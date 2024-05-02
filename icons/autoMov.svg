@@ -1,0 +1,16 @@
+<svg width="231" height="233" viewBox="0 0 231 233" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="115" cy="116" r="80" stroke="black" stroke-width="20"/>
+<path d="M190.487 11L220.487 11" stroke="black" stroke-width="20" stroke-linecap="round"/>
+<path d="M220.82 11V41" stroke="black" stroke-width="20" stroke-linecap="round"/>
+<path d="M220.82 11L172 59" stroke="black" stroke-width="20" stroke-linecap="round" stroke-dasharray="2 2"/>
+<path d="M10 40.3333L10 10.3333" stroke="black" stroke-width="20" stroke-linecap="round"/>
+<path d="M10 10L40 10" stroke="black" stroke-width="20" stroke-linecap="round"/>
+<path d="M10 10L58 58.8198" stroke="black" stroke-width="20" stroke-linecap="round" stroke-dasharray="2 2"/>
+<path d="M10 192.487L10 222.487" stroke="black" stroke-width="20" stroke-linecap="round"/>
+<path d="M10 222.82H40" stroke="black" stroke-width="20" stroke-linecap="round"/>
+<path d="M10 222.82L58 174" stroke="black" stroke-width="20" stroke-linecap="round" stroke-dasharray="2 2"/>
+<path d="M220 192.487V222.487" stroke="black" stroke-width="20" stroke-linecap="round"/>
+<path d="M220 222.82H190" stroke="black" stroke-width="20" stroke-linecap="round"/>
+<path d="M220 222.82L172 174" stroke="black" stroke-width="20" stroke-linecap="round" stroke-dasharray="2 2"/>
+<circle cx="115" cy="116" r="20" fill="black"/>
+</svg>

@@ -1,0 +1,20 @@
+<RCC>
+    <qresource prefix="/rec">
+        <file>icons/back.svg</file>
+        <file>icons/Clear.svg</file>
+        <file>icons/Cross.svg</file>
+        <file>icons/forward.svg</file>
+        <file>icons/launchAlg.svg</file>
+        <file>icons/Redo.svg</file>
+        <file>icons/Save.svg</file>
+        <file>icons/Settings.svg</file>
+        <file>icons/Undo.svg</file>
+        <file>icons/autoMov.svg</file>
+        <file>icons/manualMov.svg</file>
+        <file>icons/addNode.svg</file>
+        <file>icons/deleteNode.svg</file>
+        <file>icons/Logo.svg</file>
+        <file>icons/Pin.svg</file>
+        <file>icons/Unpin.svg</file>
+    </qresource>
+</RCC>
