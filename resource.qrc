@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/rec">
+    <qresource prefix="/ico">
         <file>icons/back.svg</file>
         <file>icons/Clear.svg</file>
         <file>icons/Cross.svg</file>
@@ -16,5 +16,8 @@
         <file>icons/Logo.svg</file>
         <file>icons/Pin.svg</file>
         <file>icons/Unpin.svg</file>
+    </qresource>
+    <qresource prefix="/qss">
+        <file>styles/defaultstyle.qss</file>
     </qresource>
 </RCC>

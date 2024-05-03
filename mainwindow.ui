@@ -39,9 +39,12 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>3</number>
       </property>
       <property name="documentMode">
+       <bool>false</bool>
+      </property>
+      <property name="tabsClosable">
        <bool>false</bool>
       </property>
       <property name="movable">
@@ -78,13 +81,14 @@
           </property>
           <property name="icon">
            <iconset resource="resource.qrc">
-            <normaloff>:/rec/icons/Unpin.svg</normaloff>
-            <activeon>:/rec/icons/Pin.svg</activeon>
-            <selectedoff>:/rec/icons/Unpin.svg</selectedoff>
-            <selectedon>:/rec/icons/Pin.svg</selectedon>:/rec/icons/Unpin.svg</iconset>
+            <normaloff>:/ico/icons/Unpin.svg</normaloff>
+            <normalon>:/ico/icons/Pin.svg</normalon>:/ico/icons/Unpin.svg</iconset>
           </property>
           <property name="checkable">
            <bool>true</bool>
+          </property>
+          <property name="flat">
+           <bool>false</bool>
           </property>
          </widget>
         </item>
@@ -154,13 +158,14 @@
           </property>
           <property name="icon">
            <iconset resource="resource.qrc">
-            <normaloff>:/rec/icons/Unpin.svg</normaloff>
-            <activeon>:/rec/icons/Pin.svg</activeon>
-            <selectedoff>:/rec/icons/Unpin.svg</selectedoff>
-            <selectedon>:/rec/icons/Pin.svg</selectedon>:/rec/icons/Unpin.svg</iconset>
+            <normaloff>:/ico/icons/Unpin.svg</normaloff>
+            <normalon>:/ico/icons/Pin.svg</normalon>:/ico/icons/Unpin.svg</iconset>
           </property>
           <property name="checkable">
            <bool>true</bool>
+          </property>
+          <property name="flat">
+           <bool>false</bool>
           </property>
          </widget>
         </item>
@@ -199,6 +204,12 @@
         </item>
         <item row="0" column="4">
          <widget class="QPushButton" name="buttonApplyEdgLst">
+          <property name="minimumSize">
+           <size>
+            <width>80</width>
+            <height>0</height>
+           </size>
+          </property>
           <property name="toolTip">
            <string>Apply matrix changes</string>
           </property>
@@ -230,13 +241,14 @@
           </property>
           <property name="icon">
            <iconset resource="resource.qrc">
-            <normaloff>:/rec/icons/Unpin.svg</normaloff>
-            <activeon>:/rec/icons/Pin.svg</activeon>
-            <selectedoff>:/rec/icons/Unpin.svg</selectedoff>
-            <selectedon>:/rec/icons/Pin.svg</selectedon>:/rec/icons/Unpin.svg</iconset>
+            <normaloff>:/ico/icons/Unpin.svg</normaloff>
+            <normalon>:/ico/icons/Pin.svg</normalon>:/ico/icons/Unpin.svg</iconset>
           </property>
           <property name="checkable">
            <bool>true</bool>
+          </property>
+          <property name="flat">
+           <bool>false</bool>
           </property>
          </widget>
         </item>
@@ -346,18 +358,22 @@
             <height>24</height>
            </size>
           </property>
+          <property name="styleSheet">
+           <string notr="true"/>
+          </property>
           <property name="text">
            <string/>
           </property>
           <property name="icon">
            <iconset resource="resource.qrc">
-            <normaloff>:/rec/icons/Unpin.svg</normaloff>
-            <activeon>:/rec/icons/Pin.svg</activeon>
-            <selectedoff>:/rec/icons/Unpin.svg</selectedoff>
-            <selectedon>:/rec/icons/Pin.svg</selectedon>:/rec/icons/Unpin.svg</iconset>
+            <normaloff>:/ico/icons/Unpin.svg</normaloff>
+            <normalon>:/ico/icons/Pin.svg</normalon>:/ico/icons/Unpin.svg</iconset>
           </property>
           <property name="checkable">
            <bool>true</bool>
+          </property>
+          <property name="flat">
+           <bool>false</bool>
           </property>
          </widget>
         </item>
@@ -392,7 +408,7 @@
     </property>
     <property name="icon">
      <iconset resource="resource.qrc">
-      <normaloff>:/rec/icons/Logo.svg</normaloff>:/rec/icons/Logo.svg</iconset>
+      <normaloff>:/ico/icons/Logo.svg</normaloff>:/ico/icons/Logo.svg</iconset>
     </property>
    </widget>
    <widget class="QMenu" name="menuFile">
@@ -460,7 +476,7 @@
   <action name="actionUndo">
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/rec/icons/Undo.svg</normaloff>:/rec/icons/Undo.svg</iconset>
+     <normaloff>:/ico/icons/Undo.svg</normaloff>:/ico/icons/Undo.svg</iconset>
    </property>
    <property name="text">
     <string>Undo</string>
@@ -472,7 +488,7 @@
   <action name="actionRedo">
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/rec/icons/Redo.svg</normaloff>:/rec/icons/Redo.svg</iconset>
+     <normaloff>:/ico/icons/Redo.svg</normaloff>:/ico/icons/Redo.svg</iconset>
    </property>
    <property name="text">
     <string>Redo</string>
@@ -484,7 +500,7 @@
   <action name="actionSave_as">
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/rec/icons/Save.svg</normaloff>:/rec/icons/Save.svg</iconset>
+     <normaloff>:/ico/icons/Save.svg</normaloff>:/ico/icons/Save.svg</iconset>
    </property>
    <property name="text">
     <string>Save as</string>
@@ -499,7 +515,7 @@
    </property>
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/rec/icons/autoMov.svg</normaloff>:/rec/icons/autoMov.svg</iconset>
+     <normaloff>:/ico/icons/autoMov.svg</normaloff>:/ico/icons/autoMov.svg</iconset>
    </property>
    <property name="text">
     <string>Automatic</string>
@@ -511,7 +527,7 @@
    </property>
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/rec/icons/manualMov.svg</normaloff>:/rec/icons/manualMov.svg</iconset>
+     <normaloff>:/ico/icons/manualMov.svg</normaloff>:/ico/icons/manualMov.svg</iconset>
    </property>
    <property name="text">
     <string>Manual</string>
@@ -520,7 +536,7 @@
   <action name="actionLaunchAlg">
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/rec/icons/launchAlg.svg</normaloff>:/rec/icons/launchAlg.svg</iconset>
+     <normaloff>:/ico/icons/launchAlg.svg</normaloff>:/ico/icons/launchAlg.svg</iconset>
    </property>
    <property name="text">
     <string>LaunchAlg</string>
@@ -532,7 +548,7 @@
   <action name="actionDeleteGraph">
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/rec/icons/Clear.svg</normaloff>:/rec/icons/Clear.svg</iconset>
+     <normaloff>:/ico/icons/Clear.svg</normaloff>:/ico/icons/Clear.svg</iconset>
    </property>
    <property name="text">
     <string>DeleteGraph</string>
@@ -544,7 +560,7 @@
   <action name="actionAddNode">
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/rec/icons/addNode.svg</normaloff>:/rec/icons/addNode.svg</iconset>
+     <normaloff>:/ico/icons/addNode.svg</normaloff>:/ico/icons/addNode.svg</iconset>
    </property>
    <property name="text">
     <string>AddNode</string>
@@ -559,7 +575,7 @@
   <action name="actionDeleteNode">
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/rec/icons/deleteNode.svg</normaloff>:/rec/icons/deleteNode.svg</iconset>
+     <normaloff>:/ico/icons/deleteNode.svg</normaloff>:/ico/icons/deleteNode.svg</iconset>
    </property>
    <property name="text">
     <string>DeleteNode</string>
@@ -580,6 +596,10 @@
    </property>
   </action>
   <action name="actionUnpin_current_tab">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/ico/icons/Unpin.svg</normaloff>:/ico/icons/Unpin.svg</iconset>
+   </property>
    <property name="text">
     <string>Unpin current tab</string>
    </property>
