@@ -2,6 +2,7 @@
 #define GRAPH_H
 #include "node.h"
 #include "qmap.h"
+#include <QException>
 
 typedef QList<QList<double>> Matrix2D;
 
@@ -13,36 +14,37 @@ enum Orientation{
 
 struct Edge{
     double weight;
-    double bandwidth;
     double flow;
     Edge():
         weight(0),
-        bandwidth(0),
         flow(0){};
     Edge(double weight,
-         double bandwidth,
          double flow):
         weight(weight),
-        bandwidth(bandwidth),
         flow(flow){};
 };
 class Graph
 {
 public:
-    void addEdge(unsigned int, unsigned int, Edge edge);
-    void removeEdge(unsigned int, unsigned int);
     Graph();
     Graph(unsigned int size);
     Graph(Matrix2D matrix);
     const Matrix2D getMatrixAdjacent();
     const Matrix2D getMatrixFlow();
-    const Matrix2D getMatrixBandwidth();
+    void setMatrixAdjacent(Matrix2D matrix);
+    void setMatrixFlow(Matrix2D matrix);
+    void setEdge(unsigned int u, unsigned int v, Edge& edge);
+    void setEdgeFlow(unsigned int u, unsigned int v, double flow);
+    void setEdgeWeight(unsigned int u, unsigned int v, double flow);
+    void removeEdge(unsigned int u, unsigned int v);
+    void addNode(unsigned int i, int x, int y);
+    void removeNode(unsigned int i);
 private:
     unsigned int amount;
     QMap<QPair<unsigned int, unsigned int>, Edge> edges;
     QMap<unsigned int, Node> nodes;
     Matrix2D adjacent;
     Matrix2D flow;
-    Matrix2D bandwidth;
+    void addEdge(unsigned int u, unsigned int v, Edge& edge);
 };
 #endif // GRAPH_H

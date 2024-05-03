@@ -9,12 +9,14 @@ public:
     Node(unsigned int i);;
     Node(unsigned int i, int x, int y);;
     unsigned int getNumber();
+    void setNumber(unsigned int i);
     void moveTo(int x, int y);
     void move(int dx, int dy);
-    void connectAdd(Node* node);
-    void connectRemove(Node* node);
+    void connectToNode(Node* node);
+    void disconnectFromNode(Node* node);
 private:
-    std::set<Node*> connects;
+    std::set<Node*> children;
+    std::set<Node*> parents;
     unsigned int number;
     int x, y;
 };

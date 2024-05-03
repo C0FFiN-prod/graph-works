@@ -12,18 +12,15 @@ SOURCES += \
     graph.cpp \
     main.cpp \
     mainwindow.cpp \
-    node.cpp \
-    titlebar.cpp
+    node.cpp
 
 HEADERS += \
     graph.h \
     mainwindow.h \
-    node.h \
-    titlebar.h
+    node.h
 
 FORMS += \
-    mainwindow.ui \
-    titlebar.ui
+    mainwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
