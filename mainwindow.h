@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "qactiongroup.h"
 #include "qpushbutton.h"
 #include <QMap>
 #include <QMainWindow>
@@ -19,14 +20,13 @@ public:
 
 private slots:
 
-    void on_buttonClearConsole_clicked();
+    void buttonClearConsoleClicked();
 
     void on_actionUnpin_current_tab_triggered();
 
 
-    void on_buttonPin_toggled(bool checked);
-    void on_viewMode_checked(bool checked);
-
+    void buttonPinToggled(bool checked);
+    void viewModeChecked(bool checked);
 
 private:
     Ui::MainWindow *ui;
@@ -34,6 +34,6 @@ private:
     QMap<QString, QWidget *> tabs;
     void unpinTab(int index);
     void pinTab();
-
+    QActionGroup *nodeMovementGroup;
 };
 #endif // MAINWINDOW_H

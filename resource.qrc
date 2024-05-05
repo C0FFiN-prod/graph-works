@@ -16,6 +16,10 @@
         <file>icons/Logo.svg</file>
         <file>icons/Pin.svg</file>
         <file>icons/Unpin.svg</file>
+        <file>icons/CheckMark.svg</file>
+        <file>icons/showMaximized.svg</file>
+        <file>icons/showMinimized.svg</file>
+        <file>icons/showNormal.svg</file>
     </qresource>
     <qresource prefix="/qss">
         <file>styles/defaultstyle.qss</file>

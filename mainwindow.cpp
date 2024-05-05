@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-
+#include <QToolTip>
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -15,24 +15,33 @@ MainWindow::MainWindow(QWidget *parent)
         act = new QAction(ui->tabWidget->tabText(i));
         act->setCheckable(true);
         act->setChecked(true);
-        connect(act, &QAction::toggled, this, &MainWindow::on_viewMode_checked);
+        connect(act, &QAction::toggled, this, &MainWindow::viewModeChecked);
         view->addAction(act);
         for(auto button: tab->findChildren<QPushButton *>()){
             if(button->objectName().startsWith("buttonPin")){
                 pins[tab] = button;
-                connect(button, &QPushButton::clicked, this, &MainWindow::on_buttonPin_toggled);
+                connect(button, &QPushButton::clicked, this, &MainWindow::buttonPinToggled);
             }
         }
     }
-
+    nodeMovementGroup = new QActionGroup(this);
+    nodeMovementGroup->addAction(ui->actionAutomatic);
+    nodeMovementGroup->addAction(ui->actionManual);
+    ui->actionManual->setChecked(true);
+    for(auto& i: ui->menubar->children()){
+        ((QMenu*)i)->setWindowFlag(Qt::FramelessWindowHint);
+        ((QMenu*)i)->setWindowFlag(Qt::NoDropShadowWindowHint);
+        ((QMenu*)i)->setAttribute(Qt::WA_TranslucentBackground);
+    }
 }
 
 MainWindow::~MainWindow()
 {
+    delete nodeMovementGroup;
     delete ui;
 }
 
-void MainWindow::on_buttonClearConsole_clicked()
+void MainWindow::buttonClearConsoleClicked()
 {
     ui->console->clear();
 }
@@ -66,17 +75,12 @@ void MainWindow::pinTab(){
 }
 
 
-
 void MainWindow::on_actionUnpin_current_tab_triggered()
 {
     unpinTab();
 }
 
-
-
-
-
-void MainWindow::on_buttonPin_toggled(bool checked)
+void MainWindow::buttonPinToggled(bool checked)
 {
     if(!checked){
         pinTab();
@@ -85,13 +89,10 @@ void MainWindow::on_buttonPin_toggled(bool checked)
     }
 }
 
-void MainWindow::on_viewMode_checked(bool checked)
+void MainWindow::viewModeChecked(bool checked)
 {
     auto act = qobject_cast<QAction*>(sender());
     auto *tab = tabs[act->text()];
     ui->tabWidget->setTabVisible(ui->tabWidget->indexOf(tab), checked);
 }
-
-
-
 
