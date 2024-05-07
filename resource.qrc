@@ -20,6 +20,10 @@
         <file>icons/showMaximized.svg</file>
         <file>icons/showMinimized.svg</file>
         <file>icons/showNormal.svg</file>
+        <file>icons/ArrowDown.svg</file>
+        <file>icons/ArrowUp.svg</file>
+        <file>icons/ArrowLeft.svg</file>
+        <file>icons/ArrowRight.svg</file>
     </qresource>
     <qresource prefix="/qss">
         <file>styles/defaultstyle.qss</file>

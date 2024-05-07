@@ -150,51 +150,51 @@ QPushButton
 {
 	background-color: #ffffff;
 	color: #1a1a1a;
-	padding: 5px 15px;
+	padding: 3px 15px;
 	border-radius: 5px;
+	border: 1px solid #d4d4d4;
+	border-bottom-color: #b7b7b7;
+	qproperty-sizePolicy: preferred;
 }
 
 
 QPushButton::disabled
 {
-	background-color: #404040;
+	background-color: #f9f9f9;
 	color: #656565;
-	border-color: #051a39;
+	border-color: #d0d0d0;
 }
 
 QPushButton::hover
 {
-	background-color: #8399ff;
-	color: #000000;
-	border-color: #051a39;
+	background-color: #fbfbfb;
+	border-color: #d0d0d0;
+	border-bottom-color: #b3b3b3;
 }
 
 QPushButton::pressed
 {
-	background-color: #4969ff;
-	color: #000000;
-	border-color: #051a39;
-
+	border-color: #d0d0d0;
+	color: #5e5e5e;
 }
 
-QTabWidget::pane QPushButton {
+QPushButton {
 	margin: 2px 5px;
-	min-height: 20px;
-	min-width: 20px;
+	min-height: 18px;
 }
-QTabWidget::pane QPushButton[objectName^="buttonPin"] {
+QPushButton[objectName^="buttonPin"] {
 	margin: 2px;
-	padding: 5px;
+	padding: 1px;
 	background: #f9f9f9;
+	height: 18px;
+	width: 18px;
 }
 
-QTabWidget::pane QPushButton[objectName^="buttonPin"]:hover {
-	margin: 2px;
-	padding: 5px;
+QPushButton[objectName^="buttonPin"]:hover {
 	background: #f3f3f3;
 }
 
-QTabWidget::pane QLabel {
+QLabel {
 	margin: 2px 5px;
 }
 
@@ -210,7 +210,7 @@ QToolButton
 
 QToolButton::disabled
 {
-	background-color: #404040;
+	background-color: #e5e5e5;
 	color: #656565;
 }
 
@@ -291,9 +291,9 @@ QComboBox::drop-down
 
 QComboBox::down-arrow
 {
-    image: url(://arrow-down.png);
-    width: 8px;
-    height: 8px;
+    image: url(:/ico/icons/ArrowDown.svg);
+    width: 7px;
+    height: 7px;
 }
 
 
@@ -302,11 +302,14 @@ QSpinBox,
 QDoubleSpinBox,
 QDateTimeEdit
 {
-	background-color: #adadac;
-	color: #000000;
-	border: 1px solid #051a39;
-	border-radius: 3px;
+	background-color: #f9f9f9;
+	color: #1a1a1a;
+	border: 1px solid #d4d4d4;
+	border-bottom-color: #b6b6b6;
+	border-radius: 5px;
 	padding : 2px;
+	selection-background-color: #c6c6c6;
+	selection-color: #1a1a1a;
 
 }
 
@@ -315,52 +318,48 @@ QSpinBox::disabled,
 QDoubleSpinBox::disabled,
 QDateTimeEdit::disabled
 {
-	background-color: #404040;
+	background-color: #f9f9f9;
 	color: #656565;
-	border-color: #051a39;
+	border-color: #d0d0d0;
 
 }
 
 
 QSpinBox:hover, 
-QDoubleSpinBox::hover,
-QDateTimeEdit::hover
+QDoubleSpinBox:hover,
+QDateTimeEdit:hover
 {
-    background-color: #626262;
-    border: 1px solid #607cff;
-    color:  #fff;
-    padding: 2px
 
 }
 
-
-QSpinBox::up-button, QSpinBox::down-button,
-QDoubleSpinBox::up-button, QDoubleSpinBox::down-button,
-QDateTimeEdit::up-button, QDateTimeEdit::down-button
+QSpinBox::up-button, 		QSpinBox::down-button,
+QDoubleSpinBox::up-button,	QDoubleSpinBox::down-button,
+QDateTimeEdit::up-button, 	QDateTimeEdit::down-button
 {
-    background-color: #607cff;
-	border-radius: 2px;
-
+    background-color: #f3f3f3;
+	border-radius: 0px;
+	border-left: 1px solid #d4d4d4;
+	width: 11px;
+	padding: 2px;
+}
+QSpinBox::down-button,
+QDoubleSpinBox::down-button,
+QDateTimeEdit::down-button {
+	border-bottom-right-radius: 5px;
 }
 
-
-QSpinBox::disabled, 
-QDoubleSpinBox::disabled,
-QDateTimeEdit::disabled
-{
-	background-color: #404040;
-	color: #656565;
-	border-color: #051a39;
-
-}
+QDateTimeEdit::up-button, 	
+QDoubleSpinBox::up-button,	
+QSpinBox::up-button {
+	border-top-right-radius: 5px;
+} 		
 
 
 QSpinBox::up-button:hover, QSpinBox::down-button:hover,
 QDoubleSpinBox::up-button:hover, QDoubleSpinBox::down-button:hover,
 QDateTimeEdit::up-button:hover, QDateTimeEdit::down-button:hover
 {
-    background-color: #8399ff;
-    border: 1px solid #8399ff;
+    background-color: #eaeaea;
 
 }
 
@@ -369,9 +368,9 @@ QSpinBox::up-button:disabled, QSpinBox::down-button:disabled,
 QDoubleSpinBox::up-button:disabled, QDoubleSpinBox::down-button:disabled,
 QDateTimeEdit::up-button:disabled, QDateTimeEdit::down-button:disabled
 {
-	background-color: #404040;
+	background-color: #f9f9f9;
 	color: #656565;
-	border-color: #051a39;
+	border-color: #d0d0d0;
 
 }
 
@@ -380,8 +379,7 @@ QSpinBox::up-button:pressed, QSpinBox::down-button:pressed,
 QDoubleSpinBox::up-button:pressed, QDoubleSpinBox::down-button::pressed,
 QDateTimeEdit::up-button:pressed, QDateTimeEdit::down-button::pressed
 {
-    background-color: #4969ff;
-    border: 1px solid #4969ff;
+    background-color: #e5e5e5;
 
 }
 
@@ -390,7 +388,7 @@ QSpinBox::down-arrow,
 QDoubleSpinBox::down-arrow,
 QDateTimeEdit::down-arrow
 {
-    image: url(://arrow-down.png);
+    image: url(:/ico/icons/ArrowDown.svg);
     width: 7px;
 
 }
@@ -400,7 +398,7 @@ QSpinBox::up-arrow,
 QDoubleSpinBox::up-arrow,
 QDateTimeEdit::up-arrow
 {
-    image: url(://arrow-up.png);
+    image: url(:/ico/icons/ArrowUp.svg);
     width: 7px;
 
 }
@@ -543,6 +541,7 @@ QTableView
     color: #1a1a1a;
     gridline-color: #d4d4d4;
     outline : 0;
+	border-top: 1px solid #ababab;
 }
 
 QTableView QLineEdit {
@@ -604,9 +603,6 @@ QTableView > QTableCornerButton::section:pressed {
 	border-left: 0px; 
 }
 
-QTabWidget::pane QTableWidget {
-	border-top: 1px solid #ababab;
-}
 
 QHeaderView::section
 {
@@ -807,6 +803,26 @@ QTabBar::tab:left:only-one, QTabBar::tab:right:only-one
 }
 
 
+QTabBar::scroller {
+	height: 30px;
+}
+QTabBar > QToolButton {
+	border: 1px solid #ababab;
+	border-bottom: 0px;
+}
+QTabBar QToolButton::left-arrow,
+QTabBar QToolButton::right-arrow {
+	height: 6px;
+	width: 6px;
+}
+QTabBar QToolButton::left-arrow {
+	image: url(:/ico/icons/ArrowLeft.svg);
+}
+QTabBar QToolButton::right-arrow { /* Styling the arrows specifically, if possible */
+    image: url(:/ico/icons/ArrowRight.svg);
+}
+
+
 /*-----QSlider-----*/
 QSlider::groove:horizontal 
 {
@@ -955,133 +971,51 @@ QDial::disabled
 }
 
 /*-----QScrollBar-----*/
+QAbstractScrollArea::corner {
+	border: none;
+	background-color: transparent;
+}
+
+QScrollBar {
+	border: 0px;
+    background: transparent;
+	margin: 0px;
+	border-radius: 6px;
+}
 QScrollBar:horizontal
 {
-    border: 1px solid #222222;
-    background-color: #3d3d3d;
-    height: 13px;
-    margin: 0px 16px 0 16px;
-
+	height: 6px;
+	margin: 0px 5px;
+	padding: 2px 0px;
 }
-
-
-QScrollBar::handle:horizontal
-{
-    background: #607cff;
-    min-height: 20px;
-
-}
-
-
-QScrollBar::add-line:horizontal
-{
-    border: 1px solid #1b1b19;
-    background-color: #607cff;
-    width: 14px;
-    subcontrol-position: right;
-    subcontrol-origin: margin;
-
-}
-
-
-QScrollBar::sub-line:horizontal
-{
-    border: 1px solid #1b1b19;
-    background-color: #607cff;
-    width: 14px;
-    subcontrol-position: left;
-    subcontrol-origin: margin;
-
-}
-
-
-QScrollBar::right-arrow:horizontal
-{
-    image: url(://arrow-right.png);
-    width: 6px;
-    height: 6px;
-
-}
-
-
-QScrollBar::left-arrow:horizontal
-{
-    image: url(://arrow-left.png);
-    width: 6px;
-    height: 6px;
-
-}
-
-
-QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal
-{
-    background: none;
-
-}
-
 
 QScrollBar:vertical
 {
-    background-color: #3d3d3d;
-    width: 13px;
-    margin: 16px 0 16px 0;
-    border: 1px solid #222222;
-
+	width: 6px;
+	padding: 0px 2px;
+	margin: 5px 0px;
+}
+QScrollBar:hover {
+	background: #f0f0f0;
+	padding: 0px;
 }
 
-
-QScrollBar::handle:vertical
-{
-    background-color: #607cff;
-    min-height: 20px;
-
+QScrollBar::add-line,
+QScrollBar::sub-line,
+QScrollBar::add-page,
+QScrollBar::sub-page {
+	background-color: transparent;
+	subcontrol-origin: none;
+	subcontrol-position: none;
+	border: 0px;
 }
 
-
-QScrollBar::add-line:vertical
-{
-    border: 1px solid #1b1b19;
-    background-color: #607cff;
-    height: 14px;
-    subcontrol-position: bottom;
-    subcontrol-origin: margin;
-
+QScrollBar::handle {
+	border-radius: 3px;
+	background: #868686;
 }
-
-
-QScrollBar::sub-line:vertical
-{
-    border: 1px solid #1b1b19;
-    background-color: #607cff;
-    height: 14px;
-    subcontrol-position: top;
-    subcontrol-origin: margin;
-
-}
-
-
-QScrollBar::up-arrow:vertical
-{
-    image: url(://arrow-up.png);
-    width: 6px;
-    height: 6px;
-
-}
-
-
-QScrollBar::down-arrow:vertical
-{
-    image: url(://arrow-down.png);
-    width: 6px;
-    height: 6px;
-
-}
-
-
-QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical
-{
-    background: none;
-
+QScrollBar::handle {
+	margin: 0px;
 }
 
 /*-----QProgressBar-----*/
