@@ -541,16 +541,16 @@ QTableView
     color: #1a1a1a;
     gridline-color: #d4d4d4;
     outline : 0;
-	border-top: 1px solid #ababab;
+    border-top: 1px solid #ababab;
 }
 
 QTableView QLineEdit {
-	background-color: #f9f9f9;
-	color: #1a1a1a;
-	border: 1px solid #0078d4;
-	border-radius: 0px;
-	selection-background-color: #c6c6c6;
-	selection-color: #1a1a1a;
+    background-color: #f9f9f9;
+    color: #1a1a1a;
+    border: 1px solid #0078d4;
+    border-radius: 0px;
+    selection-background-color: #c6c6c6;
+    selection-color: #1a1a1a;
 }
 
 
@@ -567,19 +567,17 @@ QTableView::item {
 	color: #1a1a1a;
 	background-color: #f9f9f9;
 	height: 20px;
+        width: 50px;
 }
-
-QTableView::item:hover 
-{
-
-}
-
 
 QTableView::item:selected 
 {
     border: 1px solid #0078d4;
 }
 
+QTableView::item:disabled {
+	background-color: #ececec;
+}
 
 QTableView::item:selected:disabled
 {
@@ -591,16 +589,20 @@ QTableCornerButton::section
 {
     background-color: #f9f9f9;
     color: #1a1a1a;
-	border: 1px solid #ababab;
-	border-top: 0px;
-	border-left: 0px; 
+    border: 10px solid #ababab;
+	border-left-color: #f9f9f9;
+	border-top-color: #f9f9f9;
+	margin: 5px;
 }
-
-QTableView > QTableCornerButton::section:pressed {
-	background-color: #ebebeb;
-	border: 1px solid #ababab;
-	border-top: 0px;
-	border-left: 0px; 
+QTableCornerButton::section:pressed {
+    border: 10px solid #484848;
+	border-left-color: #f9f9f9;
+	border-top-color: #f9f9f9;
+}
+QTableCornerButton::section:hover {
+    border: 10px solid #6a6a6a;
+	border-left-color: #f9f9f9;
+	border-top-color: #f9f9f9;
 }
 
 
@@ -608,12 +610,12 @@ QHeaderView::section
 {
     background-color: #f9f9f9;
     color: #1a1a1a;
-	border: 1px solid #ababab;
-	height: 20px;
-	border-top: 0px;
-	border-left: 0px;
-	
-	qproperty-defaultAlignment: AlignHCenter AlignVCenter;
+    border: 1px solid #ababab;
+    height: 20px;
+    border-top: 0px;
+    border-left: 0px;
+
+    qproperty-defaultAlignment: AlignHCenter AlignVCenter;
 }
 
 
@@ -642,19 +644,17 @@ QHeaderView::section::vertical::only-one
 }
 
 QHeaderView {
-	qproperty-defaultAlignment: AlignHCenter;
+        qproperty-defaultAlignment: AlignHCenter AlignVCenter;
 }
 
 QHeaderView::section::vertical {
-	padding-top: 8px;
-	min-width: 20px;
-	
+    padding-top: 3px;
+    min-width: 20px;
 }
 
 
 QHeaderView::section::vertical:checked
 {
-	
 	border-right: 2px solid #0078d4;
 }
 
@@ -662,18 +662,15 @@ QHeaderView::section::vertical:checked
 QHeaderView::section::horizontal::first,
 QHeaderView::section::horizontal::only-one
 {
-
+	outline: 1px solid #1a1a1a;
 }
 QHeaderView::section::horizontal {
-	padding-top: 5px;
-	padding-bottom: -3px;
 	height: 20px;
 }
 
 QHeaderView::section::horizontal:checked
 {
-	border-bottom: 2px solid #0078d4;
-	
+        border-bottom: 2px solid #0078d4;
 }
 
 

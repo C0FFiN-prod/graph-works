@@ -196,7 +196,7 @@
          </widget>
         </item>
         <item row="1" column="0" colspan="5">
-         <widget class="QTableWidget" name="tableAdjMatr"/>
+         <widget class="QTableView" name="tableGraphMatrixAdj"/>
         </item>
        </layout>
       </widget>
@@ -288,7 +288,7 @@
          </widget>
         </item>
         <item row="1" column="0" colspan="5">
-         <widget class="QTableWidget" name="tableEdgLst"/>
+         <widget class="QTableView" name="tableGraphListEdges"/>
         </item>
        </layout>
       </widget>
@@ -330,31 +330,6 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="0" colspan="5">
-         <widget class="QTableWidget" name="tableIncMatr">
-          <property name="rowCount">
-           <number>5</number>
-          </property>
-          <property name="columnCount">
-           <number>5</number>
-          </property>
-          <row/>
-          <row/>
-          <row/>
-          <row/>
-          <row/>
-          <column/>
-          <column/>
-          <column/>
-          <column/>
-          <column/>
-          <item row="0" column="0">
-           <property name="text">
-            <string/>
-           </property>
-          </item>
-         </widget>
-        </item>
         <item row="0" column="4">
          <widget class="QPushButton" name="buttonApplyIncMatr">
           <property name="minimumSize">
@@ -389,12 +364,6 @@
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>511</width>
-            <height>20</height>
-           </size>
-          </property>
          </spacer>
         </item>
         <item row="0" column="2">
@@ -404,8 +373,11 @@
           </property>
          </widget>
         </item>
+        <item row="1" column="0" colspan="5">
+         <widget class="QTableView" name="tableGraphMatrixInc"/>
+        </item>
        </layout>
-       <zorder>tableIncMatr</zorder>
+       <zorder>tableGraphMatrixInc</zorder>
        <zorder>nodesCountIncMatr</zorder>
        <zorder>horizontalSpacer_4</zorder>
        <zorder>nodesCount_3</zorder>
@@ -520,6 +492,8 @@
     <addaction name="separator"/>
     <addaction name="actionUndo"/>
     <addaction name="actionRedo"/>
+    <addaction name="actionCopy"/>
+    <addaction name="actionPaste"/>
    </widget>
    <widget class="QMenu" name="menuAlgorithm">
     <property name="enabled">
@@ -712,6 +686,16 @@
   <action name="actionShown_tabs">
    <property name="text">
     <string>Shown tabs</string>
+   </property>
+  </action>
+  <action name="actionCopy">
+   <property name="text">
+    <string>Copy</string>
+   </property>
+  </action>
+  <action name="actionPaste">
+   <property name="text">
+    <string>Paste</string>
    </property>
   </action>
  </widget>
