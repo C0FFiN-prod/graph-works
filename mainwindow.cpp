@@ -1,8 +1,11 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QStandardItemModel>
+#include <QMessageBox>
 #include <QToolTip>
 #include <QClipboard>
+#include <set>
+#include <QShortcut>
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -11,6 +14,29 @@ MainWindow::MainWindow(QWidget *parent)
     QWidget *tab;
     QAction *act;
     auto view = ui->menuView_mode;
+/*
+    for(auto* table : this->findChildren<QTableView *>()){
+        connect(ui->actionCopy,
+                &QAction::triggered,
+                this,
+                std::bind(&MainWindow::copyTableToClipboard,
+                          this, table));
+        connect(ui->actionPaste,
+                &QAction::triggered,
+                this,
+                std::bind(&MainWindow::pasteClipboardToTable,
+                          this, table));
+        table->setModel(new QStandardItemModel(0,0));
+    }
+*/
+    for(auto* table : this->findChildren<QTableView *>()){
+        table->setModel(new QStandardItemModel(0,0));
+    }
+    // connect(ui->actionCopy, &QAction::triggered,
+    //         this, std::bind(&MainWindow::copy, this));
+    // connect(ui->actionPaste, &QAction::triggered,
+    //         this, std::bind(&MainWindow::paste, this));
+
     for(int i =ui->tabWidget->count(); i--;){
         tab =ui->tabWidget->widget(i);
         tabs[ui->tabWidget->tabText(i)] = tab;
@@ -36,7 +62,7 @@ MainWindow::MainWindow(QWidget *parent)
                                 this,
                                 std::bind(&MainWindow::setNodesAmountSet,
                                           this, tables[j], std::placeholders::_1));
-                        tables[j]->setModel(new QStandardItemModel(0,0));
+
                         tables.remove(j);
                     }
                 }
@@ -53,22 +79,21 @@ MainWindow::MainWindow(QWidget *parent)
         ((QMenu*)i)->setWindowFlag(Qt::NoDropShadowWindowHint);
         ((QMenu*)i)->setAttribute(Qt::WA_TranslucentBackground);
     }
-    connect(ui->actionCopy,
-            &QAction::triggered,
-            this,
-            std::bind(&MainWindow::copyTableToClipboard,
-                      this, ui->tableGraphMatrixInc));
-    connect(ui->actionPaste,
-            &QAction::triggered,
-            this,
-            std::bind(&MainWindow::pasteClipboardToTable,
-                      this, ui->tableGraphMatrixInc));
+
+    shortCuts[0] = new QShortcut(this);
+    shortCuts[0]->setKey(QKeySequence("Ctrl+C"));
+    connect(shortCuts[0], &QShortcut::activated, this, std::bind(&MainWindow::myCopy, this));
+    shortCuts[1] = new QShortcut(this);
+    shortCuts[1]->setKey(QKeySequence("Ctrl+V"));
+    connect(shortCuts[0], &QShortcut::activated, this, std::bind(&MainWindow::myPaste, this));
 }
 
 MainWindow::~MainWindow()
 {
     delete nodeMovementGroup;
     delete ui;
+    for(int i = 2; i--;)
+        delete shortCuts[i];
 }
 
 void MainWindow::buttonClearConsoleClicked()
@@ -106,12 +131,12 @@ void MainWindow::pinTab(){
 
 void MainWindow::pasteClipboardToTable(QTableView *dest)
 {
+    if(!dest->hasFocus()) return;
     static QRegularExpression re("\t|(?=\n)");
     QStandardItemModel * model = static_cast<QStandardItemModel*>(dest->model());
     QItemSelectionModel * selection = dest->selectionModel();
     QModelIndexList indexes = selection->selectedIndexes();
     QString text = QApplication::clipboard()->text();
-    // You need a pair of indexes to find the row changes
     if(indexes.empty()) return;
     int maxIndexCol=0, maxIndexRow=0;
     if (indexes.count() == 1){
@@ -232,34 +257,68 @@ void MainWindow::setNodesAmountSet(QTableView *table, int newAmount)
         }
     }
     table->show();
-    ui->statusbar->showMessage(QString::number(model->columnCount()));
 }
 
 void MainWindow::copyTableToClipboard(QTableView *src){
+    if(!src->hasFocus()) return;
     QAbstractItemModel * model = src->model();
     QItemSelectionModel * selection = src->selectionModel();
     QModelIndexList indexes = selection->selectedIndexes();
+    std::sort(indexes.begin(), indexes.end());
     QString selected_text;
     int indexes_count = indexes.count();
-    if(indexes_count){
-        QModelIndex *current, *previous = &indexes.first();
-        QString text = model->data(*previous).toString();
-        selected_text.append(text);
-        for(int i = 1; i<indexes_count; i++)
-        {
-            current = &indexes[i];
-            text = model->data(*current).toString();
-            if (current->row() != previous->row())
-            {
-                selected_text.append('\n');
-            }
-            else
-            {
-                selected_text.append('\t');
-            }
-            selected_text.append(text);
-            previous = current;
+    if(!indexes_count) return;
+    QModelIndex *current, *previous = &indexes.first();
+    std::set<int> rows{previous->row()}, columns{previous->column()};
+    bool canCopy = true;
+    QString text = model->data(*previous).toString();
+    selected_text.append(text);
+    for(int i = 1; (i<indexes_count); i++)
+    {
+        rows.insert(indexes[i].row());
+        columns.insert(indexes[i].column());
+        if((int)(columns.size()*rows.size()) > indexes_count){
+            canCopy = false;
+            break;
         }
+        current = &indexes[i];
+        text = model->data(*current).toString();
+        if (current->row() != previous->row())
+        {
+            selected_text.append('\n');
+        }
+        else
+        {
+            selected_text.append('\t');
+        }
+        selected_text.append(text);
+        previous = current;
+    }
+    if(canCopy){
         QApplication::clipboard()->setText(selected_text+'\n');
+    }
+    else
+        QMessageBox::warning(src,
+                             this->windowTitle(),
+                             "This action won't work on multiple selections.",
+                             QMessageBox::StandardButton::Ok,
+                             QMessageBox::StandardButton::Ok);
+
+}
+
+void MainWindow::myCopy()
+{
+    auto widget = QApplication::focusWidget();
+    auto table = qobject_cast<QTableView *>(widget);
+    if( table != nullptr ){
+        copyTableToClipboard(table);
+    }
+}
+void MainWindow::myPaste()
+{
+    auto widget = QApplication::focusWidget();
+    auto table = qobject_cast<QTableView *>(widget);
+    if( table != nullptr ){
+        pasteClipboardToTable(table);
     }
 }

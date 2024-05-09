@@ -3,6 +3,7 @@
 
 #include "qactiongroup.h"
 #include "qpushbutton.h"
+#include "qshortcut.h"
 #include "qtableview.h"
 #include <QMap>
 #include <QMainWindow>
@@ -28,8 +29,8 @@ private slots:
 
     void buttonPinToggled(bool checked);
     void viewModeChecked(bool checked);
-    //void copy();
-    //void paste();
+    void myCopy();
+    void myPaste();
     void setNodesAmountSet(QTableView *table, int newAmount);
 
 private:
@@ -41,5 +42,6 @@ private:
     void pasteClipboardToTable(QTableView *dest);
     void copyTableToClipboard(QTableView *src);
     QActionGroup *nodeMovementGroup;
+    QShortcut *shortCuts[2];
 };
 #endif // MAINWINDOW_H

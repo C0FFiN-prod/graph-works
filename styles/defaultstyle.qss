@@ -1032,3 +1032,12 @@ QProgressBar::chunk
     background-color: #607cff;
 }
 
+QDialog QPushButton {
+	padding: 1px 25px;
+	margin: 0px 3px;
+	border-radius: 3px;
+}
+QDialog QLabel {
+	min-height: 32px;
+	margin-bottom: 0px;
+}
