@@ -28,6 +28,8 @@ private slots:
     void on_viewMode_checked(bool checked);
 
 
+    void on_buttonApplyAdjMatr_clicked();
+
 private:
     Ui::MainWindow *ui;
     QMap<QWidget *, QPushButton *> pins;

@@ -39,7 +39,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>1</number>
       </property>
       <property name="documentMode">
        <bool>false</bool>
@@ -59,7 +59,11 @@
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
-         <widget class="QGraphicsView" name="graphicsView"/>
+         <widget class="QPushButton" name="pushButton">
+          <property name="text">
+           <string>PushButton</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>
@@ -136,7 +140,83 @@
          </widget>
         </item>
         <item row="1" column="0" colspan="5">
-         <widget class="QTableWidget" name="tableAdjMatr"/>
+         <widget class="QTableWidget" name="tableAdjMatr">
+          <row>
+           <property name="text">
+            <string>Новая строка</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>Новая строка</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>Новая строка</string>
+           </property>
+          </row>
+          <column>
+           <property name="text">
+            <string>Новый столбец</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Новый столбец</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Новый столбец</string>
+           </property>
+          </column>
+          <item row="0" column="0">
+           <property name="text">
+            <string>12</string>
+           </property>
+          </item>
+          <item row="0" column="1">
+           <property name="text">
+            <string>12</string>
+           </property>
+          </item>
+          <item row="0" column="2">
+           <property name="text">
+            <string>12</string>
+           </property>
+          </item>
+          <item row="1" column="0">
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item row="1" column="1">
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item row="1" column="2">
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item row="2" column="0">
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item row="2" column="1">
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item row="2" column="2">
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+         </widget>
         </item>
        </layout>
       </widget>
@@ -298,14 +378,107 @@
         <item row="1" column="0" colspan="5">
          <widget class="QTableWidget" name="tableIncMatr">
           <property name="rowCount">
-           <number>1</number>
+           <number>5</number>
           </property>
           <property name="columnCount">
-           <number>2</number>
+           <number>6</number>
           </property>
+          <row>
+           <property name="text">
+            <string>Новая строка</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>1</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>2</string>
+           </property>
+          </row>
           <row/>
+          <row/>
+          <column>
+           <property name="text">
+            <string>Новый столбец</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>1</string>
+           </property>
+          </column>
           <column/>
           <column/>
+          <column/>
+          <column/>
+          <item row="0" column="0">
+           <property name="text">
+            <string/>
+           </property>
+          </item>
+          <item row="0" column="1">
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item row="0" column="2">
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item row="0" column="3">
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item row="1" column="0">
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item row="1" column="2">
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item row="1" column="3">
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item row="2" column="0">
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item row="2" column="1">
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item row="2" column="3">
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item row="3" column="0">
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item row="3" column="1">
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item row="3" column="2">
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
          </widget>
         </item>
        </layout>

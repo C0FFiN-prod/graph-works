@@ -1,6 +1,8 @@
 #ifndef GRAPH_H
 #define GRAPH_H
 #include "node.h"
+#include "edge.h"
+#include "graphwidget.h"
 #include "qmap.h"
 #include <QException>
 
@@ -12,13 +14,13 @@ enum Orientation{
     Both = 2,
 };
 
-struct Edge{
+struct EdgeStruct{
     double weight;
     double flow;
-    Edge():
+    EdgeStruct():
         weight(0),
         flow(0){};
-    Edge(double weight,
+    EdgeStruct(double weight,
          double flow):
         weight(weight),
         flow(flow){};
@@ -33,18 +35,28 @@ public:
     const Matrix2D getMatrixFlow();
     void setMatrixAdjacent(Matrix2D matrix);
     void setMatrixFlow(Matrix2D matrix);
-    void setEdge(unsigned int u, unsigned int v, Edge& edge);
+
+    void setEdge(Node* u, Node* v, Edge& edge);
+
     void setEdgeFlow(unsigned int u, unsigned int v, double flow);
     void setEdgeWeight(unsigned int u, unsigned int v, double flow);
     void removeEdge(unsigned int u, unsigned int v);
-    void addNode(unsigned int i, int x, int y);
-    void removeNode(unsigned int i);
+    //void addNode(unsigned int i, int x, int y);
+    //void removeNode(unsigned int i);
+
+    GraphWidget *graphView;
 private:
+    EdgeType getEdgeType(int i, int j);
     unsigned int amount;
-    QMap<QPair<unsigned int, unsigned int>, Edge> edges;
-    QMap<unsigned int, Node> nodes;
+
+    QMap<QPair<Node*, Node*>, Edge*> edges;
+    QMap<unsigned int, Node*> nodes;
+
+    //QMap<QPair<unsigned int, unsigned int>, EdgeStruct> edges;
+    //QMap<unsigned int, Node> nodes;
+
     Matrix2D adjacent;
     Matrix2D flow;
-    void addEdge(unsigned int u, unsigned int v, Edge& edge);
+
 };
 #endif // GRAPH_H
