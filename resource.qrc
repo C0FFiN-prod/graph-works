@@ -16,6 +16,16 @@
         <file>icons/Logo.svg</file>
         <file>icons/Pin.svg</file>
         <file>icons/Unpin.svg</file>
+        <file>icons/CheckMark.svg</file>
+        <file>icons/showMaximized.svg</file>
+        <file>icons/showMinimized.svg</file>
+        <file>icons/showNormal.svg</file>
+        <file>icons/ArrowDown.svg</file>
+        <file>icons/ArrowUp.svg</file>
+        <file>icons/ArrowLeft.svg</file>
+        <file>icons/ArrowRight.svg</file>
+        <file>icons/Copy.svg</file>
+        <file>icons/Paste.svg</file>
     </qresource>
     <qresource prefix="/qss">
         <file>styles/defaultstyle.qss</file>

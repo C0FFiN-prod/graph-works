@@ -2,7 +2,10 @@
 #define MAINWINDOW_H
 
 #include "graph.h"
+#include "qactiongroup.h"
 #include "qpushbutton.h"
+#include "qshortcut.h"
+#include "qtableview.h"
 #include <QMap>
 #include <QMainWindow>
 
@@ -20,15 +23,11 @@ public:
     ~MainWindow();
 
 private slots:
-
-    void on_buttonClearConsole_clicked();
-
-    void on_actionUnpin_current_tab_triggered();
-
-
-    void on_buttonPin_toggled(bool checked);
-    void on_viewMode_checked(bool checked);
-
+    void buttonClearConsoleClicked();
+    void viewModeChecked(bool checked);
+    void myCopy();
+    void myPaste();
+    void setNodesAmountSet(QTableView *table, int newAmount);
 
     void on_buttonApplyAdjMatr_clicked();
 
@@ -37,9 +36,11 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QMap<QWidget *, QPushButton *> pins;
-    QMap<QString, QWidget *> tabs;
+    QMap<QString, QWidget *> docksViewMode;
     void unpinTab(int index);
     void pinTab();
-
+    void pasteClipboardToTable(QTableView *dest);
+    void copyTableToClipboard(QTableView *src);
+    QActionGroup *nodeMovementGroup;
 };
 #endif // MAINWINDOW_H
