@@ -1,10 +1,6 @@
 #include "mainwindow.h"
 #include "qspinbox.h"
 #include "ui_mainwindow.h"
-#include "graphwidget.h"
-#include "graph.h"
-
-
 #include <QStandardItemModel>
 #include <QMessageBox>
 #include <QToolTip>
@@ -17,25 +13,74 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);    
     auto spinBoxes = this->findChildren<QSpinBox *>();
+    auto pushButtons = this->findChildren<QPushButton *>();
     for(auto* table : this->findChildren<QTableView *>()){
         if(table->objectName().endsWith("Graph")){
             auto name = table->objectName().replace("table_", "").replace("_Graph", "");
+
+            if(name.startsWith("Matrix")) {
+                graphMatrixViews.append(table);
+            }
+            else if (name.startsWith("List")) {
+                graphListViews.append(table);
+                if(name.endsWith("Edges")){
+                    table->setModel(new QStandardItemModel(1,5));
+                    auto model = table->model();
+                    model->setHeaderData(0, Qt::Horizontal, "U");
+                    model->setHeaderData(1, Qt::Horizontal, "V");
+                    model->setHeaderData(2, Qt::Horizontal, "Weight");
+                    model->setHeaderData(3, Qt::Horizontal, "Band");
+                    model->setHeaderData(4, Qt::Horizontal, "Flow");
+                    for(int i = 5; i--;){
+                        table->setColumnWidth(i, 10);
+                    }
+                }
+            }
+
             for(auto *spinBox : spinBoxes){
                 if(spinBox->objectName().startsWith("spin_"+name))
                 {
                     if(spinBox->objectName().endsWith("NodesCount")){
-                        if(name.startsWith("Matrix"))
+                        if(name.startsWith("Matrix")){
                             connect(spinBox,
                                     &QSpinBox::valueChanged,
                                     this,
-                                    std::bind(&MainWindow::setNodesAmountSet,
+                                    std::bind(&MainWindow::setNodesAmountMatrix,
                                               this, table, std::placeholders::_1));
+                        } else if (name.startsWith("List")){
+                            connect(spinBox,
+                                    &QSpinBox::valueChanged,
+                                    this,
+                                    std::bind(&MainWindow::setNodesAmountList,
+                                              this, table, std::placeholders::_1));
+                        }
+                        graphCountSpins.insert(table->objectName(), spinBox);
                         break;
                     }
                 }
             }
+
+            for(auto *button : pushButtons){
+                if(button->objectName().startsWith("button_"+name) &&
+                    button->objectName().endsWith("_Apply"))
+                {
+                    if(name.startsWith("List"))
+                        connect(button,
+                                &QPushButton::clicked,
+                                this,
+                                std::bind(&MainWindow::applyNodesAmountList,
+                                          this, table));
+                    else if (name.startsWith("Matrix"))
+                        connect(button,
+                                &QPushButton::clicked,
+                                this,
+                                std::bind(&MainWindow::applyNodesAmountMatrix,
+                                          this, table));
+                }
+            }
         }
-        table->setModel(new QStandardItemModel(0,0));
+        if(table->model()==nullptr)
+            table->setModel(new QStandardItemModel(0,0));
     }
     auto view = ui->menuView_mode;
     auto docks = this->findChildren<QDockWidget *>();
@@ -72,7 +117,8 @@ MainWindow::MainWindow(QWidget *parent)
         tabBar->setObjectName("tabBar_Docks");
 
     }
-
+    ui->centralwidget->layout()->removeWidget(ui->graphicsView);
+    ui->centralwidget->layout()->addWidget(graph.graphView);
     connect(ui->actionCopy, &QAction::triggered,
             this, std::bind(&MainWindow::myCopy, this));
     connect(ui->actionPaste, &QAction::triggered,
@@ -165,7 +211,7 @@ void MainWindow::viewModeChecked(bool checked)
     dock->setVisible(checked);
 }
 
-void MainWindow::setNodesAmountSet(QTableView *table, int newAmount)
+void MainWindow::setNodesAmountMatrix(QTableView *table, int newAmount)
 {
     QStandardItemModel* model = static_cast<QStandardItemModel *>(table->model());
     int oldAmount = model->columnCount();
@@ -216,6 +262,23 @@ void MainWindow::setNodesAmountSet(QTableView *table, int newAmount)
     table->show();
 }
 
+void MainWindow::setNodesAmountList(QTableView *table, int newAmount)
+{
+    QStandardItemModel* model = static_cast<QStandardItemModel *>(table->model());
+    int oldAmount = model->columnCount();
+    auto flags = Qt::ItemIsEnabled | Qt::ItemIsEditable | Qt::ItemIsSelectable;
+    if(newAmount < 0) newAmount = 0;
+    int upperLimit = ((oldAmount>newAmount)?(newAmount):(oldAmount));
+    if(upperLimit > oldAmount)
+        for(int i = 0; i < model->rowCount(); i++) {
+            if(model->item(i, 0)->data().toInt() <= upperLimit ||
+                model->item(i, 1)->data().toInt() <= upperLimit) {
+                for(int j = 5; j--;)
+                    model->item(i, j)->setFlags(flags);
+            }
+        }
+}
+
 void MainWindow::copyTableToClipboard(QTableView *src){
     if(!src->hasFocus()) return;
     QAbstractItemModel * model = src->model();
@@ -261,6 +324,84 @@ void MainWindow::copyTableToClipboard(QTableView *src){
                              QMessageBox::StandardButton::Ok,
                              QMessageBox::StandardButton::Ok);
 
+}
+
+void MainWindow::applyNodesAmountMatrix(QTableView *table)
+{
+    QStandardItemModel* model = static_cast<QStandardItemModel*>(table->model());
+    int oldAmount = model->rowCount();
+    int newAmount = graphCountSpins[table->objectName()]->value();
+    for(auto [key, value] : graphCountSpins.asKeyValueRange()){
+        if (key != table->objectName()){
+            value->setValue(newAmount);
+        }
+    }
+    if(oldAmount > newAmount){
+        model->setColumnCount(newAmount);
+        model->setRowCount(newAmount);
+    }
+    for(auto* t : graphMatrixViews){
+        if(t->objectName().contains("Adj")){
+            Matrix2D m(newAmount);
+            QStandardItemModel* mod = static_cast<QStandardItemModel*>(t->model());
+            for(int i = 0; i < newAmount; i++){
+                m[i].resize(newAmount);
+                for(int j = 0; j < newAmount; j++){
+                    m[i][j] = mod->item(i, j)->data().toDouble();
+                }
+            }
+            graph.setMatrixAdjacent(m);
+            graph.graphView->initScene();
+            break;
+        }
+    }
+}
+
+void MainWindow::applyNodesAmountList(QTableView *table)
+{
+    QStandardItemModel* model = static_cast<QStandardItemModel*>(table->model());
+    int count = model->rowCount()-1;
+    int newAmount = graphCountSpins[table->objectName()]->value();
+    for(auto [key, value] : graphCountSpins.asKeyValueRange()){
+        if (key != table->objectName()){
+            value->setValue(newAmount);
+        }
+    }
+    for(int i = count-1; i--;){
+        auto u = model->item(i, 0);
+        auto v = model->item(i, 1);
+        if(u->data().toInt() <= newAmount ||
+            v->data().toInt() <= newAmount) {
+            model->removeRow(i);
+        }
+    }
+
+}
+
+void MainWindow::addRowToList(QTableView *table, const QSet<int>& importantCols = {}){
+    auto *model = static_cast<QStandardItemModel *>(table->model());
+    int rowLast = model->rowCount()-1;
+    int colCount = model->columnCount();
+    bool needAdd = false;
+    if (importantCols.empty()){
+        for(int i = colCount; i--;){
+            if(model->item(rowLast, i)->data().toBool()){
+                needAdd = true;
+                break;
+            }
+        }
+    }else{
+        needAdd = true;
+        for(auto i : importantCols){
+            if(!model->item(rowLast, i)->data().toBool()){
+                needAdd = false;
+                break;
+            }
+        }
+    }
+    if(needAdd){
+        model->appendRow(QList{new QStandardItem});
+    }
 }
 
 void MainWindow::myCopy()

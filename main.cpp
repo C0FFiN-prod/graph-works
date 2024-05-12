@@ -14,7 +14,6 @@ int main(int argc, char *argv[])
         QString styleSheet = styleFile.readAll();
         a.setStyleSheet(styleSheet);
     }
-
     w.show();
     return a.exec();
 }

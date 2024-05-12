@@ -28,6 +28,7 @@ public:
      //getters
     double getWeight();
     double getFlow();
+    EdgeType getEdgeType();
 
     void adjust();
 

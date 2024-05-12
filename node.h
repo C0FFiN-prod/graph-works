@@ -14,7 +14,7 @@ class Node : public QGraphicsItem
 public:
     Node(int index, GraphWidget *graphWidget);
     Node();
-
+    Node(const Node& node);
     void addEdge(Edge *edge);
     QList<Edge *> edges() const;
 

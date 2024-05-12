@@ -5,6 +5,7 @@
 #include "qactiongroup.h"
 #include "qpushbutton.h"
 #include "qshortcut.h"
+#include "qspinbox.h"
 #include "qtableview.h"
 #include <QMap>
 #include <QMainWindow>
@@ -27,11 +28,8 @@ private slots:
     void viewModeChecked(bool checked);
     void myCopy();
     void myPaste();
-    void setNodesAmountSet(QTableView *table, int newAmount);
-
-    void on_buttonApplyAdjMatr_clicked();
-
-    void on_actionAddNode_triggered();
+    void setNodesAmountMatrix(QTableView *table, int newAmount);
+    void setNodesAmountList(QTableView *table, int newAmount);
 
 private:
     Ui::MainWindow *ui;
@@ -41,6 +39,12 @@ private:
     void pinTab();
     void pasteClipboardToTable(QTableView *dest);
     void copyTableToClipboard(QTableView *src);
+    void applyNodesAmountMatrix(QTableView *table);
+    void applyNodesAmountList(QTableView *table);
+    void addRowToList(QTableView *table, const QSet<int>& importantCols);
     QActionGroup *nodeMovementGroup;
+    QList<QTableView *> graphMatrixViews;
+    QList<QTableView *> graphListViews;
+    QMap<QString, QSpinBox *> graphCountSpins;
 };
 #endif // MAINWINDOW_H

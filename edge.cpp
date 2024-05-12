@@ -93,6 +93,11 @@ double Edge::getFlow()
 {
     return this->flow;
 }
+
+EdgeType Edge::getEdgeType()
+{
+    return this->edgeType;
+}
 void Edge::adjust()
 {
     if (!source || !dest)
@@ -114,7 +119,7 @@ void Edge::adjust()
 
 Edge::~Edge()
 {
-    this->source->disconnectFromNode(this->dest);
+    //this->source->disconnectFromNode(this->dest);
 }
 
 QRectF Edge::boundingRect() const

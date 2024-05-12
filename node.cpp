@@ -23,6 +23,15 @@ Node::Node(int index, GraphWidget *graphWidget)
 Node::Node():graph(nullptr), index(0)
 {}
 
+Node::Node(const Node &node) : graph(node.graph), index(node.index)
+{
+    setFlag(ItemIsMovable);
+    setFlag(ItemSendsGeometryChanges);
+    setCacheMode(DeviceCoordinateCache);
+    setZValue(-1);
+    this->setPos(QRandomGenerator::global()->bounded(300), QRandomGenerator::global()->bounded(300));
+}
+
 void Node::addEdge(Edge *edge)
 {
     edgeList << edge;
@@ -170,10 +179,10 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
 
 Node::~Node()
 {
-    for(auto& child: children){
+    for(auto& child: qAsConst(children)){
         this->disconnectFromNode(child);
     }
-    for(auto& parent: parents){
+    for(auto& parent: qAsConst(parents)){
         parent->disconnectFromNode(this);
     }
 }

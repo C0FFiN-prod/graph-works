@@ -8,23 +8,6 @@
 
 typedef QList<QList<double>> Matrix2D;
 
-enum Orientation{
-    Strait = 0,
-    Reversed = 1,
-    Both = 2,
-};
-
-struct EdgeStruct{
-    double weight;
-    double flow;
-    EdgeStruct():
-        weight(0),
-        flow(0){};
-    EdgeStruct(double weight,
-         double flow):
-        weight(weight),
-        flow(flow){};
-};
 class Graph
 {
 public:

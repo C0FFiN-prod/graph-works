@@ -6,14 +6,14 @@
 #include <QRandomGenerator>
 
 GraphWidget::GraphWidget( QMap<QPair<Node*, Node*>, Edge*>* edges,QMap<unsigned int, Node*>* nodes, QWidget *parent)
-    : QGraphicsView(parent), edges(edges), nodes(nodes)
+    : QGraphicsView(parent), scenePtr(nullptr), edges(edges), nodes(nodes)
 {
     this->amount = nodes->size();
+    scenePtr = new QGraphicsScene(this);
+    scenePtr->setItemIndexMethod(QGraphicsScene::NoIndex);
+    scenePtr->setSceneRect(-500, -300, 1000, 600);
+    setScene(scenePtr);
 
-    QGraphicsScene *scene = new QGraphicsScene(this);
-    scene->setItemIndexMethod(QGraphicsScene::NoIndex);
-    scene->setSceneRect(-500, -300, 1000, 600);
-    setScene(scene);
     setCacheMode(CacheBackground);
     setViewportUpdateMode(BoundingRectViewportUpdate);
     setRenderHint(QPainter::Antialiasing);
@@ -31,12 +31,25 @@ void GraphWidget::itemMoved()
 
 void GraphWidget::initScene()
 {
-    for(auto& node: *nodes){
+    scene()->clear();
+    QMap<int, Node*> n;
+    QList<Edge*> e(edges->size());
+    for(auto [i, node] : nodes->asKeyValueRange()){
+        n[i] = new Node(*node);
+    }
+    int i = 0;
+    for(auto& edge : *edges){
+        int u = edge->sourceNode()->getIndex();
+        int v = edge->destNode()->getIndex();
+        e[i++] = new Edge(n[u],n[v],edge->getWeight(), edge->getEdgeType());
+    }
+
+    for(auto& node: n){
         if(!isItemOnScene(scene(), qgraphicsitem_cast<Node *>(node))){
             scene()->addItem(node);
         }
     }
-    for(auto& edge: *edges){
+    for(auto& edge: e){
         if(!isItemOnScene(scene(), qgraphicsitem_cast<Edge *>(edge))){
         scene()->addItem(edge);
         }

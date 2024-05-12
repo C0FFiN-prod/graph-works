@@ -34,10 +34,9 @@ protected:
 
 private:
     int timerId = 0;
-
+    QGraphicsScene *scenePtr;
     QMap<QPair<Node*, Node*>, Edge*>* edges;
     QMap<unsigned int, Node*>* nodes;
-
     int amount;
 };
 bool isItemOnScene(QGraphicsScene *scene, QGraphicsItem *item);

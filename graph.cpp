@@ -90,8 +90,8 @@ void Graph::setMatrixAdjacent(Matrix2D matrix)
             flow.resize(amount);
         }
     }
-    for(i = 0; i != amount; i++){
-        if(needResize){
+    if(needResize){
+        for(i = 0; i != amount; i++){
             adjacent[i].resize(amount);
             if (newAmountIsLess){
                 for(j = amount; j != oldAmount; j++){
@@ -100,30 +100,47 @@ void Graph::setMatrixAdjacent(Matrix2D matrix)
                 }
             }
         }
+    }
+
+    for(i = 0; i != amount; i++){
+
         for(j = i; j != amount; j++){
-            if(adjacent[i][j]&&!matrix[i][j])
+            if(adjacent[i][j]&&!matrix[i][j]){
+                delete edges[qMakePair(nodes[i],nodes[j])];
                 edges.remove(qMakePair(nodes[i],nodes[j]));
+            }
             else if(!adjacent[i][j]&&matrix[i][j]){
                 if(getEdgeType(i,j,matrix)!=EdgeType::Error){
                     edges[qMakePair(nodes[i],nodes[j])] = new Edge(nodes[i],nodes[j], matrix[i][j], fmin(matrix[i][j], adjacent[i][j]), getEdgeType(i,j,matrix));
                 }
             }
             else{
-                edges[qMakePair(nodes[i],nodes[j])]->setWeight(matrix[i][j]);
-                edges[qMakePair(nodes[i],nodes[j])]->setFlow(fmin(matrix[i][j], adjacent[i][j]));
+                if(getEdgeType(i,j,matrix)!=EdgeType::Error){
+                    if (edges.contains(qMakePair(nodes[i],nodes[j]))){
+                        edges[qMakePair(nodes[i],nodes[j])]->setWeight(matrix[i][j]);
+                        edges[qMakePair(nodes[i],nodes[j])]->setFlow(fmin(matrix[i][j], adjacent[i][j]));
+                    }
+                }
             }
-            if(adjacent[j][i]&&!matrix[j][i])
-                edges.remove(qMakePair(nodes[i],nodes[j]));
-            else if(!adjacent[j][i]&&matrix[j][i]){
+            if(adjacent[j][i]&&!matrix[j][i]&&(i!=j)){
+                delete edges[qMakePair(nodes[j],nodes[i])];
+                edges.remove(qMakePair(nodes[j],nodes[i]));
+            }
+            else if(!adjacent[j][i]&&matrix[j][i]&&(i!=j)){
                 if(getEdgeType(j,i,matrix)!=EdgeType::Error){
-                    edges[qMakePair(nodes[j],nodes[i])] =new Edge(nodes[j],nodes[i], matrix[j][i], fmin(matrix[j][i], adjacent[j][i]), getEdgeType(j,i,matrix));
+                    edges[qMakePair(nodes[j],nodes[i])] = new Edge(nodes[j],nodes[i], matrix[j][i], fmin(matrix[j][i], adjacent[j][i]), getEdgeType(j,i,matrix));
                 }
             }
             else{
-                edges[qMakePair(nodes[j],nodes[i])]->setWeight(matrix[j][i]);
-                edges[qMakePair(nodes[j],nodes[i])]->setFlow(fmin(matrix[j][i], adjacent[j][i]));
+                if(getEdgeType(j,i,matrix)!=EdgeType::Error){
+                    if (edges.contains(qMakePair(nodes[j],nodes[i]))){
+                        edges[qMakePair(nodes[j],nodes[i])]->setWeight(matrix[j][i]);
+                        edges[qMakePair(nodes[j],nodes[i])]->setFlow(fmin(matrix[j][i], adjacent[j][i]));
+                    }
+                }
             }
             adjacent[i][j] = matrix[i][j];
+            adjacent[j][i] = matrix[j][i];
         }
     }
 }
