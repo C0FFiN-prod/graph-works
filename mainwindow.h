@@ -21,13 +21,7 @@ public:
     ~MainWindow();
 
 private slots:
-
     void buttonClearConsoleClicked();
-
-    void on_actionUnpin_current_tab_triggered();
-
-
-    void buttonPinToggled(bool checked);
     void viewModeChecked(bool checked);
     void myCopy();
     void myPaste();
@@ -36,12 +30,11 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QMap<QWidget *, QPushButton *> pins;
-    QMap<QString, QWidget *> tabs;
+    QMap<QString, QWidget *> docksViewMode;
     void unpinTab(int index);
     void pinTab();
     void pasteClipboardToTable(QTableView *dest);
     void copyTableToClipboard(QTableView *src);
     QActionGroup *nodeMovementGroup;
-    QShortcut *shortCuts[2];
 };
 #endif // MAINWINDOW_H

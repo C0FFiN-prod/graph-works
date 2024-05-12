@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "qspinbox.h"
 #include "ui_mainwindow.h"
 #include <QStandardItemModel>
 #include <QMessageBox>
@@ -10,65 +11,69 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
-    ui->setupUi(this);
-    QWidget *tab;
-    QAction *act;
-    auto view = ui->menuView_mode;
-/*
+    ui->setupUi(this);    
+    auto spinBoxes = this->findChildren<QSpinBox *>();
     for(auto* table : this->findChildren<QTableView *>()){
-        connect(ui->actionCopy,
-                &QAction::triggered,
-                this,
-                std::bind(&MainWindow::copyTableToClipboard,
-                          this, table));
-        connect(ui->actionPaste,
-                &QAction::triggered,
-                this,
-                std::bind(&MainWindow::pasteClipboardToTable,
-                          this, table));
-        table->setModel(new QStandardItemModel(0,0));
-    }
-*/
-    for(auto* table : this->findChildren<QTableView *>()){
-        table->setModel(new QStandardItemModel(0,0));
-    }
-    // connect(ui->actionCopy, &QAction::triggered,
-    //         this, std::bind(&MainWindow::copy, this));
-    // connect(ui->actionPaste, &QAction::triggered,
-    //         this, std::bind(&MainWindow::paste, this));
-
-    for(int i =ui->tabWidget->count(); i--;){
-        tab =ui->tabWidget->widget(i);
-        tabs[ui->tabWidget->tabText(i)] = tab;
-        act = new QAction(ui->tabWidget->tabText(i));
-        act->setCheckable(true);
-        act->setChecked(true);
-        connect(act, &QAction::toggled, this, &MainWindow::viewModeChecked);
-        view->addAction(act);
-        for(auto button: tab->findChildren<QPushButton *>()){
-            if(button->objectName().startsWith("buttonPin")){
-                pins[tab] = button;
-                connect(button, &QPushButton::clicked, this, &MainWindow::buttonPinToggled);
-            }
-        }
-        auto spinBoxes = tab->findChildren<QSpinBox *>();
-        auto tables = tab->findChildren<QTableView *>();
-        for(auto spinBox: spinBoxes){
-            if(spinBox->objectName().startsWith("nodesCount")){
-                for(int j = tables.count(); j--;){
-                    if(tables[j]->objectName().startsWith("tableGraphMatrix")){
-                        connect(spinBox,
-                                &QSpinBox::valueChanged,
-                                this,
-                                std::bind(&MainWindow::setNodesAmountSet,
-                                          this, tables[j], std::placeholders::_1));
-
-                        tables.remove(j);
+        if(table->objectName().endsWith("Graph")){
+            auto name = table->objectName().replace("table_", "").replace("_Graph", "");
+            for(auto *spinBox : spinBoxes){
+                if(spinBox->objectName().startsWith("spin_"+name))
+                {
+                    if(spinBox->objectName().endsWith("NodesCount")){
+                        if(name.startsWith("Matrix"))
+                            connect(spinBox,
+                                    &QSpinBox::valueChanged,
+                                    this,
+                                    std::bind(&MainWindow::setNodesAmountSet,
+                                              this, table, std::placeholders::_1));
+                        break;
                     }
                 }
             }
         }
+        table->setModel(new QStandardItemModel(0,0));
     }
+    auto view = ui->menuView_mode;
+    auto docks = this->findChildren<QDockWidget *>();
+    if(!docks.empty()){
+        auto dockStack = this->findChild<QDockWidget *>("dock_PlaceHolder");
+        QDockWidget *dockTop = nullptr;
+        for(auto* dock : docks){
+            if(dock!=dockStack){
+                auto act = new QAction(dock->windowTitle());
+                act->setCheckable(true);
+                act->setChecked(true);
+                this->tabifyDockWidget(dockStack, dock);
+                if(!dockTop)
+                    dockTop = dock;
+                docksViewMode.insert(dock->windowTitle(), dock);
+                connect(act, &QAction::triggered,
+                        this, std::bind(&MainWindow::viewModeChecked, this, std::placeholders::_1));
+                view->addAction(act);
+            }
+        }
+        dockStack->setDisabled(true);
+        dockTop->raise();
+        auto tabBar = this->findChild<QTabBar *>();
+        for(int i = 0; i < tabBar->count(); i++){
+            if(tabBar->tabText(i)==""){
+                for(int j = i+1; j < tabBar->count(); j++)
+                    tabBar->moveTab(i++, j);
+                break;
+            }
+
+        }
+        tabBar->setTabEnabled(tabBar->count()-1, false);
+        tabBar->setMovable(false);
+        tabBar->setObjectName("tabBar_Docks");
+
+    }
+
+    connect(ui->actionCopy, &QAction::triggered,
+            this, std::bind(&MainWindow::myCopy, this));
+    connect(ui->actionPaste, &QAction::triggered,
+            this, std::bind(&MainWindow::myPaste, this));
+
 
     nodeMovementGroup = new QActionGroup(this);
     nodeMovementGroup->addAction(ui->actionAutomatic);
@@ -79,54 +84,17 @@ MainWindow::MainWindow(QWidget *parent)
         ((QMenu*)i)->setWindowFlag(Qt::NoDropShadowWindowHint);
         ((QMenu*)i)->setAttribute(Qt::WA_TranslucentBackground);
     }
-
-    shortCuts[0] = new QShortcut(this);
-    shortCuts[0]->setKey(QKeySequence("Ctrl+C"));
-    connect(shortCuts[0], &QShortcut::activated, this, std::bind(&MainWindow::myCopy, this));
-    shortCuts[1] = new QShortcut(this);
-    shortCuts[1]->setKey(QKeySequence("Ctrl+V"));
-    connect(shortCuts[0], &QShortcut::activated, this, std::bind(&MainWindow::myPaste, this));
 }
 
 MainWindow::~MainWindow()
 {
     delete nodeMovementGroup;
     delete ui;
-    for(int i = 2; i--;)
-        delete shortCuts[i];
 }
 
 void MainWindow::buttonClearConsoleClicked()
 {
-    ui->console->clear();
-}
-
-void MainWindow::unpinTab(int index = -1){
-    if(index==-1){
-        index = ui->tabWidget->currentIndex();
-    }
-
-    QWidget *unpinnedTab = ui->tabWidget->widget(index);
-    if(unpinnedTab->objectName()=="graphView")
-        return;
-    unpinnedTab->setWindowTitle(ui->tabWidget->tabText(index));
-    unpinnedTab->hide();
-    pins[unpinnedTab]->setChecked(true);
-    unpinnedTab->setParent(nullptr);
-    unpinnedTab->show();
-}
-void MainWindow::pinTab(){
-    QPushButton* button = qobject_cast<QPushButton*>(sender());
-    auto key = button->nativeParentWidget();
-
-
-    ui->tabWidget->addTab(key, key->windowTitle());
-    for(auto act: ui->menuView_mode->actions()){
-        if(key->windowTitle()==act->text()){
-            ui->tabWidget->setTabVisible(ui->tabWidget->count()-1, act->isChecked());
-            break;
-        }
-    }
+    ui->textEdit_Console->clear();
 }
 
 void MainWindow::pasteClipboardToTable(QTableView *dest)
@@ -186,26 +154,11 @@ void MainWindow::pasteClipboardToTable(QTableView *dest)
     emit model->dataChanged(indexes.first(),model->item(row+i-1, col+j-1)->index());
 }
 
-
-void MainWindow::on_actionUnpin_current_tab_triggered()
-{
-    unpinTab();
-}
-
-void MainWindow::buttonPinToggled(bool checked)
-{
-    if(!checked){
-        pinTab();
-    }else{
-        unpinTab();
-    }
-}
-
 void MainWindow::viewModeChecked(bool checked)
 {
     auto act = qobject_cast<QAction*>(sender());
-    auto *tab = tabs[act->text()];
-    ui->tabWidget->setTabVisible(ui->tabWidget->indexOf(tab), checked);
+    auto *dock = docksViewMode[act->text()];
+    dock->setVisible(checked);
 }
 
 void MainWindow::setNodesAmountSet(QTableView *table, int newAmount)

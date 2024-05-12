@@ -541,7 +541,8 @@ QTableView
     color: #1a1a1a;
     gridline-color: #d4d4d4;
     outline : 0;
-    border-top: 1px solid #ababab;
+    /*border: 1px solid #ababab;*/
+	border-top: 1px solid #ababab;
 }
 
 QTableView QLineEdit {
@@ -677,20 +678,43 @@ QHeaderView::section::horizontal:checked
 /*-----QTabWidget-----*/
 QTabBar {
 	background-color: #f9f9f9;
+	
+}
+
+QTabBar:horizontal {
 	border-top: 1px solid #ababab;
 }
+
+QTabBar:vertical {
+	border-right: 1px solid #ababab;
+}
+
 QTabBar::tab
 {
 	background-color: #f9f9f9;
 	color: #1a1a1a;
+}
+
+QTabBar::tab:vertical {
+	border-top: 1px solid #ababab;
+	border-left: 2px solid #f9f9f9;
+	border-right: 1px solid #ababab;
+	padding: 10px 5px;
+}
+
+QTabBar::tab:horizontal:first {
+	border-left: 1px solid #ababab;
+}
+
+QTabBar::tab:vertical:last {
+	border-bottom: 1px solid #ababab;
+}
+
+QTabBar::tab:horizontal {
 	border-right: 1px solid #ababab;
 	border-top: 1px solid #ababab;
 	border-bottom: 2px solid #f9f9f9;
 	padding: 5px 10px;
-}
-
-QTabBar::tab:first {
-	border-left: 1px solid #ababab;
 }
 
 QTabBar::tab:disabled
@@ -713,10 +737,16 @@ QTabWidget::pane
 
 
 
-QTabBar::tab:selected
+QTabBar::tab:horizontal:selected
 {
 	border-bottom: 2px solid #0078d4;
 	border-top: 1px solid #f9f9f9;
+}
+
+QTabBar::tab:vertical:selected
+{
+	border-left: 2px solid #0078d4;
+	border-right: 1px solid #f9f9f9;
 }
 
 
@@ -733,43 +763,28 @@ QTabBar::tab:!selected:hover
 }
 
 
-
-
-QTabBar::tab:top:selected 
-{
-
-}
-
-
-QTabBar::tab:bottom:selected 
-{
-
-}
-
-
-QTabBar::tab:top:last, QTabBar::tab:bottom:last,
-QTabBar::tab:top:only-one, QTabBar::tab:bottom:only-one 
+QTabBar::tab:horizontal:top:last,		QTabBar::tab:horizontal:bottom:last,
+QTabBar::tab:horizontal:top:only-one, 	QTabBar::tab:horizontal:bottom:only-one 
 {
     margin-right: 0;
-
 }
 
 
-QTabBar::tab:left:!selected 
+QTabBar::tab:horizontal:left:!selected 
 {
     margin-right: 3px;
 
 }
 
 
-QTabBar::tab:right:!selected
+QTabBar::tab:horizontal:right:!selected
 {
     margin-left: 3px;
 
 }
 
 
-QTabBar::tab:left, QTabBar::tab:right 
+QTabBar::tab:horizontal:left, QTabBar::tab:horizontal:right 
 {
     min-height: 8ex;
     margin-bottom: -1px;
@@ -778,22 +793,22 @@ QTabBar::tab:left, QTabBar::tab:right
 }
 
 
-QTabBar::tab:left:selected 
+QTabBar::tab:horizontal:left:selected 
 {
     border-left-color: none;
 
 }
 
 
-QTabBar::tab:right:selected 
+QTabBar::tab:horizontal:right:selected 
 {
     border-right-color: none;
 
 }
 
 
-QTabBar::tab:left:last, QTabBar::tab:right:last,
-QTabBar::tab:left:only-one, QTabBar::tab:right:only-one 
+QTabBar::tab:horizontal:left:last, QTabBar::tab:horizontal:right:last,
+QTabBar::tab:horizontal:left:only-one, QTabBar::tab:horizontal:right:only-one 
 {
     margin-bottom: 0;
 
@@ -995,6 +1010,7 @@ QScrollBar:vertical
 QScrollBar:hover {
 	background: #f0f0f0;
 	padding: 0px;
+	border-radius: 6px;
 }
 
 QScrollBar::add-line,
@@ -1040,4 +1056,88 @@ QDialog QPushButton {
 QDialog QLabel {
 	min-height: 32px;
 	margin-bottom: 0px;
+}
+QDockWidget {
+	margin: 0px;
+	padding: 0px;
+}
+
+QDockWidget::title {
+	background-color: #f3f3f3;
+	border-top-right-radius: 5px;
+	border-bottom-right-radius: 5px;
+	margin: 0px;
+	padding: 8px;
+	border: 1px solid #e5e5e5;
+}
+QDockWidget::float-button {
+	margin: 0px;
+	padding: 5px;
+	color: #1a1a1a;
+	height: 20px;
+}
+
+QDockWidget::float-button:hover {
+	background: #e9e9e9;
+	border: 0px;
+}
+
+QDockWidget::float-button:pressed {
+	background: #ededed;
+	border: 0px;
+}
+
+QDockWidget::close-button {
+	height: 0px;
+	width: 0px;
+	background: none;
+}
+
+QStatusBar {
+	border-top: 1px solid #e5e5e5;
+	background: #f3f3f3;
+	color: #1a1a1a;
+}
+#line {
+	background: #e5e5e5;
+	margin: 5px 0px;
+	width: 1px;
+	max-width: 1px;
+}
+
+QPlainTextEdit,
+QGraphicsView {
+	background: #fefefe;
+	margin: 5px;
+	border: 1px solid #eaeaea;
+	color: #1a1a1a;
+	font-size: 12px;
+}
+
+QDockWidget#dock_PlaceHolder,
+QDockWidget#dock_PlaceHolder * {
+	background: transparent;
+	border: 0px;
+	margin: 0px;
+}
+QDockWidget#dock_PlaceHolder::title {
+	width: 0px;
+	height: 0px;
+	background: transparent;
+	border: 0px;
+}
+
+QTabBar#tabBar_Docks::tab:last:disabled {
+	border: 1px solid #ababab;
+	border-left: 2px solid #f9f9f9;
+	border-top: 1px solid #ababab;
+	border-bottom: 0px;
+	height: 30px;
+	background: transparent;
+	padding: 0px;
+	margin: 0px;
+}
+QTabBar#tabBar_Docks::tab:only-one:disabled {
+	border: 0px;
+	background: transparent;
 }
