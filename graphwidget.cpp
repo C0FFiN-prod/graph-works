@@ -1,12 +1,9 @@
 #include "graphwidget.h"
-#include "edge.h"
-#include "node.h"
+
 
 #include <math.h>
-
 #include <QKeyEvent>
 #include <QRandomGenerator>
-
 
 GraphWidget::GraphWidget( QMap<QPair<Node*, Node*>, Edge*>* edges,QMap<unsigned int, Node*>* nodes, QWidget *parent)
     : QGraphicsView(parent), edges(edges), nodes(nodes)
@@ -34,12 +31,15 @@ void GraphWidget::itemMoved()
 
 void GraphWidget::initScene()
 {
-    scene()->clear();
     for(auto& node: *nodes){
-        scene()->addItem(node);
+        if(!isItemOnScene(scene(), qgraphicsitem_cast<Node *>(node))){
+            scene()->addItem(node);
+        }
     }
     for(auto& edge: *edges){
+        if(!isItemOnScene(scene(), qgraphicsitem_cast<Edge *>(edge))){
         scene()->addItem(edge);
+        }
     }
 }
 
@@ -73,7 +73,6 @@ void GraphWidget::timerEvent(QTimerEvent *event)
 
     for (Node *node : nodes){
         node->calculateForces();
-
     }
 
 
@@ -82,11 +81,6 @@ void GraphWidget::timerEvent(QTimerEvent *event)
         if (node->advancePosition())
             itemsMoved = true;
     }
-    // if(itemsMoved){
-    //     for(Edge *edge: edges){
-    //         edge->adjust();
-    //     }
-    // }
 
     if (!itemsMoved) {
         killTimer(timerId);
@@ -110,7 +104,6 @@ void GraphWidget::scaleView(qreal scaleFactor)
     scale(scaleFactor, scaleFactor);
 }
 
-
 void GraphWidget::shuffle()
 {
     const QList<QGraphicsItem *> items = scene()->items();
@@ -128,4 +121,14 @@ void GraphWidget::zoomIn()
 void GraphWidget::zoomOut()
 {
     scaleView(1 / qreal(1.2));
+}
+
+bool isItemOnScene(QGraphicsScene *scene, QGraphicsItem *item)
+{
+    for(auto i: scene->items()){
+        if(i==item){
+            return true;
+        }
+    }
+    return false;
 }

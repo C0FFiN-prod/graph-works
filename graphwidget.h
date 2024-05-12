@@ -1,9 +1,11 @@
 #ifndef GRAPHWIDGET_H
 #define GRAPHWIDGET_H
 
-
+#include "node.h"
 #include "edge.h"
+
 #include <QGraphicsView>
+
 typedef QList<QList<double>> Matrix2D;
 class Node;
 
@@ -32,13 +34,12 @@ protected:
 
 private:
     int timerId = 0;
-    //Node *centerNode;
-    //Matrix2D matrix;
 
     QMap<QPair<Node*, Node*>, Edge*>* edges;
     QMap<unsigned int, Node*>* nodes;
 
     int amount;
 };
+bool isItemOnScene(QGraphicsScene *scene, QGraphicsItem *item);
 
 #endif // GRAPHWIDGET_H

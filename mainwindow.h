@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "graph.h"
 #include "qpushbutton.h"
 #include <QMap>
 #include <QMainWindow>
@@ -15,6 +16,7 @@ class MainWindow : public QMainWindow
 
 public:
     MainWindow(QWidget *parent = nullptr);
+    Graph graph;
     ~MainWindow();
 
 private slots:
@@ -29,6 +31,8 @@ private slots:
 
 
     void on_buttonApplyAdjMatr_clicked();
+
+    void on_actionAddNode_triggered();
 
 private:
     Ui::MainWindow *ui;

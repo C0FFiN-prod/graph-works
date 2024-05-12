@@ -41,12 +41,12 @@ public:
     void setEdgeFlow(unsigned int u, unsigned int v, double flow);
     void setEdgeWeight(unsigned int u, unsigned int v, double flow);
     void removeEdge(unsigned int u, unsigned int v);
-    //void addNode(unsigned int i, int x, int y);
+    void addNode(unsigned int i);
     //void removeNode(unsigned int i);
 
     GraphWidget *graphView;
 private:
-    EdgeType getEdgeType(int i, int j);
+    EdgeType getEdgeType(int i, int j, Matrix2D matrix);
     unsigned int amount;
 
     QMap<QPair<Node*, Node*>, Edge*> edges;

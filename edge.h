@@ -9,7 +9,8 @@ enum EdgeType{
     BiDirectionalSame =0,
     BiDirectionalDiff = 1,
     SingleDirection = 2,
-    Error =3
+    Loop = 3,
+    Error =-1
 };
 class Node;
 

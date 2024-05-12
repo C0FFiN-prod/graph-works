@@ -101,23 +101,13 @@ void MainWindow::on_viewMode_checked(bool checked)
 
 void MainWindow::on_buttonApplyAdjMatr_clicked()
 {
-    int row =ui->tableAdjMatr->rowCount();
-    int col = ui->tableAdjMatr->columnCount();
-    Matrix2D copy(row, QList<double>(col,0));
-    for(int i = 0 ; i < row; i++){
-        for(int j = 0 ; j < col; j++){
-            if(auto item = ui->tableAdjMatr->item(i, j)==nullptr){
-                copy[i][j] = 0.;
-            }else{
-                copy[i][j] = ui->tableAdjMatr->item(i, j)->text().toDouble();
-            }
-        }
-    }
-    Graph graph(copy);
-    ui->tabWidget->addTab(graph.graphView, "fuck all of ya");
-    graph.graphView->initScene();
-    //GraphWidget *widget = new GraphWidget(copy, nullptr);
-    //ui->tabWidget->addTab(widget, "dsadas");
+
+
+}
+
+
+void MainWindow::on_actionAddNode_triggered()
+{
 
 }
 

@@ -144,30 +144,36 @@ void Node::setIndex(unsigned int num)
 }
 
 
-void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *)
-{
-    painter->setPen(Qt::NoPen);
-    //painter->setBrush(Qt::white);
-
-
-
+void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *) {
+    // drawing circle
     painter->setPen(QPen(Qt::black, 1));
     painter->drawEllipse(-nodeSize/2, -nodeSize/2, nodeSize, nodeSize);
 
+    //font setting up
     QFont font = painter->font();
     font.setBold(true);
     font.setPointSize(14);
     painter->setFont(font);
+
+    //get text boxing
+    QString nodeText = QString::number(index);
+    QFontMetrics metrics(font);
+    QRect textRect = metrics.boundingRect(nodeText);
+
+    //get coords of text
+    QPointF textPnt(-(textRect.width())/2 -0.7 , textRect.height()/3. - 0.7);;
+
+    //drawing text
     painter->setPen(Qt::black);
-    painter->drawText(-5, 7, QString::number(index));
+    painter->drawText(textPnt, nodeText);
 }
 
 Node::~Node()
 {
-    for(auto child: children){
+    for(auto& child: children){
         this->disconnectFromNode(child);
     }
-    for(auto parent: parents){
+    for(auto& parent: parents){
         parent->disconnectFromNode(this);
     }
 }

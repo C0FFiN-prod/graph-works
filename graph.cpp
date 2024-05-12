@@ -79,8 +79,11 @@ void Graph::setMatrixAdjacent(Matrix2D matrix)
 {
     unsigned int i, j, oldAmount = amount;
     short newAmountIsLess = amount > matrix.size(), needResize = this->amount != matrix.size();
-
     amount = matrix.size();
+    //increase nodes amount
+    for(i = oldAmount; i<amount; i++){
+        nodes[i]= new Node(i, graphView);
+    }
     if(needResize){
         adjacent.resize(amount);
         if(!newAmountIsLess){
@@ -100,16 +103,22 @@ void Graph::setMatrixAdjacent(Matrix2D matrix)
         for(j = i; j != amount; j++){
             if(adjacent[i][j]&&!matrix[i][j])
                 edges.remove(qMakePair(nodes[i],nodes[j]));
-            else if(!adjacent[i][j]&&matrix[i][j])
-                edges[qMakePair(nodes[i],nodes[j])] = new Edge(nodes[i],nodes[j], matrix[i][j], fmin(matrix[i][j], adjacent[i][j]), getEdgeType(i,j));
+            else if(!adjacent[i][j]&&matrix[i][j]){
+                if(getEdgeType(i,j,matrix)!=EdgeType::Error){
+                    edges[qMakePair(nodes[i],nodes[j])] = new Edge(nodes[i],nodes[j], matrix[i][j], fmin(matrix[i][j], adjacent[i][j]), getEdgeType(i,j,matrix));
+                }
+            }
             else{
                 edges[qMakePair(nodes[i],nodes[j])]->setWeight(matrix[i][j]);
                 edges[qMakePair(nodes[i],nodes[j])]->setFlow(fmin(matrix[i][j], adjacent[i][j]));
             }
             if(adjacent[j][i]&&!matrix[j][i])
                 edges.remove(qMakePair(nodes[i],nodes[j]));
-            else if(!adjacent[j][i]&&matrix[j][i])
-                edges[qMakePair(nodes[j],nodes[i])] =new Edge(nodes[j],nodes[i], matrix[j][i], fmin(matrix[j][i], adjacent[j][i]), getEdgeType(j,i));
+            else if(!adjacent[j][i]&&matrix[j][i]){
+                if(getEdgeType(j,i,matrix)!=EdgeType::Error){
+                    edges[qMakePair(nodes[j],nodes[i])] =new Edge(nodes[j],nodes[i], matrix[j][i], fmin(matrix[j][i], adjacent[j][i]), getEdgeType(j,i,matrix));
+                }
+            }
             else{
                 edges[qMakePair(nodes[j],nodes[i])]->setWeight(matrix[j][i]);
                 edges[qMakePair(nodes[j],nodes[i])]->setFlow(fmin(matrix[j][i], adjacent[j][i]));
@@ -131,11 +140,11 @@ void Graph::setMatrixFlow(Matrix2D matrix)
         flow.resize(amount);
         if(newAmountIsLess){
             for(i = amount; i != oldAmount; i++){
-                //nodes.remove(i);
+                nodes.remove(i);
             }
         }else{
             for(i = oldAmount; i != amount; i++){
-                //nodes.insert(i, qMove(Node(i, graph)));
+                nodes[i] = new Node(i, graphView);
             }
         }
     }
@@ -153,9 +162,9 @@ void Graph::setMatrixFlow(Matrix2D matrix)
         }
         for(j = i; j != amount; j++){
             if(!adjacent[i][j]&&matrix[i][j]){
-                edges[qMakePair(nodes[i],nodes[j])] = new Edge(nodes[i],nodes[j], matrix[i][j], matrix[i][j], getEdgeType(i,j));
-                //edges.insert(qMakePair(i,j), qMove(EdgeStruct(matrix[i][j], matrix[i][j])));
-                //nodes[i].connectToNode(&nodes[j]);
+                if(getEdgeType(j,i,matrix)!=EdgeType::Error){
+                    edges[qMakePair(nodes[i],nodes[j])] = new Edge(nodes[i],nodes[j], matrix[i][j], matrix[i][j], getEdgeType(i,j, matrix));
+                }
             }
             else {
                 edges[qMakePair(nodes[i],nodes[j])]->setWeight(fmax(adjacent[i][j],matrix[i][j]));
@@ -163,11 +172,11 @@ void Graph::setMatrixFlow(Matrix2D matrix)
             }
             if(adjacent[j][i]&&!matrix[j][i]){
                 edges.remove(qMakePair(nodes[i],nodes[j]));
-                //nodes[j].disconnectFromNode(&nodes[i]);
             }
             else if(!adjacent[j][i]&&matrix[j][i]){
-                edges[qMakePair(nodes[j],nodes[i])] = new Edge(nodes[j],nodes[i], matrix[i][j], matrix[j][i], getEdgeType(j,i));
-                //nodes[j].connectToNode(&nodes[i]);
+                if(getEdgeType(j,i,matrix)!=EdgeType::Error){
+                    edges[qMakePair(nodes[j],nodes[i])] = new Edge(nodes[j],nodes[i], matrix[i][j], matrix[j][i], getEdgeType(j,i,matrix));
+                }
             }
             else {
                 edges[qMakePair(nodes[j],nodes[i])]->setWeight(fmax(adjacent[j][i],matrix[j][i]));
@@ -191,17 +200,19 @@ void Graph::setEdgeFlow(unsigned int u, unsigned int v, double flow)
     edges[key]->setFlow(flow);
 }
 
-EdgeType Graph::getEdgeType(int i, int j)
+EdgeType Graph::getEdgeType(int i, int j, Matrix2D matrix)
 {
-    if(adjacent[i][j]==adjacent[j][i] && adjacent[i][j]!=0 &&i<j){
+    if(matrix[i][j]==matrix[j][i] && matrix[i][j]!=0 &&i<j){
         return EdgeType::BiDirectionalSame;
 
-    }else if(adjacent[i][j]!=0 && adjacent[j][i]!=0 && adjacent[i][j]!=adjacent[j][i]){
+    }else if(matrix[i][j]!=0 && matrix[j][i]!=0 && matrix[i][j]!=matrix[j][i]){
         return EdgeType::BiDirectionalDiff;
 
-    }else if((adjacent[i][j]!=0 && adjacent[j][j]==0)||(adjacent[j][i]!=0 && adjacent[i][j]==0)){
+    }else if((matrix[i][j]!=0 && matrix[j][j]==0)||(matrix[j][i]!=0 && matrix[i][j]==0)){
         return EdgeType::SingleDirection;
 
+    }else if(i==j && matrix[i][j]!=0){
+        return EdgeType::Loop;
     }
     return Error;
 }
@@ -218,25 +229,25 @@ void Graph::removeEdge(unsigned int u, unsigned int v)
     flow[u][v] = 0;
 }
 
-// void Graph::addNode(unsigned int i, int x, int y)
-// {
-//     if(nodes.contains(i))
-//         throw std::runtime_error("Node already exists");
-//     //nodes.insert(i, qMove(Node(i, graph)));
-//     short adjacentIsLess = adjacent.capacity() < amount+1;
-//     short flowIsLess = flow.capacity() < amount+1;
-//     if (adjacentIsLess||flowIsLess){
-//         if(adjacentIsLess)
-//             adjacent.resize(amount+1);
-//         if(flowIsLess)
-//             flow.resize(amount+1);
-//         for(unsigned int j = 0; j != amount+1; j++){
-//             if(adjacentIsLess)
-//                 adjacent[j].resize(amount+1);
-//             if(flowIsLess)
-//                 flow[j].resize(amount+1);
+void Graph::addNode(unsigned int i)
+{
+    if(nodes.contains(i))
+        throw std::runtime_error("Node already exists");
+    nodes[i] = new Node(i, graphView);
+    short adjacentIsLess = adjacent.capacity() < amount+1;
+    short flowIsLess = flow.capacity() < amount+1;
+    if (adjacentIsLess||flowIsLess){
+        if(adjacentIsLess)
+            adjacent.resize(amount+1);
+        if(flowIsLess)
+            flow.resize(amount+1);
+        for(unsigned int j = 0; j != amount+1; j++){
+            if(adjacentIsLess)
+                adjacent[j].resize(amount+1);
+            if(flowIsLess)
+                flow[j].resize(amount+1);
 
-//         }
-//     }
-// }
+        }
+    }
+}
 
