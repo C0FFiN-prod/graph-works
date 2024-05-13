@@ -29,7 +29,7 @@ public:
 
     GraphWidget *graphView;
 private:
-    EdgeType getEdgeType(int i, int j, Matrix2D matrix);
+    EdgeType getEdgeType(int i, int j, Matrix2D &matrix);
     unsigned int amount;
 
     QMap<QPair<Node*, Node*>, Edge*> edges;

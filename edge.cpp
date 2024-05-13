@@ -84,6 +84,11 @@ void Edge::setFlow(double flow)
     this->flow = flow;
 }
 
+void Edge::setEdgeType(EdgeType type)
+{
+    this->edgeType = type;
+}
+
 double Edge::getWeight()
 {
     return this->weight;

@@ -20,7 +20,6 @@ public:
     void initScene();
 
 public slots:
-    void shuffle();
     void zoomIn();
     void zoomOut();
 protected:

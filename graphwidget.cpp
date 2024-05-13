@@ -31,27 +31,14 @@ void GraphWidget::itemMoved()
 
 void GraphWidget::initScene()
 {
-    scene()->clear();
-    QMap<int, Node*> n;
-    QList<Edge*> e(edges->size());
-    for(auto [i, node] : nodes->asKeyValueRange()){
-        n[i] = new Node(*node);
-    }
-    int i = 0;
-    for(auto& edge : *edges){
-        int u = edge->sourceNode()->getIndex();
-        int v = edge->destNode()->getIndex();
-        e[i++] = new Edge(n[u],n[v],edge->getWeight(), edge->getEdgeType());
-    }
-
-    for(auto& node: n){
+    for(auto& node: *nodes){
         if(!isItemOnScene(scene(), qgraphicsitem_cast<Node *>(node))){
             scene()->addItem(node);
         }
     }
-    for(auto& edge: e){
+    for(auto& edge: *edges){
         if(!isItemOnScene(scene(), qgraphicsitem_cast<Edge *>(edge))){
-        scene()->addItem(edge);
+            scene()->addItem(edge);
         }
     }
 }
@@ -60,7 +47,6 @@ void GraphWidget::keyPressEvent(QKeyEvent *event)
 {
     switch (event->key()) {
     case Qt::Key_Enter:
-        shuffle();
         break;
     default:
         QGraphicsView::keyPressEvent(event);
@@ -115,15 +101,6 @@ void GraphWidget::scaleView(qreal scaleFactor)
         return;
 
     scale(scaleFactor, scaleFactor);
-}
-
-void GraphWidget::shuffle()
-{
-    const QList<QGraphicsItem *> items = scene()->items();
-    for (QGraphicsItem *item : items) {
-        if (qgraphicsitem_cast<Node *>(item))
-            item->setPos(-150 + QRandomGenerator::global()->bounded(300), -150 + QRandomGenerator::global()->bounded(300));
-    }
 }
 
 void GraphWidget::zoomIn()

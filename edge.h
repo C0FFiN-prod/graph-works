@@ -25,6 +25,7 @@ public:
      //setters
     void setWeight(double weight);
     void setFlow(double flow);
+    void setEdgeType(EdgeType type);
      //getters
     double getWeight();
     double getFlow();

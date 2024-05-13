@@ -23,14 +23,6 @@ Node::Node(int index, GraphWidget *graphWidget)
 Node::Node():graph(nullptr), index(0)
 {}
 
-Node::Node(const Node &node) : graph(node.graph), index(node.index)
-{
-    setFlag(ItemIsMovable);
-    setFlag(ItemSendsGeometryChanges);
-    setCacheMode(DeviceCoordinateCache);
-    setZValue(-1);
-    this->setPos(QRandomGenerator::global()->bounded(300), QRandomGenerator::global()->bounded(300));
-}
 
 void Node::addEdge(Edge *edge)
 {
@@ -71,7 +63,7 @@ void Node::calculateForces()
 
     // Now subtract all forces pulling items together
     double weight = (edgeList.size() + 1) * 50;
-    for (const Edge *edge : qAsConst(edgeList)) {
+    for (const Edge *edge : std::as_const(edgeList)) {
         QPointF vec;
         if (edge->sourceNode() == this)
             vec = mapToItem(edge->destNode(), 0, 0);
@@ -112,10 +104,28 @@ void Node::disconnectFromNode(Node *node) {
     if (node == nullptr) {
         return;
     }
-
-    if(children.find(node)!=children.end()){
-        this->children.remove(node);
-        node->parents.remove(this);
+    if(node == this){
+        for(int i = this->edgeList.count(); i--;)
+            if (edgeList[i]->getEdgeType() == EdgeType::Loop) {
+                edgeList.takeAt(i);
+            }
+        if(children.find(this)!=children.end()){
+            this->children.remove(this);
+            this->parents.remove(this);
+        }
+    }else {
+        for(int i = this->edgeList.count(); i--;)
+            if((edgeList[i]->destNode() == node)){
+                edgeList.takeAt(i);
+            }
+        for(int i = node->edgeList.count(); i--;)
+            if (node->edgeList[i]->sourceNode() == this){
+                node->edgeList.takeAt(i);
+            }
+        if(children.find(node)!=children.end()){
+            this->children.remove(node);
+            node->parents.remove(this);
+        }
     }
 }
 
@@ -179,10 +189,10 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
 
 Node::~Node()
 {
-    for(auto& child: qAsConst(children)){
+    for(auto& child: std::as_const(children)){
         this->disconnectFromNode(child);
     }
-    for(auto& parent: qAsConst(parents)){
+    for(auto& parent: std::as_const(parents)){
         parent->disconnectFromNode(this);
     }
 }

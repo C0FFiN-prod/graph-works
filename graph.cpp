@@ -95,49 +95,61 @@ void Graph::setMatrixAdjacent(Matrix2D matrix)
             adjacent[i].resize(amount);
             if (newAmountIsLess){
                 for(j = amount; j != oldAmount; j++){
-                    edges.remove(qMakePair(nodes[i],nodes[j]));
-                    edges.remove(qMakePair(nodes[j],nodes[i]));
+                    if(edges.contains(qMakePair(nodes[i],nodes[j]))){
+                        graphView->scene()->removeItem(edges[qMakePair(nodes[i],nodes[j])]);
+                        delete edges.take(qMakePair(nodes[i],nodes[j]));
+                    }
+                    if(i!=j && edges.contains(qMakePair(nodes[j],nodes[i]))){
+                        graphView->scene()->removeItem(edges[qMakePair(nodes[j],nodes[i])]);
+                        delete edges.take(qMakePair(nodes[j],nodes[i]));
+                    }
                 }
             }
         }
+        if(newAmountIsLess)
+            for(i = amount; i != oldAmount; i++){
+                if(nodes.contains(i)){
+                    graphView->scene()->removeItem(nodes[i]);
+                    delete nodes.take(i);
+                }
+            }
     }
 
     for(i = 0; i != amount; i++){
 
         for(j = i; j != amount; j++){
             if(adjacent[i][j]&&!matrix[i][j]){
-                delete edges[qMakePair(nodes[i],nodes[j])];
-                edges.remove(qMakePair(nodes[i],nodes[j]));
+                if(edges.contains(qMakePair(nodes[i],nodes[j]))){
+                    graphView->scene()->removeItem(edges[qMakePair(nodes[i],nodes[j])]);
+                    nodes[i]->disconnectFromNode(nodes[j]);
+                    delete edges.take(qMakePair(nodes[i],nodes[j]));
+                }
             }
             else if(!adjacent[i][j]&&matrix[i][j]){
-                if(getEdgeType(i,j,matrix)!=EdgeType::Error){
-                    edges[qMakePair(nodes[i],nodes[j])] = new Edge(nodes[i],nodes[j], matrix[i][j], fmin(matrix[i][j], adjacent[i][j]), getEdgeType(i,j,matrix));
-                }
+                nodes[i]->connectToNode(nodes[j]);
+                edges[qMakePair(nodes[i],nodes[j])] = new Edge(nodes[i],nodes[j], matrix[i][j], fmin(matrix[i][j], adjacent[i][j]), getEdgeType(i,j,matrix));
+
             }
-            else{
-                if(getEdgeType(i,j,matrix)!=EdgeType::Error){
-                    if (edges.contains(qMakePair(nodes[i],nodes[j]))){
-                        edges[qMakePair(nodes[i],nodes[j])]->setWeight(matrix[i][j]);
-                        edges[qMakePair(nodes[i],nodes[j])]->setFlow(fmin(matrix[i][j], adjacent[i][j]));
-                    }
-                }
+            else if(adjacent[i][j]&&matrix[i][j]){
+                auto edge = edges[qMakePair(nodes[i],nodes[j])];
+                edge->setWeight(matrix[i][j]);
+                edge->setFlow(fmin(matrix[i][j], adjacent[i][j]));
+                edge->setEdgeType(getEdgeType(i, j, matrix));
             }
             if(adjacent[j][i]&&!matrix[j][i]&&(i!=j)){
-                delete edges[qMakePair(nodes[j],nodes[i])];
-                edges.remove(qMakePair(nodes[j],nodes[i]));
+                graphView->scene()->removeItem(edges[qMakePair(nodes[j],nodes[i])]);
+                nodes[j]->disconnectFromNode(nodes[i]);
+                delete edges.take(qMakePair(nodes[j],nodes[i]));
             }
             else if(!adjacent[j][i]&&matrix[j][i]&&(i!=j)){
-                if(getEdgeType(j,i,matrix)!=EdgeType::Error){
-                    edges[qMakePair(nodes[j],nodes[i])] = new Edge(nodes[j],nodes[i], matrix[j][i], fmin(matrix[j][i], adjacent[j][i]), getEdgeType(j,i,matrix));
-                }
+                nodes[j]->connectToNode(nodes[i]);
+                edges[qMakePair(nodes[j],nodes[i])] = new Edge(nodes[j],nodes[i], matrix[j][i], fmin(matrix[j][i], adjacent[j][i]), getEdgeType(j,i,matrix));
             }
-            else{
-                if(getEdgeType(j,i,matrix)!=EdgeType::Error){
-                    if (edges.contains(qMakePair(nodes[j],nodes[i]))){
-                        edges[qMakePair(nodes[j],nodes[i])]->setWeight(matrix[j][i]);
-                        edges[qMakePair(nodes[j],nodes[i])]->setFlow(fmin(matrix[j][i], adjacent[j][i]));
-                    }
-                }
+            else if (adjacent[j][i]&&matrix[j][i]&&(i!=j)){
+                auto edge = edges[qMakePair(nodes[j],nodes[i])];
+                edge->setWeight(matrix[j][i]);
+                edge->setFlow(fmin(matrix[j][i], adjacent[j][i]));
+                edge->setEdgeType(getEdgeType(j, i, matrix));
             }
             adjacent[i][j] = matrix[i][j];
             adjacent[j][i] = matrix[j][i];
@@ -179,9 +191,7 @@ void Graph::setMatrixFlow(Matrix2D matrix)
         }
         for(j = i; j != amount; j++){
             if(!adjacent[i][j]&&matrix[i][j]){
-                if(getEdgeType(j,i,matrix)!=EdgeType::Error){
-                    edges[qMakePair(nodes[i],nodes[j])] = new Edge(nodes[i],nodes[j], matrix[i][j], matrix[i][j], getEdgeType(i,j, matrix));
-                }
+                edges[qMakePair(nodes[i],nodes[j])] = new Edge(nodes[i],nodes[j], matrix[i][j], matrix[i][j], getEdgeType(i,j, matrix));
             }
             else {
                 edges[qMakePair(nodes[i],nodes[j])]->setWeight(fmax(adjacent[i][j],matrix[i][j]));
@@ -191,9 +201,7 @@ void Graph::setMatrixFlow(Matrix2D matrix)
                 edges.remove(qMakePair(nodes[i],nodes[j]));
             }
             else if(!adjacent[j][i]&&matrix[j][i]){
-                if(getEdgeType(j,i,matrix)!=EdgeType::Error){
-                    edges[qMakePair(nodes[j],nodes[i])] = new Edge(nodes[j],nodes[i], matrix[i][j], matrix[j][i], getEdgeType(j,i,matrix));
-                }
+                edges[qMakePair(nodes[j],nodes[i])] = new Edge(nodes[j],nodes[i], matrix[i][j], matrix[j][i], getEdgeType(j,i,matrix));
             }
             else {
                 edges[qMakePair(nodes[j],nodes[i])]->setWeight(fmax(adjacent[j][i],matrix[j][i]));
@@ -217,7 +225,7 @@ void Graph::setEdgeFlow(unsigned int u, unsigned int v, double flow)
     edges[key]->setFlow(flow);
 }
 
-EdgeType Graph::getEdgeType(int i, int j, Matrix2D matrix)
+EdgeType Graph::getEdgeType(int i, int j, Matrix2D& matrix)
 {
     if(matrix[i][j]==matrix[j][i] && matrix[i][j]!=0 &&i<j){
         return EdgeType::BiDirectionalSame;
@@ -225,7 +233,7 @@ EdgeType Graph::getEdgeType(int i, int j, Matrix2D matrix)
     }else if(matrix[i][j]!=0 && matrix[j][i]!=0 && matrix[i][j]!=matrix[j][i]){
         return EdgeType::BiDirectionalDiff;
 
-    }else if((matrix[i][j]!=0 && matrix[j][j]==0)||(matrix[j][i]!=0 && matrix[i][j]==0)){
+    }else if((matrix[i][j]!=0 && matrix[j][i]==0)||(matrix[j][i]!=0 && matrix[i][j]==0)){
         return EdgeType::SingleDirection;
 
     }else if(i==j && matrix[i][j]!=0){

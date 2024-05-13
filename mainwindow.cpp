@@ -150,11 +150,13 @@ void MainWindow::buttonClearConsoleClicked()
 void MainWindow::pasteClipboardToTable(QTableView *dest)
 {
     if(!dest->hasFocus()) return;
-    static QRegularExpression re("\t|(?=\n)");
+    static QRegularExpression reSplit("\t|(?=\n)");
+    static QRegularExpression reValid("([0-9]+(\\.[0-9]+)?(\t|\n))+");
+    QString text = QApplication::clipboard()->text();
+    if(!reValid.match(text).hasMatch()) return;
     QStandardItemModel * model = static_cast<QStandardItemModel*>(dest->model());
     QItemSelectionModel * selection = dest->selectionModel();
     QModelIndexList indexes = selection->selectedIndexes();
-    QString text = QApplication::clipboard()->text();
     if(indexes.empty()) return;
     int maxIndexCol=0, maxIndexRow=0;
     if (indexes.count() == 1){
@@ -173,7 +175,7 @@ void MainWindow::pasteClipboardToTable(QTableView *dest)
     int row=indexes.first().row();
     int col=indexes.first().column();
     int i = 0, j = 0, dt = 0;
-    auto data = text.split(re);
+    auto data = text.split(reSplit);
     int data_len = data.count();
     QString textToCell;
     while(((row+i < maxIndexRow)) && (dt < data_len))
@@ -340,21 +342,19 @@ void MainWindow::applyNodesAmountMatrix(QTableView *table)
         model->setColumnCount(newAmount);
         model->setRowCount(newAmount);
     }
-    for(auto* t : graphMatrixViews){
-        if(t->objectName().contains("Adj")){
-            Matrix2D m(newAmount);
-            QStandardItemModel* mod = static_cast<QStandardItemModel*>(t->model());
-            for(int i = 0; i < newAmount; i++){
-                m[i].resize(newAmount);
-                for(int j = 0; j < newAmount; j++){
-                    m[i][j] = mod->item(i, j)->data().toDouble();
-                }
-            }
-            graph.setMatrixAdjacent(m);
-            graph.graphView->initScene();
-            break;
+    Matrix2D m(newAmount);
+    for(int i = 0; i < newAmount; i++){
+        m[i].resize(newAmount);
+        for(int j = 0; j < newAmount; j++){
+            m[i][j] = model->item(i, j)->text().toDouble();
         }
     }
+    if(table->objectName().contains("Adj"))
+        graph.setMatrixAdjacent(m);
+    else if(table->objectName().contains("Flow"))
+        graph.setMatrixFlow(m);
+    graph.graphView->initScene();
+
 }
 
 void MainWindow::applyNodesAmountList(QTableView *table)
