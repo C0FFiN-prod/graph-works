@@ -69,10 +69,13 @@ void GraphWidget::timerEvent(QTimerEvent *event)
             edges << edge;
         }
     }
+    int w = this->width()-10, h = this->height()-10;
+    scene()->setSceneRect(-w/2, -h/2, w, h);
 
     for (Node *node : nodes){
         node->calculateForces();
     }
+
 
 
     bool itemsMoved = false;

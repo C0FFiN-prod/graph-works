@@ -16,7 +16,7 @@ public:
     Node();
     Node(const Node& node);
     void addEdge(Edge *edge);
-    QList<Edge *> edges() const;
+    QSet<Edge *> edges() const;
 
     enum { Type = UserType + 1 };
     int type() const override { return Type; }
@@ -46,7 +46,7 @@ protected:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 
 private:
-    QList<Edge *> edgeList;
+    QSet<Edge *> edgeList;
     QSet<Node *> children;
     QSet<Node *> parents;
 

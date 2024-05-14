@@ -30,7 +30,7 @@ void Node::addEdge(Edge *edge)
     edge->adjust();
 }
 
-QList<Edge *> Node::edges() const
+QSet<Edge *> Node::edges() const
 {
     return edgeList;
 }
@@ -105,24 +105,22 @@ void Node::disconnectFromNode(Node *node) {
         return;
     }
     if(node == this){
-        for(int i = this->edgeList.count(); i--;)
-            if (edgeList[i]->getEdgeType() == EdgeType::Loop) {
-                edgeList.takeAt(i);
-            }
+
         if(children.find(this)!=children.end()){
+            edgeList.removeIf([](Edge* i){
+                return i->getEdgeType() == EdgeType::Loop;
+            });
             this->children.remove(this);
             this->parents.remove(this);
         }
     }else {
-        for(int i = this->edgeList.count(); i--;)
-            if((edgeList[i]->destNode() == node)){
-                edgeList.takeAt(i);
-            }
-        for(int i = node->edgeList.count(); i--;)
-            if (node->edgeList[i]->sourceNode() == this){
-                node->edgeList.takeAt(i);
-            }
         if(children.find(node)!=children.end()){
+            edgeList.removeIf([&node](Edge* i){
+                return i->destNode() == node;
+            });
+            node->edgeList.removeIf([this](Edge* i){
+                return i->sourceNode() == this;
+            });
             this->children.remove(node);
             node->parents.remove(this);
         }

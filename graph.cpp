@@ -78,29 +78,28 @@ const Matrix2D Graph::getMatrixFlow()
 void Graph::setMatrixAdjacent(Matrix2D matrix)
 {
     unsigned int i, j, oldAmount = amount;
-    short newAmountIsLess = amount > matrix.size(), needResize = this->amount != matrix.size();
+    short newAmountIsLess = amount > matrix.size(),
+        needResize = amount != matrix.size();
     amount = matrix.size();
     //increase nodes amount
-    for(i = oldAmount; i<amount; i++){
-        nodes[i]= new Node(i, graphView);
-    }
     if(needResize){
         adjacent.resize(amount);
         if(!newAmountIsLess){
             flow.resize(amount);
         }
-    }
-    if(needResize){
-        for(i = 0; i != amount; i++){
+        for(i = 0; i != amount; i++)
             adjacent[i].resize(amount);
-            if (newAmountIsLess){
+        if (newAmountIsLess){
+            for(i = 0; i != oldAmount; i++){
                 for(j = amount; j != oldAmount; j++){
                     if(edges.contains(qMakePair(nodes[i],nodes[j]))){
                         graphView->scene()->removeItem(edges[qMakePair(nodes[i],nodes[j])]);
+                        nodes[i]->disconnectFromNode(nodes[j]);
                         delete edges.take(qMakePair(nodes[i],nodes[j]));
                     }
                     if(i!=j && edges.contains(qMakePair(nodes[j],nodes[i]))){
                         graphView->scene()->removeItem(edges[qMakePair(nodes[j],nodes[i])]);
+                        nodes[j]->disconnectFromNode(nodes[i]);
                         delete edges.take(qMakePair(nodes[j],nodes[i]));
                     }
                 }
@@ -112,6 +111,10 @@ void Graph::setMatrixAdjacent(Matrix2D matrix)
                     graphView->scene()->removeItem(nodes[i]);
                     delete nodes.take(i);
                 }
+            }
+        else
+            for(i = oldAmount; i<amount; i++){
+                nodes[i]= new Node(i, graphView);
             }
     }
 
@@ -155,6 +158,7 @@ void Graph::setMatrixAdjacent(Matrix2D matrix)
             adjacent[j][i] = matrix[j][i];
         }
     }
+
 }
 
 void Graph::setMatrixFlow(Matrix2D matrix)
