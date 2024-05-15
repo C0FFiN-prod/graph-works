@@ -21,7 +21,7 @@ public:
     enum { Type = UserType + 1 };
     int type() const override { return Type; }
 
-    void calculateForces();
+    void calculateForces(bool manual);
     bool advancePosition();
 
     void connectToNode(Node* node);

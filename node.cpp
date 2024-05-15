@@ -35,9 +35,9 @@ QSet<Edge *> Node::edges() const
     return edgeList;
 }
 
-void Node::calculateForces()
+void Node::calculateForces(bool manual)
 {
-    if (!scene() || scene()->mouseGrabberItem() == this) {
+    if (!scene() || manual || scene()->mouseGrabberItem() == this) {
         newPos = pos();
         return;
     }

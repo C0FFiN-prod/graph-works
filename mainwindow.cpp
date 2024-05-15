@@ -82,6 +82,28 @@ MainWindow::MainWindow(QWidget *parent)
         if(table->model()==nullptr)
             table->setModel(new QStandardItemModel(0,0));
     }
+
+    connect(ui->actionBandwidth, &QAction::triggered, this, [this](bool checked){
+        if(checked)
+            this->graph.setFlag(GraphFlags::ShowBandwidth);
+        else
+            this->graph.unsetFlag(GraphFlags::ShowBandwidth);
+    });
+
+    connect(ui->actionWeights, &QAction::triggered, this, [this](bool checked){
+        if(checked)
+            this->graph.setFlag(GraphFlags::ShowWeights);
+        else
+            this->graph.unsetFlag(GraphFlags::ShowWeights);
+    });
+
+    connect(ui->actionFlow, &QAction::triggered, this, [this](bool checked){
+        if(checked)
+            this->graph.setFlag(GraphFlags::ShowFlow);
+        else
+            this->graph.unsetFlag(GraphFlags::ShowFlow);
+    });
+
     auto view = ui->menuView_mode;
     auto docks = this->findChildren<QDockWidget *>();
     if(!docks.empty()){
@@ -117,7 +139,7 @@ MainWindow::MainWindow(QWidget *parent)
         tabBar->setObjectName("tabBar_Docks");
 
     }
-    ui->centralwidget->layout()->removeWidget(ui->graphicsView);
+    ui->centralwidget->layout()->removeWidget(ui->graphView);
     ui->centralwidget->layout()->addWidget(graph.graphView);
     connect(ui->actionCopy, &QAction::triggered,
             this, std::bind(&MainWindow::myCopy, this));
@@ -128,7 +150,11 @@ MainWindow::MainWindow(QWidget *parent)
     nodeMovementGroup = new QActionGroup(this);
     nodeMovementGroup->addAction(ui->actionAutomatic);
     nodeMovementGroup->addAction(ui->actionManual);
-    ui->actionManual->setChecked(true);
+    connect(ui->actionManual, &QAction::triggered, this,
+            [this](bool checked){if (checked) graph.setFlag(GraphFlags::ManualMode);});
+    connect(ui->actionAutomatic, &QAction::triggered, this,
+            [this](bool checked){if (checked) graph.unsetFlag(GraphFlags::ManualMode);});
+    ui->actionAutomatic->setChecked(true);
     for(auto& i: ui->menubar->children()){
         ((QMenu*)i)->setWindowFlag(Qt::FramelessWindowHint);
         ((QMenu*)i)->setWindowFlag(Qt::NoDropShadowWindowHint);

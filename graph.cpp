@@ -4,8 +4,9 @@ Graph::Graph():
     amount(0),
     adjacent(Matrix2D(10, QList<double>(10, 0))),
     flow(Matrix2D(10, QList<double>(10, 0)))
-    {
-    graphView = new GraphWidget(&edges, &nodes);
+{
+    graphView = new GraphWidget(&edges, &nodes, &flags);
+    Edge::setFlagsPtr(&flags);
 }
 
 Graph::Graph(unsigned int size):
@@ -13,16 +14,17 @@ Graph::Graph(unsigned int size):
     adjacent(Matrix2D(size, QList<double>(size, 0))),
     flow(Matrix2D(size, QList<double>(size, 0)))
     {
-    graphView = new GraphWidget(&edges, &nodes);
+    graphView = new GraphWidget(&edges, &nodes, &flags);
+    Edge::setFlagsPtr(&flags);
 }
 
-Graph::Graph(Matrix2D matrix):
+Graph::Graph(Matrix2D &matrix):
     amount(matrix.size()),
     adjacent(matrix),
     flow(Matrix2D(amount, QList<double>(amount, 0)))
 {
-
-    graphView = new GraphWidget(&edges, &nodes);
+    graphView = new GraphWidget(&edges, &nodes, &flags);
+    Edge::setFlagsPtr(&flags);
     //create nodes accoring to matrix size
     for(unsigned int i = 0; i!= amount; i++){ //adding all nodes
         //Node *node1 = new Node(i, graphView);
@@ -74,128 +76,62 @@ const Matrix2D Graph::getMatrixFlow()
     return flow;
 }
 
-
-void Graph::setMatrixAdjacent(Matrix2D matrix)
+const Matrix2D Graph::getMatrixBandwidth()
 {
-    unsigned int i, j, oldAmount = amount;
-    short newAmountIsLess = amount > matrix.size(),
-        needResize = amount != matrix.size();
-    amount = matrix.size();
-    //increase nodes amount
-    if(needResize){
-        adjacent.resize(amount);
-        if(!newAmountIsLess){
-            flow.resize(amount);
-        }
-        for(i = 0; i != amount; i++)
-            adjacent[i].resize(amount);
-        if (newAmountIsLess){
-            for(i = 0; i != oldAmount; i++){
-                for(j = amount; j != oldAmount; j++){
-                    if(edges.contains(qMakePair(nodes[i],nodes[j]))){
-                        graphView->scene()->removeItem(edges[qMakePair(nodes[i],nodes[j])]);
-                        nodes[i]->disconnectFromNode(nodes[j]);
-                        delete edges.take(qMakePair(nodes[i],nodes[j]));
-                    }
-                    if(i!=j && edges.contains(qMakePair(nodes[j],nodes[i]))){
-                        graphView->scene()->removeItem(edges[qMakePair(nodes[j],nodes[i])]);
-                        nodes[j]->disconnectFromNode(nodes[i]);
-                        delete edges.take(qMakePair(nodes[j],nodes[i]));
-                    }
-                }
-            }
-        }
-        if(newAmountIsLess)
-            for(i = amount; i != oldAmount; i++){
-                if(nodes.contains(i)){
-                    graphView->scene()->removeItem(nodes[i]);
-                    delete nodes.take(i);
-                }
-            }
-        else
-            for(i = oldAmount; i<amount; i++){
-                nodes[i]= new Node(i, graphView);
-            }
-    }
+    return bandwidth;
+}
+
+
+void Graph::setMatrixAdjacent(Matrix2D &matrix)
+{
+    unsigned int i, j;
+    resizeGraph(amount, matrix.size());
 
     for(i = 0; i != amount; i++){
-
         for(j = i; j != amount; j++){
             if(adjacent[i][j]&&!matrix[i][j]){
-                if(edges.contains(qMakePair(nodes[i],nodes[j]))){
-                    graphView->scene()->removeItem(edges[qMakePair(nodes[i],nodes[j])]);
-                    nodes[i]->disconnectFromNode(nodes[j]);
-                    delete edges.take(qMakePair(nodes[i],nodes[j]));
-                }
+                removeEdge(i, j);
             }
             else if(!adjacent[i][j]&&matrix[i][j]){
                 nodes[i]->connectToNode(nodes[j]);
-                edges[qMakePair(nodes[i],nodes[j])] = new Edge(nodes[i],nodes[j], matrix[i][j], fmin(matrix[i][j], adjacent[i][j]), getEdgeType(i,j,matrix));
+                edges[qMakePair(nodes[i],nodes[j])] = new Edge(nodes[i],nodes[j], matrix[i][j], getEdgeType(i,j,matrix));
 
             }
             else if(adjacent[i][j]&&matrix[i][j]){
                 auto edge = edges[qMakePair(nodes[i],nodes[j])];
                 edge->setWeight(matrix[i][j]);
-                edge->setFlow(fmin(matrix[i][j], adjacent[i][j]));
                 edge->setEdgeType(getEdgeType(i, j, matrix));
             }
-            if(adjacent[j][i]&&!matrix[j][i]&&(i!=j)){
-                graphView->scene()->removeItem(edges[qMakePair(nodes[j],nodes[i])]);
-                nodes[j]->disconnectFromNode(nodes[i]);
-                delete edges.take(qMakePair(nodes[j],nodes[i]));
+            if((i!=j)&&adjacent[j][i]&&!matrix[j][i]){
+                removeEdge(j, i);
             }
-            else if(!adjacent[j][i]&&matrix[j][i]&&(i!=j)){
+            else if((i!=j)&&!adjacent[j][i]&&matrix[j][i]){
                 nodes[j]->connectToNode(nodes[i]);
-                edges[qMakePair(nodes[j],nodes[i])] = new Edge(nodes[j],nodes[i], matrix[j][i], fmin(matrix[j][i], adjacent[j][i]), getEdgeType(j,i,matrix));
+                edges[qMakePair(nodes[j],nodes[i])] = new Edge(nodes[j],nodes[i], matrix[j][i], getEdgeType(j,i,matrix));
             }
-            else if (adjacent[j][i]&&matrix[j][i]&&(i!=j)){
+            else if ((i!=j)&&adjacent[j][i]&&matrix[j][i]){
                 auto edge = edges[qMakePair(nodes[j],nodes[i])];
                 edge->setWeight(matrix[j][i]);
-                edge->setFlow(fmin(matrix[j][i], adjacent[j][i]));
                 edge->setEdgeType(getEdgeType(j, i, matrix));
             }
             adjacent[i][j] = matrix[i][j];
             adjacent[j][i] = matrix[j][i];
         }
     }
-
+    unsavedChanges = false;
 }
 
-void Graph::setMatrixFlow(Matrix2D matrix)
+void Graph::setMatrixFlow(Matrix2D &matrix)
 {
-    unsigned int i, j, oldAmount = amount;
-    short newAmountIsLess = amount > matrix.size(), needResize = this->amount != matrix.size();
+    unsigned int i, j;
+    resizeGraph(amount, matrix.size());
 
     amount = matrix.size();
-    if(needResize){
-        if(!newAmountIsLess)
-            adjacent.resize(amount);
-        flow.resize(amount);
-        if(newAmountIsLess){
-            for(i = amount; i != oldAmount; i++){
-                nodes.remove(i);
-            }
-        }else{
-            for(i = oldAmount; i != amount; i++){
-                nodes[i] = new Node(i, graphView);
-            }
-        }
-    }
+
     for(i = 0; i != amount; i++){
-        if(needResize){
-            if(!newAmountIsLess)
-                adjacent[i].resize(amount);
-            flow[i].resize(amount);
-            if (newAmountIsLess){
-                for(j = amount; j != oldAmount; j++){
-                    edges.remove(qMakePair(nodes[i],nodes[j]));
-                    edges.remove(qMakePair(nodes[j],nodes[i]));
-                }
-            }
-        }
         for(j = i; j != amount; j++){
             if(!adjacent[i][j]&&matrix[i][j]){
-                edges[qMakePair(nodes[i],nodes[j])] = new Edge(nodes[i],nodes[j], matrix[i][j], matrix[i][j], getEdgeType(i,j, matrix));
+                edges[qMakePair(nodes[i],nodes[j])] = new Edge(nodes[i],nodes[j], adjacent[i][j], getEdgeType(i,j, matrix));
             }
             else {
                 edges[qMakePair(nodes[i],nodes[j])]->setWeight(fmax(adjacent[i][j],matrix[i][j]));
@@ -205,7 +141,8 @@ void Graph::setMatrixFlow(Matrix2D matrix)
                 edges.remove(qMakePair(nodes[i],nodes[j]));
             }
             else if(!adjacent[j][i]&&matrix[j][i]){
-                edges[qMakePair(nodes[j],nodes[i])] = new Edge(nodes[j],nodes[i], matrix[i][j], matrix[j][i], getEdgeType(j,i,matrix));
+                auto key = qMakePair(nodes[j],nodes[i]);
+                edges[key] = new Edge(nodes[j],nodes[i], adjacent[i][j], getEdgeType(j,i,matrix));
             }
             else {
                 edges[qMakePair(nodes[j],nodes[i])]->setWeight(fmax(adjacent[j][i],matrix[j][i]));
@@ -217,6 +154,11 @@ void Graph::setMatrixFlow(Matrix2D matrix)
             adjacent[j][i] = fmax(adjacent[j][i],matrix[j][i]);
         }
     }
+}
+
+void Graph::setMatrixBandwidth(Matrix2D& matrix)
+{
+
 }
 
 
@@ -250,12 +192,13 @@ void Graph::removeEdge(unsigned int u, unsigned int v)
 {
     auto key = qMakePair(nodes[u],nodes[v]);
     if(edges.contains(key)){
-        edges.remove(key);
-        //nodes[u].disconnectFromNode(&nodes[v]);
-        //nodes[v].disconnectFromNode(&nodes[u]);
+        graphView->scene()->removeItem(edges[key]);
+        nodes[u]->disconnectFromNode(nodes[v]);
+        delete edges.take(key);
     }
     adjacent[u][v] = 0;
     flow[u][v] = 0;
+    bandwidth[u][v] = 0;
 }
 
 void Graph::addNode(unsigned int i)
@@ -277,6 +220,70 @@ void Graph::addNode(unsigned int i)
                 flow[j].resize(amount+1);
 
         }
+    }
+}
+
+const QFlags<GraphFlags> Graph::getFlags()
+{
+    return flags;
+}
+
+void Graph::setFlag(GraphFlags flag)
+{
+    flags|=flag;
+}
+
+void Graph::setFlags(QFlags<GraphFlags> flags)
+{
+    this->flags = flags;
+}
+
+void Graph::unsetFlag(GraphFlags flag)
+{
+    this->flags &= (~flag);
+}
+
+void Graph::toggleFlag(GraphFlags flag)
+{
+    this->flags^=flag;
+}
+
+void Graph::resizeGraph(unsigned int oldAmount, unsigned int newAmount)
+{
+    unsigned int i, j;
+    bool newAmountIsLess = oldAmount > newAmount;
+    bool needResize = amount != newAmount;
+    //increase nodes amount
+    if(needResize){
+        adjacent.resize(newAmount);
+        flow.resize(newAmount);
+        bandwidth.resize(newAmount);
+        for(i = 0; i != newAmount; i++){
+            adjacent[i].resize(newAmount);
+            bandwidth[i].resize(newAmount);
+            flow[i].resize(newAmount);
+        }
+        if (newAmountIsLess){
+            for(i = 0; i != oldAmount; i++){
+                for(j = newAmount; j != oldAmount; j++){
+                    removeEdge(i, j);
+                    if(i!=j)
+                        removeEdge(j, i);
+                }
+            }
+        }
+        if(newAmountIsLess)
+            for(i = newAmount; i != oldAmount; i++){
+                if(nodes.contains(i)){
+                    graphView->scene()->removeItem(nodes[i]);
+                    delete nodes.take(i);
+                }
+            }
+        else
+            for(i = oldAmount; i<newAmount; i++){
+                nodes[i]= new Node(i, graphView);
+            }
+        amount = newAmount;
     }
 }
 

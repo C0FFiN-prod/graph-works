@@ -19,6 +19,7 @@ SOURCES += \
 HEADERS += \
     edge.h \
     graph.h \
+    graphenums.h \
     graphwidget.h \
     mainwindow.h \
     node.h

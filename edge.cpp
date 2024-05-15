@@ -4,16 +4,16 @@
 #include <QPainter>
 #include <QtMath>
 
-void drawTextAt(QPainter *painter, QPointF offsetPnt, double weight){
+QFlags<GraphFlags> *Edge::graphFlags = nullptr;
+
+void drawTextAt(QPainter *painter, QPointF offsetPnt, QString& text){
     //setting up font parameters
+    if(text.isEmpty()) return;
     QFont font = painter->font();
     font.setBold(false);
     font.setPointSize(7);
     painter->setFont(font);
     painter->setPen(Qt::black);
-
-    //getting text
-    QString text = QString::number(weight);
 
     //get text bounds
     QFontMetrics metrics(font);
@@ -44,7 +44,7 @@ void drawArrowAt(QPainter *painter, QPointF at, double angle, double arrowSize){
 
 
 Edge::Edge(Node *sourceNode, Node *destNode, double weight, EdgeType edgeType = EdgeType::SingleDirection)
-    : edgeType(edgeType), source(sourceNode), dest(destNode), weight(weight)
+    : edgeType(edgeType), source(sourceNode), dest(destNode), flow(0), weight(weight), bandwidth(0)
 {
     setAcceptedMouseButtons(Qt::NoButton);
     source->addEdge(this);
@@ -53,15 +53,6 @@ Edge::Edge(Node *sourceNode, Node *destNode, double weight, EdgeType edgeType = 
     sourceNode->connectToNode(destNode);
 }
 
-Edge::Edge(Node *sourceNode, Node *destNode, double weight, double flow, EdgeType edgeType = EdgeType::SingleDirection)
-    :edgeType(edgeType), source(sourceNode), dest(destNode), flow(flow), weight(weight)
-{
-    setAcceptedMouseButtons(Qt::NoButton);
-    source->addEdge(this);
-    dest->addEdge(this);
-    adjust();
-    sourceNode->connectToNode(destNode);
-}
 
 
 Node *Edge::sourceNode() const
@@ -127,6 +118,11 @@ Edge::~Edge()
     //this->source->disconnectFromNode(this->dest);
 }
 
+void Edge::setFlagsPtr(QFlags<GraphFlags> *flagsPtr)
+{
+    graphFlags = flagsPtr;
+}
+
 QRectF Edge::boundingRect() const
 {
     if (!source || !dest)
@@ -158,7 +154,24 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 
     //calculate curve points
     QPointF midPoint = QPointF((line.p1().x()+ line.p2().x())/2,(line.p1().y()+ line.p2().y())/2 );
-
+    QString text = "";
+    bool slashNeeded = false;
+    if(graphFlags->testFlag(GraphFlags::ShowWeights)){
+        text.append(QString::number(this->weight));
+        slashNeeded = true;
+    }
+    if(graphFlags->testFlag(GraphFlags::ShowFlow)){
+        if(slashNeeded)
+            text.append('|');
+        text.append(QString::number(this->flow));
+        slashNeeded = true;
+    }
+    if(graphFlags->testFlag(GraphFlags::ShowBandwidth)){
+        if(slashNeeded)
+            text.append('|');
+        text.append(QString::number(this->bandwidth));
+        slashNeeded = true;
+    }
 
     //draw lines and arrows
 
@@ -169,7 +182,7 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 
         drawArrowAt(painter, destPoint, atan2(-line.dy(), line.dx()), 10);
 
-        drawTextAt(painter, midPoint, this->weight);
+        drawTextAt(painter, midPoint, text);
 
     }else if(this->edgeType==EdgeType::BiDirectionalDiff){
         //calculate offset point and angle for curviness
@@ -185,7 +198,7 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 
         drawArrowAt(painter, destPoint, M_PI-atan2(offsetPnt.y()-destPoint.y(), offsetPnt.x()-destPoint.x()), 10);
 
-        drawTextAt(painter,  QPointF(midPoint.x() + curvines/2 * cos(teta+M_PI/2), midPoint.y() + curvines/2 * sin(teta+M_PI/2)), this->weight);
+        drawTextAt(painter,  QPointF(midPoint.x() + curvines/2 * cos(teta+M_PI/2), midPoint.y() + curvines/2 * sin(teta+M_PI/2)), text);
 
     }else if(this->edgeType==EdgeType::BiDirectionalSame){
         //draw straight line
@@ -194,7 +207,7 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 
         //if weight needs to be drawn
         if(this->source->getIndex()<this->dest->getIndex()){
-            drawTextAt(painter, midPoint, this->weight);
+            drawTextAt(painter, midPoint, text);
         }
     }
 

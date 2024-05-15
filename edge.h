@@ -1,17 +1,11 @@
 
 #ifndef EDGE_H
 #define EDGE_H
-
+#include "graphenums.h"
 #include <QGraphicsItem>
 #define txtOffset 15
 #define curvines 25
-enum EdgeType{
-    BiDirectionalSame =0,
-    BiDirectionalDiff = 1,
-    SingleDirection = 2,
-    Loop = 3,
-    Error =-1
-};
+
 class Node;
 
 class Edge : public QGraphicsItem
@@ -36,19 +30,20 @@ public:
     enum { Type = UserType + 2 };
     int type() const override { return Type; }
     ~Edge();
-
+    static void setFlagsPtr(QFlags<GraphFlags> *flagsPtr);
 protected:
     QRectF boundingRect() const override;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
 private:
+    static QFlags<GraphFlags> *graphFlags;
     EdgeType edgeType;
     Node *source, *dest;
     double flow;
     double weight;
+    double bandwidth;
     QPointF sourcePoint;
     QPointF destPoint;
     qreal arrowSize = 10;
 };
-
 #endif // EDGE_H

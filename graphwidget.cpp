@@ -1,12 +1,12 @@
 #include "graphwidget.h"
 
-
+#include <QScrollBar>
 #include <math.h>
 #include <QKeyEvent>
 #include <QRandomGenerator>
 
-GraphWidget::GraphWidget( QMap<QPair<Node*, Node*>, Edge*>* edges,QMap<unsigned int, Node*>* nodes, QWidget *parent)
-    : QGraphicsView(parent), scenePtr(nullptr), edges(edges), nodes(nodes)
+GraphWidget::GraphWidget(QMap<QPair<Node*, Node*>, Edge*>* edges, QMap<unsigned int, Node*>* nodes, QFlags<GraphFlags> *flags, QWidget *parent)
+    : QGraphicsView(parent), scenePtr(nullptr), edges(edges), nodes(nodes), flags(flags)
 {
     this->amount = nodes->size();
     scenePtr = new QGraphicsScene(this);
@@ -19,8 +19,10 @@ GraphWidget::GraphWidget( QMap<QPair<Node*, Node*>, Edge*>* edges,QMap<unsigned 
     setRenderHint(QPainter::Antialiasing);
     setTransformationAnchor(AnchorUnderMouse);
     scale(qreal(1), qreal(1));
-    setMinimumSize(300, 00);
-
+    setMinimumSize(300, 200);
+    setTransformationAnchor(QGraphicsView::NoAnchor);
+    setMouseTracking(true);
+    setOptimizationFlag(QGraphicsView::DontAdjustForAntialiasing);
 }
 
 void GraphWidget::itemMoved()
@@ -69,11 +71,10 @@ void GraphWidget::timerEvent(QTimerEvent *event)
             edges << edge;
         }
     }
-    int w = this->width()-10, h = this->height()-10;
-    scene()->setSceneRect(-w/2, -h/2, w, h);
+
 
     for (Node *node : nodes){
-        node->calculateForces();
+        node->calculateForces(flags->testFlag(GraphFlags::ManualMode));
     }
 
 
@@ -96,6 +97,45 @@ void GraphWidget::wheelEvent(QWheelEvent *event)
     scaleView(pow(2., -event->angleDelta().y() / 240.0));
 }
 #endif
+void GraphWidget::mousePressEvent(QMouseEvent *event){
+    if((event->button() == Qt::MiddleButton) &&
+        (this->dragMode()==QGraphicsView::NoDrag)){
+        // Start dragging and save the last mouse position
+        setCursor(Qt::ClosedHandCursor);
+        dragging = true;
+        prevScenePos = event->position();
+        event->accept();
+    } else
+        QGraphicsView::mousePressEvent(event);
+}
+void GraphWidget::mouseMoveEvent(QMouseEvent *event){
+    if(dragging){
+        QPointF diff = event->position() - prevScenePos;
+        prevScenePos = event->position();
+
+        // Scroll the view accordingly
+        horizontalScrollBar()->setValue(horizontalScrollBar()->value() - diff.x());
+        verticalScrollBar()->setValue(verticalScrollBar()->value() - diff.y());
+        event->accept();
+    }
+    else
+        QGraphicsView::mouseMoveEvent(event);
+}
+void GraphWidget::mouseReleaseEvent(QMouseEvent *event){
+    if((event->button() == Qt::MiddleButton)){
+        setCursor(Qt::ArrowCursor);
+        //setDragMode(NoDrag);
+        dragging = false;
+        event->accept();
+    } else
+        QGraphicsView::mouseReleaseEvent(event);
+}
+void GraphWidget::resizeEvent(QResizeEvent *event)
+{
+    int w = this->width()-10, h = this->height()-10;
+    scene()->setSceneRect(-w/2, -h/2, w, h);
+    QGraphicsView::resizeEvent(event);
+}
 
 void GraphWidget::scaleView(qreal scaleFactor)
 {
