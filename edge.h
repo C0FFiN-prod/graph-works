@@ -19,10 +19,12 @@ public:
      //setters
     void setWeight(double weight);
     void setFlow(double flow);
+    void setBandwidth(double bandwidth);
     void setEdgeType(EdgeType type);
      //getters
-    double getWeight();
-    double getFlow();
+    double getWeight() const;
+    double getFlow() const;
+    double getBandwidth() const;
     EdgeType getEdgeType();
 
     void adjust();

@@ -17,9 +17,11 @@ public:
     Graph();
     Graph(unsigned int size);
     Graph(Matrix2D &matrix);
+    ~Graph();
     const Matrix2D getMatrixAdjacent();
     const Matrix2D getMatrixFlow();
     const Matrix2D getMatrixBandwidth();
+    const QList<QVariantList> getListEdges();
     void setMatrixAdjacent(Matrix2D &matrix);
     void setMatrixFlow(Matrix2D &matrix);
     void setMatrixBandwidth(Matrix2D &matrix);
@@ -37,9 +39,10 @@ public:
     void unsetFlag(GraphFlags flag);
     void toggleFlag(GraphFlags flag);
     //void removeNode(unsigned int i);
-    bool unsavedChanges = false;
     GraphWidget *graphView;
+    bool isUnsaved();
 private:
+    bool unsavedChanges = false;
     void resizeGraph(unsigned int oldAmount, unsigned int newAmount);
     QFlags<GraphFlags> flags;
     EdgeType getEdgeType(int i, int j, Matrix2D &matrix);

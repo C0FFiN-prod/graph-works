@@ -41,7 +41,7 @@ private:
     void copyTableToClipboard(QTableView *src);
     void applyNodesAmountMatrix(QTableView *table);
     void applyNodesAmountList(QTableView *table);
-    void addRowToList(QTableView *table, const QSet<int>& importantCols);
+    void updateEdgesList(QTableView *list);
     QActionGroup *nodeMovementGroup;
     QList<QTableView *> graphMatrixViews;
     QList<QTableView *> graphListViews;

@@ -24,13 +24,14 @@ MainWindow::MainWindow(QWidget *parent)
             else if (name.startsWith("List")) {
                 graphListViews.append(table);
                 if(name.endsWith("Edges")){
-                    table->setModel(new QStandardItemModel(1,5));
+                    table->setModel(new QStandardItemModel(0,5));
                     auto model = table->model();
                     model->setHeaderData(0, Qt::Horizontal, "U");
                     model->setHeaderData(1, Qt::Horizontal, "V");
                     model->setHeaderData(2, Qt::Horizontal, "Weight");
                     model->setHeaderData(3, Qt::Horizontal, "Band");
                     model->setHeaderData(4, Qt::Horizontal, "Flow");
+
                     for(int i = 5; i--;){
                         table->setColumnWidth(i, 10);
                     }
@@ -64,13 +65,7 @@ MainWindow::MainWindow(QWidget *parent)
                 if(button->objectName().startsWith("button_"+name) &&
                     button->objectName().endsWith("_Apply"))
                 {
-                    if(name.startsWith("List"))
-                        connect(button,
-                                &QPushButton::clicked,
-                                this,
-                                std::bind(&MainWindow::applyNodesAmountList,
-                                          this, table));
-                    else if (name.startsWith("Matrix"))
+                    if (name.startsWith("Matrix"))
                         connect(button,
                                 &QPushButton::clicked,
                                 this,
@@ -146,6 +141,12 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionPaste, &QAction::triggered,
             this, std::bind(&MainWindow::myPaste, this));
 
+
+    connect(new QShortcut(QKeySequence("F5"), this),
+            &QShortcut::activated,
+            this,
+            std::bind(&MainWindow::updateEdgesList,
+                      this, ui->table_ListEdges_Graph));
 
     nodeMovementGroup = new QActionGroup(this);
     nodeMovementGroup->addAction(ui->actionAutomatic);
@@ -379,6 +380,8 @@ void MainWindow::applyNodesAmountMatrix(QTableView *table)
         graph.setMatrixAdjacent(m);
     else if(table->objectName().contains("Flow"))
         graph.setMatrixFlow(m);
+    else if(table->objectName().contains("Bandwidth"))
+        graph.setMatrixBandwidth(m);
     graph.graphView->initScene();
 
 }
@@ -404,31 +407,38 @@ void MainWindow::applyNodesAmountList(QTableView *table)
 
 }
 
-void MainWindow::addRowToList(QTableView *table, const QSet<int>& importantCols = {}){
-    auto *model = static_cast<QStandardItemModel *>(table->model());
-    int rowLast = model->rowCount()-1;
-    int colCount = model->columnCount();
-    bool needAdd = false;
-    if (importantCols.empty()){
-        for(int i = colCount; i--;){
-            if(model->item(rowLast, i)->data().toBool()){
-                needAdd = true;
-                break;
+void MainWindow::updateEdgesList(QTableView *list)
+{
+    auto edges = graph.getListEdges();
+    auto model = static_cast<QStandardItemModel *>(list->model());
+    if(edges.empty()) {
+        model->setRowCount(0);
+        return;
+    }
+    int count = edges.count();
+    int oldRowCount = model->rowCount();
+    int colCount = edges[0].count();
+    model->setRowCount(count);
+    for(int i = 0; i < count; i++){
+        if(i >= oldRowCount)
+            for(int j = 0; j < colCount; j++){
+                model->setItem(i,j,new QStandardItem(edges[i][j].toString()));
+            }
+        else {
+            for(int j = 0; j < colCount; j++){
+                model->item(i, j)->setText(edges[i][j].toString());
+                model->item(i, j)->setData(edges[i][j].toString());
             }
         }
-    }else{
-        needAdd = true;
-        for(auto i : importantCols){
-            if(!model->item(rowLast, i)->data().toBool()){
-                needAdd = false;
-                break;
-            }
-        }
+        auto item = model->item(i, 0);
+        item->setFlags(item->flags()&(~Qt::ItemIsEditable));
+        item = model->item(i, 1);
+        item->setFlags(item->flags()&(~Qt::ItemIsEditable));
     }
-    if(needAdd){
-        model->appendRow(QList{new QStandardItem});
-    }
+    emit model->dataChanged(model->item(0,0)->index(),model->item(count-1, colCount-1)->index());
 }
+
+
 
 void MainWindow::myCopy()
 {

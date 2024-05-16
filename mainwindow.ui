@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>676</height>
+    <height>693</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -489,7 +489,7 @@
     </property>
    </widget>
   </widget>
-  <widget class="QDockWidget" name="dockWidget">
+  <widget class="QDockWidget" name="dock_Bandwidth">
    <property name="windowTitle">
     <string>Bandwidth Matrix</string>
    </property>
@@ -539,10 +539,10 @@
         </widget>
        </item>
        <item>
-        <widget class="QSpinBox" name="spin_MatrixBandwith_NodesCount"/>
+        <widget class="QSpinBox" name="spin_MatrixBandwidth_NodesCount"/>
        </item>
        <item>
-        <widget class="QPushButton" name="button_MatrixBandwith_Apply">
+        <widget class="QPushButton" name="button_MatrixBandwidth_Apply">
          <property name="text">
           <string>Apply</string>
          </property>
@@ -551,7 +551,7 @@
       </layout>
      </item>
      <item row="1" column="0">
-      <widget class="QTableView" name="table_MatrixBandwith_Graph"/>
+      <widget class="QTableView" name="table_MatrixBandwidth_Graph"/>
      </item>
     </layout>
    </widget>

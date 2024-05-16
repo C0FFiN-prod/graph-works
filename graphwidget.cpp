@@ -22,7 +22,7 @@ GraphWidget::GraphWidget(QMap<QPair<Node*, Node*>, Edge*>* edges, QMap<unsigned 
     setMinimumSize(300, 200);
     setTransformationAnchor(QGraphicsView::NoAnchor);
     setMouseTracking(true);
-    setOptimizationFlag(QGraphicsView::DontAdjustForAntialiasing);
+//    setOptimizationFlag(QGraphicsView::DontAdjustForAntialiasing);
 }
 
 void GraphWidget::itemMoved()

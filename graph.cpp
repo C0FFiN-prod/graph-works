@@ -3,7 +3,8 @@
 Graph::Graph():
     amount(0),
     adjacent(Matrix2D(10, QList<double>(10, 0))),
-    flow(Matrix2D(10, QList<double>(10, 0)))
+    flow(Matrix2D(10, QList<double>(10, 0))),
+    bandwidth(Matrix2D(10, QList<double>(10, 0)))
 {
     graphView = new GraphWidget(&edges, &nodes, &flags);
     Edge::setFlagsPtr(&flags);
@@ -65,6 +66,16 @@ Graph::Graph(Matrix2D &matrix):
 
 }
 
+Graph::~Graph()
+{
+    for(auto edge : std::as_const(edges)){
+        delete edge;
+    }
+    for(auto node : std::as_const(nodes)){
+        delete node;
+    }
+}
+
 
 const Matrix2D Graph::getMatrixAdjacent()
 {
@@ -79,6 +90,17 @@ const Matrix2D Graph::getMatrixFlow()
 const Matrix2D Graph::getMatrixBandwidth()
 {
     return bandwidth;
+}
+
+const QList<QVariantList> Graph::getListEdges()
+{
+    QList<QVariantList> edgeList(edges.size());
+    unsigned int i = 0;
+    for(auto [key, edge] : edges.asKeyValueRange()){
+        QVariantList tuple{key.first->getIndex(), key.second->getIndex(), edge->getWeight(), edge->getBandwidth(), edge->getFlow()};
+        edgeList[i++] = tuple;
+    }
+    return edgeList;
 }
 
 
@@ -125,40 +147,78 @@ void Graph::setMatrixFlow(Matrix2D &matrix)
 {
     unsigned int i, j;
     resizeGraph(amount, matrix.size());
-
-    amount = matrix.size();
-
+    unsavedChanges = false;
     for(i = 0; i != amount; i++){
         for(j = i; j != amount; j++){
             if(!adjacent[i][j]&&matrix[i][j]){
-                edges[qMakePair(nodes[i],nodes[j])] = new Edge(nodes[i],nodes[j], adjacent[i][j], getEdgeType(i,j, matrix));
+                nodes[i]->connectToNode(nodes[j]);
+                auto key = qMakePair(nodes[i],nodes[j]);
+                edges[key] = new Edge(nodes[i],nodes[j], 1, getEdgeType(i,j,matrix));
+                edges[key]->setFlow(matrix[i][j]);
+                adjacent[i][j] = 1;
+                unsavedChanges = true;
             }
-            else {
-                edges[qMakePair(nodes[i],nodes[j])]->setWeight(fmax(adjacent[i][j],matrix[i][j]));
-                edges[qMakePair(nodes[i],nodes[j])]->setFlow(matrix[i][j]);
+            else if(adjacent[i][j]){
+                auto edge = edges[qMakePair(nodes[i],nodes[j])];
+                edge->setBandwidth(fmax(matrix[i][j], edge->getBandwidth()));
+                edge->setFlow(matrix[i][j]);
             }
-            if(adjacent[j][i]&&!matrix[j][i]){
-                edges.remove(qMakePair(nodes[i],nodes[j]));
-            }
-            else if(!adjacent[j][i]&&matrix[j][i]){
+            if((i!=j)&&!adjacent[j][i]&&matrix[j][i]){
+                nodes[j]->connectToNode(nodes[i]);
                 auto key = qMakePair(nodes[j],nodes[i]);
-                edges[key] = new Edge(nodes[j],nodes[i], adjacent[i][j], getEdgeType(j,i,matrix));
+                edges[key] = new Edge(nodes[j],nodes[i], 1, getEdgeType(j,i,matrix));
+                edges[key]->setFlow(matrix[j][i]);
+                adjacent[j][i] = 1;
+                unsavedChanges = true;
             }
-            else {
-                edges[qMakePair(nodes[j],nodes[i])]->setWeight(fmax(adjacent[j][i],matrix[j][i]));
-                edges[qMakePair(nodes[i],nodes[j])]->setFlow(matrix[i][j]);
+            else if ((i!=j)&&adjacent[j][i]){
+                auto edge = edges[qMakePair(nodes[j],nodes[i])];
+                edge->setBandwidth(fmax(matrix[j][i], edge->getBandwidth()));
+                edge->setFlow(matrix[j][i]);
             }
             flow[i][j] = matrix[i][j];
             flow[j][i] = matrix[j][i];
-            adjacent[i][j] = fmax(adjacent[i][j],matrix[i][j]);
-            adjacent[j][i] = fmax(adjacent[j][i],matrix[j][i]);
         }
     }
 }
 
 void Graph::setMatrixBandwidth(Matrix2D& matrix)
 {
-
+    unsigned int i, j;
+    resizeGraph(amount, matrix.size());
+    unsavedChanges = false;
+    for(i = 0; i != amount; i++){
+        for(j = i; j != amount; j++){
+            if(!adjacent[i][j]&&matrix[i][j]){
+                nodes[i]->connectToNode(nodes[j]);
+                auto key = qMakePair(nodes[i],nodes[j]);
+                edges[key] = new Edge(nodes[i],nodes[j], 1, getEdgeType(i,j,matrix));
+                edges[key]->setBandwidth(matrix[i][j]);
+                adjacent[i][j] = 1;
+                unsavedChanges = true;
+            }
+            else if(adjacent[i][j]){
+                auto edge = edges[qMakePair(nodes[j],nodes[i])];
+                edge->setBandwidth(matrix[j][i]);
+                edge->setFlow(fmin(matrix[j][i], edge->getFlow()));
+            }
+            if((i!=j)&&!adjacent[j][i]&&matrix[j][i]){
+                nodes[j]->connectToNode(nodes[i]);
+                auto key = qMakePair(nodes[j],nodes[i]);
+                edges[key] = new Edge(nodes[j],nodes[i], 1, getEdgeType(j,i,matrix));
+                edges[key]->setBandwidth(matrix[j][i]);
+                adjacent[j][i] = 1;
+                unsavedChanges = true;
+            }
+            else if ((i!=j)&&adjacent[j][i]){
+                auto edge = edges[qMakePair(nodes[j],nodes[i])];
+                edge->setBandwidth(matrix[j][i]);
+                edge->setFlow(fmin(matrix[j][i], edge->getFlow()));
+            }
+            bandwidth[i][j] = matrix[i][j];
+            bandwidth[j][i] = matrix[j][i];
+        }
+    }
 }
 
 
@@ -196,9 +256,11 @@ void Graph::removeEdge(unsigned int u, unsigned int v)
         nodes[u]->disconnectFromNode(nodes[v]);
         delete edges.take(key);
     }
-    adjacent[u][v] = 0;
-    flow[u][v] = 0;
-    bandwidth[u][v] = 0;
+    if (u<amount && v<amount){
+        adjacent[u][v] = 0;
+        flow[u][v] = 0;
+        bandwidth[u][v] = 0;
+    }
 }
 
 void Graph::addNode(unsigned int i)
@@ -248,6 +310,11 @@ void Graph::toggleFlag(GraphFlags flag)
     this->flags^=flag;
 }
 
+bool Graph::isUnsaved()
+{
+    return unsavedChanges;
+}
+
 void Graph::resizeGraph(unsigned int oldAmount, unsigned int newAmount)
 {
     unsigned int i, j;
@@ -255,6 +322,7 @@ void Graph::resizeGraph(unsigned int oldAmount, unsigned int newAmount)
     bool needResize = amount != newAmount;
     //increase nodes amount
     if(needResize){
+        amount = newAmount;
         adjacent.resize(newAmount);
         flow.resize(newAmount);
         bandwidth.resize(newAmount);
@@ -283,7 +351,7 @@ void Graph::resizeGraph(unsigned int oldAmount, unsigned int newAmount)
             for(i = oldAmount; i<newAmount; i++){
                 nodes[i]= new Node(i, graphView);
             }
-        amount = newAmount;
+
     }
 }
 

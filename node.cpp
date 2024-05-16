@@ -163,15 +163,15 @@ void Node::setIndex(unsigned int num)
 
 void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *) {
     // drawing circle
-    painter->setPen(QPen(Qt::black, 1));
-    painter->drawEllipse(-nodeSize/2, -nodeSize/2, nodeSize, nodeSize);
-
+    painter->fillPath(shape(), QBrush(Qt::white));
+    painter->setPen(QPen(Qt::black, 2));
+    painter->drawPath(shape());
     //font setting up
     QFont font = painter->font();
     font.setBold(true);
     font.setPointSize(14);
     painter->setFont(font);
-
+    setZValue(1);
     //get text boxing
     QString nodeText = QString::number(index);
     QFontMetrics metrics(font);
@@ -199,7 +199,7 @@ QVariant Node::itemChange(GraphicsItemChange change, const QVariant &value)
 {
     switch (change) {
     case ItemPositionHasChanged:
-        for (Edge *edge : edgeList)
+        for (Edge *edge : std::as_const(edgeList))
             edge->adjust();
         graph->itemMoved();
         break;
