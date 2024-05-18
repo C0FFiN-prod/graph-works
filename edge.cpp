@@ -23,8 +23,7 @@ void drawTextAt(QPainter *painter, QPointF offsetPnt, QString& text){
     int padding = 5;
     QPointF offset(-padding,padding);
     QRect backgroundRect = rect.adjusted(-padding*2, -padding*2, padding/2, padding/2);
-    backgroundRect.moveBottomLeft((offsetPnt+offset).toPoint());
-
+    backgroundRect.moveCenter((offsetPnt).toPoint());
     //drawing background
     painter->setBrush(QColor(255, 255, 255, 255));
     painter->setPen(Qt::NoPen);
@@ -32,7 +31,7 @@ void drawTextAt(QPainter *painter, QPointF offsetPnt, QString& text){
 
     //drawing text
     painter->setPen(Qt::black);
-    painter->drawText(offsetPnt, text);
+    painter->drawText(backgroundRect, Qt::AlignVCenter | Qt::AlignHCenter, text);
 }
 void drawArrowAt(QPainter *painter, QPointF at, double angle, double arrowSize){
     QPointF destArrowP1 = at + QPointF(sin(angle - M_PI / 3) * arrowSize, cos(angle - M_PI / 3) * arrowSize);
@@ -180,7 +179,6 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
         if(slashNeeded)
             text.append('|');
         text.append(QString::number(this->bandwidth));
-        slashNeeded = true;
     }
 
     //draw lines and arrows
@@ -211,12 +209,12 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
         drawTextAt(painter,  QPointF(midPoint.x() + curvines/2 * cos(teta+M_PI/2), midPoint.y() + curvines/2 * sin(teta+M_PI/2)), text);
 
     }else if(this->edgeType==EdgeType::BiDirectionalSame){
+        if(this->source->getIndex()<this->dest->getIndex()){
         //draw straight line
         painter->setPen(QPen(Qt::black, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         painter->drawLine(line);
 
         //if weight needs to be drawn
-        if(this->source->getIndex()<this->dest->getIndex()){
             drawTextAt(painter, midPoint, text);
         }
     }

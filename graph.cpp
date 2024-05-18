@@ -116,8 +116,10 @@ void Graph::setMatrixAdjacent(Matrix2D &matrix)
             }
             else if(!adjacent[i][j]&&matrix[i][j]){
                 nodes[i]->connectToNode(nodes[j]);
-                edges[qMakePair(nodes[i],nodes[j])] = new Edge(nodes[i],nodes[j], matrix[i][j], getEdgeType(i,j,matrix));
-
+                auto key = qMakePair(nodes[i],nodes[j]);
+                edges[key] = new Edge(nodes[i],nodes[j], matrix[i][j], getEdgeType(i,j,matrix));
+                edges[key]->setFlow(flow[i][j]);
+                edges[key]->setBandwidth(bandwidth[i][j]);
             }
             else if(adjacent[i][j]&&matrix[i][j]){
                 auto edge = edges[qMakePair(nodes[i],nodes[j])];
@@ -129,7 +131,10 @@ void Graph::setMatrixAdjacent(Matrix2D &matrix)
             }
             else if((i!=j)&&!adjacent[j][i]&&matrix[j][i]){
                 nodes[j]->connectToNode(nodes[i]);
-                edges[qMakePair(nodes[j],nodes[i])] = new Edge(nodes[j],nodes[i], matrix[j][i], getEdgeType(j,i,matrix));
+                auto key = qMakePair(nodes[j],nodes[i]);
+                edges[key] = new Edge(nodes[j],nodes[i], matrix[j][i], getEdgeType(j,i,matrix));
+                edges[key]->setFlow(flow[j][i]);
+                edges[key]->setBandwidth(bandwidth[j][i]);
             }
             else if ((i!=j)&&adjacent[j][i]&&matrix[j][i]){
                 auto edge = edges[qMakePair(nodes[j],nodes[i])];
@@ -153,28 +158,44 @@ void Graph::setMatrixFlow(Matrix2D &matrix)
             if(!adjacent[i][j]&&matrix[i][j]){
                 nodes[i]->connectToNode(nodes[j]);
                 auto key = qMakePair(nodes[i],nodes[j]);
-                edges[key] = new Edge(nodes[i],nodes[j], 1, getEdgeType(i,j,matrix));
+                if(bandwidth[i][j] < matrix[i][j])
+                    bandwidth[i][j] = matrix[i][j];
+                edges[key] = new Edge(nodes[i],nodes[j], 1, getEdgeType(i,j,bandwidth));
+                edges[key]->setBandwidth(matrix[i][j]);
                 edges[key]->setFlow(matrix[i][j]);
                 adjacent[i][j] = 1;
                 unsavedChanges = true;
             }
             else if(adjacent[i][j]){
                 auto edge = edges[qMakePair(nodes[i],nodes[j])];
-                edge->setBandwidth(fmax(matrix[i][j], edge->getBandwidth()));
+                if(edge->getBandwidth() < matrix[i][j]){
+                    bandwidth[i][j] = matrix[i][j];
+                    edge->setBandwidth(matrix[i][j]);
+                    unsavedChanges = true;
+                }
                 edge->setFlow(matrix[i][j]);
+                edge->setEdgeType(getEdgeType(i, j, bandwidth));
             }
             if((i!=j)&&!adjacent[j][i]&&matrix[j][i]){
                 nodes[j]->connectToNode(nodes[i]);
                 auto key = qMakePair(nodes[j],nodes[i]);
-                edges[key] = new Edge(nodes[j],nodes[i], 1, getEdgeType(j,i,matrix));
+                if(bandwidth[j][i] < matrix[j][i])
+                    bandwidth[j][i] = matrix[j][i];
+                edges[key] = new Edge(nodes[j],nodes[i], 1, getEdgeType(j,i,bandwidth));
+                edges[key]->setBandwidth(matrix[j][i]);
                 edges[key]->setFlow(matrix[j][i]);
                 adjacent[j][i] = 1;
                 unsavedChanges = true;
             }
             else if ((i!=j)&&adjacent[j][i]){
                 auto edge = edges[qMakePair(nodes[j],nodes[i])];
-                edge->setBandwidth(fmax(matrix[j][i], edge->getBandwidth()));
+                if(edge->getBandwidth() < matrix[j][i]){
+                    bandwidth[j][i] = matrix[j][i];
+                    edge->setBandwidth(matrix[j][i]);
+                    unsavedChanges = true;
+                }
                 edge->setFlow(matrix[j][i]);
+                edge->setEdgeType(getEdgeType(j, i, bandwidth));
             }
             flow[i][j] = matrix[i][j];
             flow[j][i] = matrix[j][i];
@@ -189,31 +210,51 @@ void Graph::setMatrixBandwidth(Matrix2D& matrix)
     unsavedChanges = false;
     for(i = 0; i != amount; i++){
         for(j = i; j != amount; j++){
-            if(!adjacent[i][j]&&matrix[i][j]){
+            if(adjacent[i][j]&&!matrix[i][j]){
+                removeEdge(i, j);
+            }else if(!adjacent[i][j]&&matrix[i][j]){
                 nodes[i]->connectToNode(nodes[j]);
                 auto key = qMakePair(nodes[i],nodes[j]);
+                if(flow[i][j] > matrix[i][j])
+                    flow[i][j] = matrix[i][j];
                 edges[key] = new Edge(nodes[i],nodes[j], 1, getEdgeType(i,j,matrix));
                 edges[key]->setBandwidth(matrix[i][j]);
+                edges[key]->setFlow(flow[i][j]);
                 adjacent[i][j] = 1;
                 unsavedChanges = true;
             }
             else if(adjacent[i][j]){
-                auto edge = edges[qMakePair(nodes[j],nodes[i])];
-                edge->setBandwidth(matrix[j][i]);
-                edge->setFlow(fmin(matrix[j][i], edge->getFlow()));
+                auto edge = edges[qMakePair(nodes[i],nodes[j])];
+                edge->setBandwidth(matrix[i][j]);
+                if(edge->getFlow() > matrix[i][j]){
+                    flow[i][j] = matrix[i][j];
+                    edge->setFlow(matrix[i][j]);
+                    unsavedChanges = true;
+                }
+                edge->setEdgeType(getEdgeType(i, j, matrix));
             }
-            if((i!=j)&&!adjacent[j][i]&&matrix[j][i]){
+            if((i!=j)&&adjacent[j][i]&&!matrix[j][i]){
+                removeEdge(j, i);
+            }else if((i!=j)&&!adjacent[j][i]&&matrix[j][i]){
                 nodes[j]->connectToNode(nodes[i]);
                 auto key = qMakePair(nodes[j],nodes[i]);
+                if(flow[j][i] > matrix[j][i])
+                    flow[j][i] = matrix[j][i];
                 edges[key] = new Edge(nodes[j],nodes[i], 1, getEdgeType(j,i,matrix));
                 edges[key]->setBandwidth(matrix[j][i]);
+                edges[key]->setFlow(flow[j][i]);
                 adjacent[j][i] = 1;
                 unsavedChanges = true;
             }
             else if ((i!=j)&&adjacent[j][i]){
                 auto edge = edges[qMakePair(nodes[j],nodes[i])];
                 edge->setBandwidth(matrix[j][i]);
-                edge->setFlow(fmin(matrix[j][i], edge->getFlow()));
+                if(edge->getFlow() > matrix[j][i]){
+                    flow[j][i] = matrix[j][i];
+                    edge->setFlow(matrix[j][i]);
+                    unsavedChanges = true;
+                }
+                edge->setEdgeType(getEdgeType(i, j, matrix));
             }
             bandwidth[i][j] = matrix[i][j];
             bandwidth[j][i] = matrix[j][i];
@@ -233,7 +274,9 @@ void Graph::setEdgeFlow(unsigned int u, unsigned int v, double flow)
 
 EdgeType Graph::getEdgeType(int i, int j, Matrix2D& matrix)
 {
-    if(matrix[i][j]==matrix[j][i] && matrix[i][j]!=0 &&i<j){
+    if(i==j && matrix[i][j]!=0){
+        return EdgeType::Loop;
+    }else if(matrix[i][j]==matrix[j][i] && matrix[i][j]!=0){
         return EdgeType::BiDirectionalSame;
 
     }else if(matrix[i][j]!=0 && matrix[j][i]!=0 && matrix[i][j]!=matrix[j][i]){
@@ -241,9 +284,6 @@ EdgeType Graph::getEdgeType(int i, int j, Matrix2D& matrix)
 
     }else if((matrix[i][j]!=0 && matrix[j][i]==0)||(matrix[j][i]!=0 && matrix[i][j]==0)){
         return EdgeType::SingleDirection;
-
-    }else if(i==j && matrix[i][j]!=0){
-        return EdgeType::Loop;
     }
     return Error;
 }
@@ -251,9 +291,17 @@ EdgeType Graph::getEdgeType(int i, int j, Matrix2D& matrix)
 void Graph::removeEdge(unsigned int u, unsigned int v)
 {
     auto key = qMakePair(nodes[u],nodes[v]);
+    auto logState = [&key]() {
+        qDebug() << key.first->getIndex() << '\t' << key.first->getChilden().size()
+                 << key.first->getParents().size() << '\t' << key.first->edgeList.size()
+                 << key.second->getIndex() << '\t' << key.second->getChilden().size()
+                 << key.second->getParents().size() << '\t' << key.second->edgeList.size();
+    };
     if(edges.contains(key)){
         graphView->scene()->removeItem(edges[key]);
+        logState();
         nodes[u]->disconnectFromNode(nodes[v]);
+        logState();
         delete edges.take(key);
     }
     if (u<amount && v<amount){

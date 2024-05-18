@@ -15,7 +15,7 @@ GraphWidget::GraphWidget(QMap<QPair<Node*, Node*>, Edge*>* edges, QMap<unsigned 
     setScene(scenePtr);
 
     setCacheMode(CacheBackground);
-    setViewportUpdateMode(BoundingRectViewportUpdate);
+    setViewportUpdateMode(FullViewportUpdate); // TODO razobrat'sa cho za hren'
     setRenderHint(QPainter::Antialiasing);
     setTransformationAnchor(AnchorUnderMouse);
     scale(qreal(1), qreal(1));
@@ -25,7 +25,7 @@ GraphWidget::GraphWidget(QMap<QPair<Node*, Node*>, Edge*>* edges, QMap<unsigned 
 //    setOptimizationFlag(QGraphicsView::DontAdjustForAntialiasing);
 }
 
-void GraphWidget::itemMoved()
+void GraphWidget::runTimer()
 {
     if (!timerId)
         timerId = startTimer(1000 / 25);

@@ -16,7 +16,7 @@ class GraphWidget : public QGraphicsView
 public:
     GraphWidget(QMap<QPair<Node*, Node*>, Edge*>* edges, QMap<unsigned int, Node*>* nodes, QFlags<GraphFlags> *flags, QWidget *parent = nullptr);
 
-    void itemMoved();
+    void runTimer();
     void initScene();
 
 public slots:

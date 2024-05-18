@@ -16,7 +16,7 @@ Node::Node(int index, GraphWidget *graphWidget)
     setFlag(ItemIsMovable);
     setFlag(ItemSendsGeometryChanges);
     setCacheMode(DeviceCoordinateCache);
-    setZValue(-1);
+    setZValue(1);
     this->setPos(QRandomGenerator::global()->bounded(300), QRandomGenerator::global()->bounded(300));
 }
 
@@ -171,7 +171,6 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
     font.setBold(true);
     font.setPointSize(14);
     painter->setFont(font);
-    setZValue(1);
     //get text boxing
     QString nodeText = QString::number(index);
     QFontMetrics metrics(font);
@@ -201,7 +200,7 @@ QVariant Node::itemChange(GraphicsItemChange change, const QVariant &value)
     case ItemPositionHasChanged:
         for (Edge *edge : std::as_const(edgeList))
             edge->adjust();
-        graph->itemMoved();
+        graph->runTimer();
         break;
     default:
         break;

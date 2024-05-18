@@ -32,9 +32,7 @@ MainWindow::MainWindow(QWidget *parent)
                     model->setHeaderData(3, Qt::Horizontal, "Band");
                     model->setHeaderData(4, Qt::Horizontal, "Flow");
 
-                    for(int i = 5; i--;){
-                        table->setColumnWidth(i, 10);
-                    }
+
                 }
             }
 
@@ -83,6 +81,7 @@ MainWindow::MainWindow(QWidget *parent)
             this->graph.setFlag(GraphFlags::ShowBandwidth);
         else
             this->graph.unsetFlag(GraphFlags::ShowBandwidth);
+        graph.graphView->scene()->update();
     });
 
     connect(ui->actionWeights, &QAction::triggered, this, [this](bool checked){
@@ -90,6 +89,7 @@ MainWindow::MainWindow(QWidget *parent)
             this->graph.setFlag(GraphFlags::ShowWeights);
         else
             this->graph.unsetFlag(GraphFlags::ShowWeights);
+        graph.graphView->scene()->update();
     });
 
     connect(ui->actionFlow, &QAction::triggered, this, [this](bool checked){
@@ -97,6 +97,7 @@ MainWindow::MainWindow(QWidget *parent)
             this->graph.setFlag(GraphFlags::ShowFlow);
         else
             this->graph.unsetFlag(GraphFlags::ShowFlow);
+        graph.graphView->scene()->update();
     });
 
     auto view = ui->menuView_mode;
@@ -152,9 +153,9 @@ MainWindow::MainWindow(QWidget *parent)
     nodeMovementGroup->addAction(ui->actionAutomatic);
     nodeMovementGroup->addAction(ui->actionManual);
     connect(ui->actionManual, &QAction::triggered, this,
-            [this](bool checked){if (checked) graph.setFlag(GraphFlags::ManualMode);});
+            [this](bool checked){if (checked) graph.setFlag(GraphFlags::ManualMode); graph.graphView->scene()->update();});
     connect(ui->actionAutomatic, &QAction::triggered, this,
-            [this](bool checked){if (checked) graph.unsetFlag(GraphFlags::ManualMode);});
+            [this](bool checked){if (checked) {graph.unsetFlag(GraphFlags::ManualMode); graph.graphView->runTimer();}});
     ui->actionAutomatic->setChecked(true);
     for(auto& i: ui->menubar->children()){
         ((QMenu*)i)->setWindowFlag(Qt::FramelessWindowHint);
@@ -383,27 +384,7 @@ void MainWindow::applyNodesAmountMatrix(QTableView *table)
     else if(table->objectName().contains("Bandwidth"))
         graph.setMatrixBandwidth(m);
     graph.graphView->initScene();
-
-}
-
-void MainWindow::applyNodesAmountList(QTableView *table)
-{
-    QStandardItemModel* model = static_cast<QStandardItemModel*>(table->model());
-    int count = model->rowCount()-1;
-    int newAmount = graphCountSpins[table->objectName()]->value();
-    for(auto [key, value] : graphCountSpins.asKeyValueRange()){
-        if (key != table->objectName()){
-            value->setValue(newAmount);
-        }
-    }
-    for(int i = count-1; i--;){
-        auto u = model->item(i, 0);
-        auto v = model->item(i, 1);
-        if(u->data().toInt() <= newAmount ||
-            v->data().toInt() <= newAmount) {
-            model->removeRow(i);
-        }
-    }
+    graph.graphView->scene()->update();
 
 }
 
@@ -434,6 +415,9 @@ void MainWindow::updateEdgesList(QTableView *list)
         item->setFlags(item->flags()&(~Qt::ItemIsEditable));
         item = model->item(i, 1);
         item->setFlags(item->flags()&(~Qt::ItemIsEditable));
+    }
+    for(int i = colCount; i--;){
+        list->setColumnWidth(i, 10);
     }
     emit model->dataChanged(model->item(0,0)->index(),model->item(count-1, colCount-1)->index());
 }

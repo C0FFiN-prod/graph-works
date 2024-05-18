@@ -38,6 +38,7 @@ public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
     void extracted();
     ~Node();
+    QSet<Edge *> edgeList;
 
 protected:
     QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;
@@ -46,7 +47,6 @@ protected:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 
 private:
-    QSet<Edge *> edgeList;
     QSet<Node *> children;
     QSet<Node *> parents;
 
