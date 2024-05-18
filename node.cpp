@@ -4,9 +4,9 @@
 #include "graphwidget.h"
 
 #include <QGraphicsScene>
-#include <QRandomGenerator>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
+#include <QRandomGenerator>
 #include <QStyleOption>
 
 Node::Node(int index, GraphWidget *graphWidget)

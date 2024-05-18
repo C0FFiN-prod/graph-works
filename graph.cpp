@@ -262,14 +262,71 @@ void Graph::setMatrixBandwidth(Matrix2D& matrix)
     }
 }
 
-
-
-void Graph::setEdgeFlow(unsigned int u, unsigned int v, double flow)
+void Graph::setEdgeFlow(unsigned int u, unsigned int v, double f)
 {
     auto key = qMakePair(nodes[u],nodes[v]);
     if(!edges.contains(key))
         throw std::runtime_error("No such edge");
-    edges[key]->setFlow(flow);
+    edges[key]->setFlow(f);
+    if (edges[key]->getBandwidth() < f) {
+        bandwidth[u][v] = f;
+        unsavedChanges = true;
+    }
+    flow[u][v] = f;
+    EdgeType bandType = getEdgeType(u, v, bandwidth);
+    EdgeType adjType = getEdgeType(u, v, adjacent);
+    edges[key]->setEdgeType((bandType > adjType) ? (bandType) : (adjType));
+
+    key = qMakePair(nodes[v], nodes[u]);
+    if (edges.contains(key)) {
+        bandType = getEdgeType(v, u, bandwidth);
+        adjType = getEdgeType(v, u, adjacent);
+        edges[key]->setEdgeType((bandType > adjType) ? (bandType) : (adjType));
+    }
+}
+
+void Graph::setEdgeWeight(unsigned int u, unsigned int v, double w)
+{
+    auto key = qMakePair(nodes[u], nodes[v]);
+    if (!edges.contains(key))
+        throw std::runtime_error("No such edge");
+    if (!w)
+        throw std::runtime_error("Weight can't be zero");
+    adjacent[u][v] = w;
+    edges[key]->setWeight(w);
+    EdgeType bandType = getEdgeType(u, v, bandwidth);
+    EdgeType adjType = getEdgeType(u, v, adjacent);
+    edges[key]->setEdgeType((bandType > adjType) ? (bandType) : (adjType));
+
+    key = qMakePair(nodes[v], nodes[u]);
+    if (edges.contains(key)) {
+        bandType = getEdgeType(v, u, bandwidth);
+        adjType = getEdgeType(v, u, adjacent);
+        edges[key]->setEdgeType((bandType > adjType) ? (bandType) : (adjType));
+    }
+}
+
+void Graph::setEdgeBandwidth(unsigned int u, unsigned int v, double b)
+{
+    auto key = qMakePair(nodes[u], nodes[v]);
+    if (!edges.contains(key))
+        throw std::runtime_error("No such edge");
+    edges[key]->setBandwidth(b);
+    if (edges[key]->getFlow() > b) {
+        flow[u][v] = b;
+        unsavedChanges = true;
+    }
+    bandwidth[u][v] = b;
+    EdgeType bandType = getEdgeType(u, v, bandwidth);
+    EdgeType adjType = getEdgeType(u, v, adjacent);
+    edges[key]->setEdgeType((bandType > adjType) ? (bandType) : (adjType));
+
+    key = qMakePair(nodes[v], nodes[u]);
+    if (edges.contains(key)) {
+        bandType = getEdgeType(v, u, bandwidth);
+        adjType = getEdgeType(v, u, adjacent);
+        edges[key]->setEdgeType((bandType > adjType) ? (bandType) : (adjType));
+    }
 }
 
 EdgeType Graph::getEdgeType(int i, int j, Matrix2D& matrix)
@@ -291,23 +348,20 @@ EdgeType Graph::getEdgeType(int i, int j, Matrix2D& matrix)
 void Graph::removeEdge(unsigned int u, unsigned int v)
 {
     auto key = qMakePair(nodes[u],nodes[v]);
-    auto logState = [&key]() {
-        qDebug() << key.first->getIndex() << '\t' << key.first->getChilden().size()
-                 << key.first->getParents().size() << '\t' << key.first->edgeList.size()
-                 << key.second->getIndex() << '\t' << key.second->getChilden().size()
-                 << key.second->getParents().size() << '\t' << key.second->edgeList.size();
-    };
-    if(edges.contains(key)){
-        graphView->scene()->removeItem(edges[key]);
-        logState();
-        nodes[u]->disconnectFromNode(nodes[v]);
-        logState();
-        delete edges.take(key);
-    }
-    if (u<amount && v<amount){
+    if (u < amount && v < amount) {
         adjacent[u][v] = 0;
         flow[u][v] = 0;
         bandwidth[u][v] = 0;
+    }
+    if(edges.contains(key)){
+        graphView->scene()->removeItem(edges[key]);
+        nodes[u]->disconnectFromNode(nodes[v]);
+        delete edges.take(key);
+
+        key = qMakePair(nodes[v], nodes[u]);
+        if (edges.contains(key) && (edges[key]->getEdgeType() != EdgeType::Error)) {
+            edges[key]->setEdgeType(EdgeType::SingleDirection);
+        }
     }
 }
 
@@ -358,9 +412,9 @@ void Graph::toggleFlag(GraphFlags flag)
     this->flags^=flag;
 }
 
-bool Graph::isUnsaved()
+unsigned int Graph::getAmount()
 {
-    return unsavedChanges;
+    return this->amount;
 }
 
 void Graph::resizeGraph(unsigned int oldAmount, unsigned int newAmount)

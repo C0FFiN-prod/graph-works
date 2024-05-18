@@ -7,12 +7,12 @@ enum GraphFlags {
     ShowFlow = 8
 };
 
-enum EdgeType{
-    BiDirectionalSame =0,
-    BiDirectionalDiff = 1,
-    SingleDirection = 2,
+enum EdgeType {
+    SingleDirection = 0,
+    BiDirectionalSame = 1,
+    BiDirectionalDiff = 2,
     Loop = 3,
-    Error =-1
+    Error = -1
 };
 
 #endif // GRAPHENUMS_H

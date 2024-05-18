@@ -24,15 +24,7 @@ MainWindow::MainWindow(QWidget *parent)
             else if (name.startsWith("List")) {
                 graphListViews.append(table);
                 if(name.endsWith("Edges")){
-                    table->setModel(new QStandardItemModel(0,5));
-                    auto model = table->model();
-                    model->setHeaderData(0, Qt::Horizontal, "U");
-                    model->setHeaderData(1, Qt::Horizontal, "V");
-                    model->setHeaderData(2, Qt::Horizontal, "Weight");
-                    model->setHeaderData(3, Qt::Horizontal, "Band");
-                    model->setHeaderData(4, Qt::Horizontal, "Flow");
-
-
+                    table->setModel(new QStandardItemModel(0, 0));
                 }
             }
 
@@ -45,12 +37,6 @@ MainWindow::MainWindow(QWidget *parent)
                                     &QSpinBox::valueChanged,
                                     this,
                                     std::bind(&MainWindow::setNodesAmountMatrix,
-                                              this, table, std::placeholders::_1));
-                        } else if (name.startsWith("List")){
-                            connect(spinBox,
-                                    &QSpinBox::valueChanged,
-                                    this,
-                                    std::bind(&MainWindow::setNodesAmountList,
                                               this, table, std::placeholders::_1));
                         }
                         graphCountSpins.insert(table->objectName(), spinBox);
@@ -67,8 +53,13 @@ MainWindow::MainWindow(QWidget *parent)
                         connect(button,
                                 &QPushButton::clicked,
                                 this,
-                                std::bind(&MainWindow::applyNodesAmountMatrix,
-                                          this, table));
+                                std::bind(&MainWindow::applyGraphMatrix, this, table));
+                    else if (name == "ListEdges") {
+                        connect(button,
+                                &QPushButton::clicked,
+                                this,
+                                std::bind(&MainWindow::applyEdgesList, this, table));
+                    }
                 }
             }
         }
@@ -142,12 +133,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionPaste, &QAction::triggered,
             this, std::bind(&MainWindow::myPaste, this));
 
-
-    connect(new QShortcut(QKeySequence("F5"), this),
-            &QShortcut::activated,
+    connect(ui->actionRefreshTables,
+            &QAction::triggered,
             this,
-            std::bind(&MainWindow::updateEdgesList,
-                      this, ui->table_ListEdges_Graph));
+            std::bind(&MainWindow::updateTables, this));
 
     nodeMovementGroup = new QActionGroup(this);
     nodeMovementGroup->addAction(ui->actionAutomatic);
@@ -292,23 +281,6 @@ void MainWindow::setNodesAmountMatrix(QTableView *table, int newAmount)
     table->show();
 }
 
-void MainWindow::setNodesAmountList(QTableView *table, int newAmount)
-{
-    QStandardItemModel* model = static_cast<QStandardItemModel *>(table->model());
-    int oldAmount = model->columnCount();
-    auto flags = Qt::ItemIsEnabled | Qt::ItemIsEditable | Qt::ItemIsSelectable;
-    if(newAmount < 0) newAmount = 0;
-    int upperLimit = ((oldAmount>newAmount)?(newAmount):(oldAmount));
-    if(upperLimit > oldAmount)
-        for(int i = 0; i < model->rowCount(); i++) {
-            if(model->item(i, 0)->data().toInt() <= upperLimit ||
-                model->item(i, 1)->data().toInt() <= upperLimit) {
-                for(int j = 5; j--;)
-                    model->item(i, j)->setFlags(flags);
-            }
-        }
-}
-
 void MainWindow::copyTableToClipboard(QTableView *src){
     if(!src->hasFocus()) return;
     QAbstractItemModel * model = src->model();
@@ -356,7 +328,7 @@ void MainWindow::copyTableToClipboard(QTableView *src){
 
 }
 
-void MainWindow::applyNodesAmountMatrix(QTableView *table)
+void MainWindow::applyGraphMatrix(QTableView *table)
 {
     QStandardItemModel* model = static_cast<QStandardItemModel*>(table->model());
     int oldAmount = model->rowCount();
@@ -385,7 +357,32 @@ void MainWindow::applyNodesAmountMatrix(QTableView *table)
         graph.setMatrixBandwidth(m);
     graph.graphView->initScene();
     graph.graphView->scene()->update();
+    updateTables();
+}
 
+void MainWindow::applyEdgesList(QTableView *table)
+{
+    auto model = static_cast<QStandardItemModel *>(table->model());
+    int rowCount = model->rowCount();
+    int amount = graph.getAmount();
+    int u, v;
+    double weight, bandwidth, flow;
+    for (int i = 0; i != rowCount; ++i) {
+        u = model->item(i, 0)->text().toInt();
+        v = model->item(i, 1)->text().toInt();
+        weight = model->item(i, 2)->text().toDouble();
+        if ((u < amount) && (v < amount) && weight) {
+            bandwidth = model->item(i, 3)->text().toDouble();
+            flow = model->item(i, 4)->text().toDouble();
+            graph.setEdgeWeight(u, v, weight);
+            graph.setEdgeBandwidth(u, v, bandwidth);
+            graph.setEdgeFlow(u, v, flow);
+        } else {
+            graph.removeEdge(u, v);
+        }
+    }
+    graph.graphView->scene()->update();
+    updateTables();
 }
 
 void MainWindow::updateEdgesList(QTableView *list)
@@ -394,13 +391,22 @@ void MainWindow::updateEdgesList(QTableView *list)
     auto model = static_cast<QStandardItemModel *>(list->model());
     if(edges.empty()) {
         model->setRowCount(0);
+        model->setColumnCount(0);
         return;
     }
+    model->setColumnCount(edges[0].count());
+    model->setHeaderData(0, Qt::Horizontal, "U");
+    model->setHeaderData(1, Qt::Horizontal, "V");
+    model->setHeaderData(2, Qt::Horizontal, "Weight");
+    model->setHeaderData(3, Qt::Horizontal, "Band");
+    model->setHeaderData(4, Qt::Horizontal, "Flow");
     int count = edges.count();
     int oldRowCount = model->rowCount();
     int colCount = edges[0].count();
+    ui->label_ListEdges_Count->setText(QString::number(count));
     model->setRowCount(count);
     for(int i = 0; i < count; i++){
+        list->setRowHeight(i, 20);
         if(i >= oldRowCount)
             for(int j = 0; j < colCount; j++){
                 model->setItem(i,j,new QStandardItem(edges[i][j].toString()));
@@ -417,12 +423,37 @@ void MainWindow::updateEdgesList(QTableView *list)
         item->setFlags(item->flags()&(~Qt::ItemIsEditable));
     }
     for(int i = colCount; i--;){
-        list->setColumnWidth(i, 10);
+        list->setColumnWidth(i, 20);
     }
     emit model->dataChanged(model->item(0,0)->index(),model->item(count-1, colCount-1)->index());
 }
 
-
+void MainWindow::updateTables()
+{
+    static QRegularExpression nameRe("(table_(Matrix|List))|(_Graph)");
+    unsigned int amount = graph.getAmount();
+    for (auto &spin : graphCountSpins) {
+        spin->setValue(amount);
+    }
+    QString tableName;
+    for (auto &table : graphMatrixViews) {
+        tableName = table->objectName().replace(nameRe, "");
+        if (tableName == "Adj") {
+            setTableFromMatrix(table, graph.getMatrixAdjacent(), amount, amount);
+        } else if (tableName == "Flow") {
+            setTableFromMatrix(table, graph.getMatrixFlow(), amount, amount);
+        } else if (tableName == "Bandwidth") {
+            setTableFromMatrix(table, graph.getMatrixBandwidth(), amount, amount);
+        }
+    }
+    for (auto &list : graphListViews) {
+        tableName = list->objectName().replace(nameRe, "");
+        if (tableName == "Edges") {
+            updateEdgesList(list);
+        }
+    }
+    graph.unsavedChanges = false;
+}
 
 void MainWindow::myCopy()
 {
@@ -439,4 +470,39 @@ void MainWindow::myPaste()
     if( table != nullptr ){
         pasteClipboardToTable(table);
     }
+}
+
+template<typename T>
+void MainWindow::setTableFromMatrix(QTableView *table, T &matrix, int height, int width)
+{
+    if ((height == -1) || (height > matrix.size()))
+        height = matrix.size();
+    if (height && ((width == -1) || (width > matrix[0].size())))
+        width = matrix[0].size();
+    if (!height || !width)
+        return;
+    auto *model = static_cast<QStandardItemModel *>(table->model());
+    int colCount = model->columnCount();
+    int rowCount = model->rowCount();
+
+    if (height > rowCount)
+        model->insertRows(rowCount, height - rowCount);
+    if (width > colCount)
+        model->insertColumns(colCount, width - colCount);
+
+    for (int i = height; i--;) {
+        model->setHeaderData(i, Qt::Horizontal, i);
+        model->setHeaderData(i, Qt::Vertical, i);
+        table->setColumnWidth(i, 20);
+        table->setRowHeight(i, 20);
+        for (int j = width; j--;) {
+            if ((i > rowCount) || (j > colCount))
+                model->setItem(i, j, new QStandardItem(QString::number(matrix[i][j])));
+            else {
+                model->item(i, j)->setData(QString::number(matrix[i][j]));
+                model->item(i, j)->setText(QString::number(matrix[i][j]));
+            }
+        }
+    }
+    emit model->dataChanged(model->item(0, 0)->index(), model->item(height - 1, width - 1)->index());
 }

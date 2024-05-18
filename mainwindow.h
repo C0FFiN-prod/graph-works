@@ -29,7 +29,6 @@ private slots:
     void myCopy();
     void myPaste();
     void setNodesAmountMatrix(QTableView *table, int newAmount);
-    void setNodesAmountList(QTableView *table, int newAmount);
 
 private:
     Ui::MainWindow *ui;
@@ -39,9 +38,12 @@ private:
     void pinTab();
     void pasteClipboardToTable(QTableView *dest);
     void copyTableToClipboard(QTableView *src);
-    void applyNodesAmountMatrix(QTableView *table);
-    void applyNodesAmountList(QTableView *table);
+    void applyGraphMatrix(QTableView *table);
+    void applyEdgesList(QTableView *table);
     void updateEdgesList(QTableView *list);
+    void updateTables();
+    template<typename T>
+    void setTableFromMatrix(QTableView *table, T &matrix, int height = -1, int width = -1);
     QActionGroup *nodeMovementGroup;
     QList<QTableView *> graphMatrixViews;
     QList<QTableView *> graphListViews;

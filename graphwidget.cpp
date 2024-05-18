@@ -132,8 +132,9 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event){
 }
 void GraphWidget::resizeEvent(QResizeEvent *event)
 {
-    int w = this->width()-10, h = this->height()-10;
+    int w = this->width() - nodeSize, h = this->height() - nodeSize;
     scene()->setSceneRect(-w/2, -h/2, w, h);
+    runTimer();
     QGraphicsView::resizeEvent(event);
 }
 

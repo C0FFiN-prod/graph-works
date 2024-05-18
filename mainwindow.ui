@@ -84,18 +84,9 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>21</height>
+     <height>18</height>
     </rect>
    </property>
-   <widget class="QMenu" name="mainMenu">
-    <property name="title">
-     <string>Main menu</string>
-    </property>
-    <property name="icon">
-     <iconset resource="resource.qrc">
-      <normaloff>:/ico/icons/Logo.svg</normaloff>:/ico/icons/Logo.svg</iconset>
-    </property>
-   </widget>
    <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>File</string>
@@ -111,6 +102,7 @@
     <addaction name="actionRedo"/>
     <addaction name="actionCopy"/>
     <addaction name="actionPaste"/>
+    <addaction name="actionRefreshTables"/>
    </widget>
    <widget class="QMenu" name="menuAlgorithm">
     <property name="enabled">
@@ -138,7 +130,6 @@
     <addaction name="actionFlow"/>
     <addaction name="separator"/>
    </widget>
-   <addaction name="mainMenu"/>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuAlgorithm"/>
@@ -168,6 +159,7 @@
    <addaction name="actionDeleteGraph"/>
    <addaction name="actionAddNode"/>
    <addaction name="actionDeleteNode"/>
+   <addaction name="actionRefreshTables"/>
   </widget>
   <widget class="QDockWidget" name="dock_MatrixAdj">
    <property name="features">
@@ -278,6 +270,20 @@
         <number>0</number>
        </property>
        <item>
+        <widget class="QLabel" name="label_8">
+         <property name="text">
+          <string>Edges count:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_ListEdges_Count">
+         <property name="text">
+          <string>0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="horizontalSpacer_9">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -289,16 +295,6 @@
           </size>
          </property>
         </spacer>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_8">
-         <property name="text">
-          <string>Nodes count:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QSpinBox" name="spin_ListEdges_NodesCount"/>
        </item>
        <item>
         <widget class="QPushButton" name="button_ListEdges_Apply">
@@ -756,6 +752,21 @@
    </property>
    <property name="menuRole">
     <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionRefreshTables">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/ico/icons/Refresh.svg</normaloff>:/ico/icons/Refresh.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Refresh Tables</string>
+   </property>
+   <property name="toolTip">
+    <string>Refresh Tables</string>
+   </property>
+   <property name="shortcut">
+    <string>F5</string>
    </property>
   </action>
   <zorder>dock_MatrixFlow</zorder>

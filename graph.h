@@ -8,9 +8,6 @@
 
 typedef QList<QList<double>> Matrix2D;
 
-
-
-
 class Graph
 {
 public:
@@ -28,8 +25,10 @@ public:
 
     void setEdge(Node* u, Node* v, Edge& edge);
 
-    void setEdgeFlow(unsigned int u, unsigned int v, double flow);
-    void setEdgeWeight(unsigned int u, unsigned int v, double flow);
+    void setEdgeFlow(unsigned int u, unsigned int v, double f);
+    void setEdgeWeight(unsigned int u, unsigned int v, double w);
+    void setEdgeBandwidth(unsigned int u, unsigned int v, double b);
+
     void removeEdge(unsigned int u, unsigned int v);
     void addNode(unsigned int i);
 
@@ -40,9 +39,10 @@ public:
     void toggleFlag(GraphFlags flag);
     //void removeNode(unsigned int i);
     GraphWidget *graphView;
-    bool isUnsaved();
-private:
+    unsigned int getAmount();
     bool unsavedChanges = false;
+
+private:
     void resizeGraph(unsigned int oldAmount, unsigned int newAmount);
     QFlags<GraphFlags> flags;
     EdgeType getEdgeType(int i, int j, Matrix2D &matrix);

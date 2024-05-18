@@ -1,4 +1,3 @@
-
 #ifndef EDGE_H
 #define EDGE_H
 #include "graphenums.h"
