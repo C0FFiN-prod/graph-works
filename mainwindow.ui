@@ -124,6 +124,8 @@
      <string>View mode</string>
     </property>
     <addaction name="separator"/>
+    <addaction name="actionDisplayIndex"/>
+    <addaction name="actionDisplayName"/>
     <addaction name="separator"/>
     <addaction name="actionWeights"/>
     <addaction name="actionBandwidth"/>
@@ -767,6 +769,39 @@
    </property>
    <property name="shortcut">
     <string>F5</string>
+   </property>
+  </action>
+  <action name="actionDisplayIndex">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/ico/icons/DisplayIndex.svg</normaloff>:/ico/icons/DisplayIndex.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Display Index</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionDisplayName">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/ico/icons/DisplayName.svg</normaloff>:/ico/icons/DisplayName.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Display Name</string>
+   </property>
+   <property name="toolTip">
+    <string>Display Name</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
    </property>
   </action>
   <zorder>dock_MatrixFlow</zorder>

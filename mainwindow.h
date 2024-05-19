@@ -44,7 +44,7 @@ private:
     void updateTables();
     template<typename T>
     void setTableFromMatrix(QTableView *table, T &matrix, int height = -1, int width = -1);
-    QActionGroup *nodeMovementGroup;
+    QList<QActionGroup *> actionGroups;
     QList<QTableView *> graphMatrixViews;
     QList<QTableView *> graphListViews;
     QMap<QString, QSpinBox *> graphCountSpins;

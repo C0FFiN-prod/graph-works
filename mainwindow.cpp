@@ -137,16 +137,35 @@ MainWindow::MainWindow(QWidget *parent)
             &QAction::triggered,
             this,
             std::bind(&MainWindow::updateTables, this));
-
-    nodeMovementGroup = new QActionGroup(this);
-    nodeMovementGroup->addAction(ui->actionAutomatic);
-    nodeMovementGroup->addAction(ui->actionManual);
+    auto actGroup = new QActionGroup(this);
+    actionGroups.append(actGroup);
+    actGroup->addAction(ui->actionAutomatic);
+    actGroup->addAction(ui->actionManual);
     connect(ui->actionManual, &QAction::triggered, this,
             [this](bool checked){if (checked) graph.setFlag(GraphFlags::ManualMode); graph.graphView->scene()->update();});
     connect(ui->actionAutomatic, &QAction::triggered, this,
             [this](bool checked){if (checked) {graph.unsetFlag(GraphFlags::ManualMode); graph.graphView->runTimer();}});
     ui->actionAutomatic->setChecked(true);
-    for(auto& i: ui->menubar->children()){
+
+    actGroup = new QActionGroup(this);
+    actionGroups.append(actGroup);
+    actGroup->addAction(ui->actionDisplayIndex);
+    actGroup->addAction(ui->actionDisplayName);
+    connect(ui->actionDisplayIndex, &QAction::triggered, this, [this](bool checked) {
+        if (checked) {
+            graph.setFlag(GraphFlags::DisplayIndex);
+            graph.updateNodes();
+        }
+    });
+    connect(ui->actionDisplayName, &QAction::triggered, this, [this](bool checked) {
+        if (checked) {
+            graph.unsetFlag(GraphFlags::DisplayIndex);
+            graph.updateNodes();
+        }
+    });
+    ui->actionDisplayName->setChecked(true);
+
+    for (auto &i : ui->menubar->children()) {
         ((QMenu*)i)->setWindowFlag(Qt::FramelessWindowHint);
         ((QMenu*)i)->setWindowFlag(Qt::NoDropShadowWindowHint);
         ((QMenu*)i)->setAttribute(Qt::WA_TranslucentBackground);
@@ -155,7 +174,8 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    delete nodeMovementGroup;
+    for (auto &act : actionGroups)
+        delete act;
     delete ui;
 }
 

@@ -4,7 +4,8 @@ enum GraphFlags {
     ManualMode = 1,
     ShowWeights = 2,
     ShowBandwidth = 4,
-    ShowFlow = 8
+    ShowFlow = 8,
+    DisplayIndex = 16
 };
 
 enum EdgeType {

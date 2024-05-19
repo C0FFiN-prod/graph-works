@@ -45,6 +45,11 @@ void GraphWidget::initScene()
     }
 }
 
+QFlags<GraphFlags> GraphWidget::getFlags()
+{
+    return *flags;
+}
+
 void GraphWidget::keyPressEvent(QKeyEvent *event)
 {
     switch (event->key()) {

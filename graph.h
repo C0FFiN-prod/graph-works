@@ -31,9 +31,9 @@ public:
 
     void removeEdge(unsigned int u, unsigned int v);
     void addNode(unsigned int i);
-
+    void updateNodes();
     const QFlags<GraphFlags> getFlags();
-    void setFlag(GraphFlags flag);
+    void setFlag(GraphFlags flag, bool set = true);
     void setFlags(QFlags<GraphFlags> flags);
     void unsetFlag(GraphFlags flag);
     void toggleFlag(GraphFlags flag);

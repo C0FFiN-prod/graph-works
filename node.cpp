@@ -11,8 +11,9 @@
 
 Node::Node(int index, GraphWidget *graphWidget)
     : graph(graphWidget)
+    , index(index)
+    , displayName(QString::number(index))
 {
-    this->index = index;
     setFlag(ItemIsMovable);
     setFlag(ItemSendsGeometryChanges);
     setCacheMode(DeviceCoordinateCache);
@@ -20,7 +21,10 @@ Node::Node(int index, GraphWidget *graphWidget)
     this->setPos(QRandomGenerator::global()->bounded(300), QRandomGenerator::global()->bounded(300));
 }
 
-Node::Node():graph(nullptr), index(0)
+Node::Node()
+    : graph(nullptr)
+    , index(0)
+    , displayName("0")
 {}
 
 
@@ -150,18 +154,28 @@ QPainterPath Node::shape() const
     return path;
 }
 
-int Node::getIndex()
+int Node::getIndex() const
 {
     return this->index;
 }
 
-void Node::setIndex(unsigned int num)
+void Node::setIndex(unsigned int i)
 {
-    this->index= num;
+    this->index = i;
 }
 
+QString Node::getDisplayName() const
+{
+    return this->displayName;
+}
 
-void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *) {
+void Node::setDisplayName(QString &name)
+{
+    this->displayName = name;
+}
+
+void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
+{
     // drawing circle
     painter->fillPath(shape(), QBrush(Qt::white));
     painter->setPen(QPen(Qt::black, 2));
@@ -172,7 +186,9 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
     font.setPointSize(14);
     painter->setFont(font);
     //get text boxing
-    QString nodeText = QString::number(index);
+    QString nodeText = (graph->getFlags().testFlag(GraphFlags::DisplayIndex))
+                           ? (QString::number(index))
+                           : (displayName);
     QFontMetrics metrics(font);
     QRect textRect = metrics.boundingRect(nodeText);
 

@@ -18,7 +18,7 @@ public:
 
     void runTimer();
     void initScene();
-
+    QFlags<GraphFlags> getFlags();
 public slots:
     void zoomIn();
     void zoomOut();

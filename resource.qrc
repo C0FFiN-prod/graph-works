@@ -27,6 +27,8 @@
         <file>icons/Copy.svg</file>
         <file>icons/Paste.svg</file>
         <file>icons/Refresh.svg</file>
+        <file>icons/DisplayIndex.svg</file>
+        <file>icons/DisplayName.svg</file>
     </qresource>
     <qresource prefix="/qss">
         <file>styles/defaultstyle.qss</file>

@@ -31,11 +31,15 @@ public:
 
     QRectF boundingRect() const override;
     QPainterPath shape() const override;
-    int getIndex();
-    void setIndex(unsigned int);
+
+    int getIndex() const;
+    void setIndex(unsigned int i);
+
+    QString getDisplayName() const;
+    void setDisplayName(QString &name);
 
     Node& operator=(const Node&);
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *widget) override;
     void extracted();
     ~Node();
     QSet<Edge *> edgeList;
@@ -53,6 +57,7 @@ private:
     QPointF newPos;
     GraphWidget *graph;
     int index;
+    QString displayName;
 };
 
 #endif // NODE_H

@@ -387,14 +387,23 @@ void Graph::addNode(unsigned int i)
     }
 }
 
+void Graph::updateNodes()
+{
+    for (auto &node : nodes)
+        node->update(node->boundingRect());
+}
+
 const QFlags<GraphFlags> Graph::getFlags()
 {
     return flags;
 }
 
-void Graph::setFlag(GraphFlags flag)
+void Graph::setFlag(GraphFlags flag, bool set)
 {
-    flags|=flag;
+    if (set)
+        flags |= flag;
+    else
+        flags &= ~flag;
 }
 
 void Graph::setFlags(QFlags<GraphFlags> flags)
