@@ -341,6 +341,11 @@ void Graph::setEdgeBandwidth(unsigned int u, unsigned int v, double b)
     }
 }
 
+QString Graph::getNodeName(unsigned int u)
+{
+    return nodes[u]->getDisplayName();
+}
+
 EdgeType Graph::getEdgeType(int i, int j, Matrix2D& matrix)
 {
     if(i==j && matrix[i][j]!=0){

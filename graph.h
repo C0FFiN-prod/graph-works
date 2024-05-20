@@ -28,7 +28,7 @@ public:
     void setEdgeFlow(unsigned int u, unsigned int v, double f);
     void setEdgeWeight(unsigned int u, unsigned int v, double w);
     void setEdgeBandwidth(unsigned int u, unsigned int v, double b);
-
+    QString getNodeName(unsigned int u);
     void removeEdge(unsigned int u, unsigned int v);
     void addNode(unsigned int i, const QString &name);
     void updateNodes();

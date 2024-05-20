@@ -406,7 +406,16 @@ void MainWindow::applyEdgesList(QTableView *table)
     for (int i = 0; i != rowCount; ++i) {
         su = model->item(i, 0)->text();
         sv = model->item(i, 1)->text();
-
+        if (!model->item(i, 0)->flags().testFlag(Qt::ItemIsEditable)) {
+            u = model->item(i, 0)->data().toInt();
+            nodes[su] = u;
+        }
+        if (!model->item(i, 1)->flags().testFlag(Qt::ItemIsEditable)) {
+            v = model->item(i, 1)->data().toInt();
+            nodes[sv] = v;
+        }
+        if (su.isEmpty() || sv.isEmpty())
+            continue;
         if (nodes.contains(su))
             u = nodes[su];
         else {
@@ -430,13 +439,12 @@ void MainWindow::applyEdgesList(QTableView *table)
         weight = model->item(i, 2)->text().toDouble();
         if (weight) {
             if (addedEdges.contains(qMakePair(u, v))) {
-                auto result
-                    = QMessageBox::warning(table,
-                                           this->windowTitle(),
-                                           QString("Edge %1 - %2 already exists").arg(u).arg(v),
-                                           QMessageBox::StandardButton::Abort
-                                               | QMessageBox::StandardButton::Ignore
-                                               | QMessageBox::StandardButton::Apply);
+                auto result = QMessageBox::warning(
+                    table,
+                    this->windowTitle(),
+                    QString("Row %1: Edge %2 - %3 already exists").arg(i + 1).arg(u).arg(v),
+                    QMessageBox::StandardButton::Abort | QMessageBox::StandardButton::Ignore
+                        | QMessageBox::StandardButton::Apply);
                 if (result == QMessageBox::StandardButton::NoButton
                     || result == QMessageBox::StandardButton::Abort) {
                     return;
@@ -479,7 +487,7 @@ void MainWindow::updateEdgesList(QTableView *list)
     auto model = static_cast<QStandardItemModel *>(list->model());
     if(edges.empty()) {
         model->setRowCount(0);
-        model->setColumnCount(0);
+        model->setColumnCount(5);
         return;
     }
     model->setColumnCount(edges[0].count());
@@ -491,23 +499,25 @@ void MainWindow::updateEdgesList(QTableView *list)
     model->setRowCount(count);
     for(int i = 0; i < count; i++){
         list->setRowHeight(i, 20);
-        if(i >= oldRowCount)
-            for(int j = 0; j < colCount; j++){
-                model->setItem(i,j,new QStandardItem(edges[i][j].toString()));
-            }
-        else {
-            for(int j = 0; j < colCount; j++){
-                model->item(i, j)->setText(edges[i][j].toString());
-                model->item(i, j)->setData(edges[i][j].toString());
-            }
+
+        for (int j = 0; j < colCount; j++) {
+            if (i >= oldRowCount)
+                model->setItem(i,
+                               j,
+                               new QStandardItem((j < 2) ? (graph.getNodeName(edges[i][j].toInt()))
+                                                         : (edges[i][j].toString())));
+            else
+                model->item(i, j)->setText((j < 2) ? (graph.getNodeName(edges[i][j].toInt()))
+                                                   : (edges[i][j].toString()));
+            model->item(i, j)->setData(edges[i][j].toString());
         }
         auto item = model->item(i, 0);
-        item->setFlags(item->flags()&(~Qt::ItemIsEditable));
+        item->setFlags(item->flags() & (~Qt::ItemIsEditable));
         item = model->item(i, 1);
-        item->setFlags(item->flags()&(~Qt::ItemIsEditable));
+        item->setFlags(item->flags() & (~Qt::ItemIsEditable));
     }
 
-    emit model->dataChanged(model->item(0,0)->index(),model->item(count-1, colCount-1)->index());
+    //emit model->dataChanged(model->item(0,0)->index(),model->item(count-1, colCount-1)->index());
 }
 
 void MainWindow::updateTables()
@@ -598,7 +608,6 @@ void MainWindow::setTableFromMatrix(QTableView *table, T &matrix, int height, in
         model->setHeaderData(i, Qt::Horizontal, i);
         model->setHeaderData(i, Qt::Vertical, i);
         table->setColumnWidth(i, 20);
-        table->setRowHeight(i, 20);
         for (int j = width; j--;) {
             if ((i > rowCount) || (j > colCount))
                 model->setItem(i, j, new QStandardItem(QString::number(matrix[i][j])));
