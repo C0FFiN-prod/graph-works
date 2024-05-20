@@ -1,14 +1,15 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QMainWindow>
+#include <QMap>
 #include "graph.h"
 #include "qactiongroup.h"
 #include "qpushbutton.h"
 #include "qshortcut.h"
 #include "qspinbox.h"
+#include "qstandarditemmodel.h"
 #include "qtableview.h"
-#include <QMap>
-#include <QMainWindow>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -29,6 +30,9 @@ private slots:
     void myCopy();
     void myPaste();
     void setNodesAmountMatrix(QTableView *table, int newAmount);
+    void listDataChanged(const QModelIndex &topLeft,
+                         const QModelIndex &bottomRight,
+                         const QVector<int> &);
 
 private:
     Ui::MainWindow *ui;
@@ -42,6 +46,7 @@ private:
     void applyEdgesList(QTableView *table);
     void updateEdgesList(QTableView *list);
     void updateTables();
+    void addRowToList(QStandardItemModel *table);
     template<typename T>
     void setTableFromMatrix(QTableView *table, T &matrix, int height = -1, int width = -1);
     QList<QActionGroup *> actionGroups;

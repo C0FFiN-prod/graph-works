@@ -23,9 +23,21 @@ MainWindow::MainWindow(QWidget *parent)
             }
             else if (name.startsWith("List")) {
                 graphListViews.append(table);
+                QStandardItemModel *model;
                 if(name.endsWith("Edges")){
-                    table->setModel(new QStandardItemModel(0, 0));
+                    model = new QStandardItemModel(1, 5);
+                    table->setModel(model);
+                    model->setHeaderData(0, Qt::Horizontal, "U");
+                    model->setHeaderData(1, Qt::Horizontal, "V");
+                    model->setHeaderData(2, Qt::Horizontal, "Weight");
+                    model->setHeaderData(3, Qt::Horizontal, "Band");
+                    model->setHeaderData(4, Qt::Horizontal, "Flow");
+                    for (int i = 5; i--;) {
+                        model->setItem(0, i, new QStandardItem());
+                        table->setColumnWidth(i, 20);
+                    }
                 }
+                connect(model, &QStandardItemModel::dataChanged, this, &MainWindow::listDataChanged);
             }
 
             for(auto *spinBox : spinBoxes){
@@ -382,25 +394,81 @@ void MainWindow::applyGraphMatrix(QTableView *table)
 
 void MainWindow::applyEdgesList(QTableView *table)
 {
+    static QRegularExpression reNumInt("[0-9]+");
     auto model = static_cast<QStandardItemModel *>(table->model());
-    int rowCount = model->rowCount();
+    int rowCount = model->rowCount() - 1;
     int amount = graph.getAmount();
     int u, v;
+    QString su, sv;
     double weight, bandwidth, flow;
+    QSet<std::pair<int, int>> addedEdges;
+    QMap<QString, int> nodes;
     for (int i = 0; i != rowCount; ++i) {
-        u = model->item(i, 0)->text().toInt();
-        v = model->item(i, 1)->text().toInt();
+        su = model->item(i, 0)->text();
+        sv = model->item(i, 1)->text();
+
+        if (nodes.contains(su))
+            u = nodes[su];
+        else {
+            if (reNumInt.match(su).hasMatch())
+                u = su.toInt();
+            else {
+                u = amount + 1;
+            }
+        }
+
+        if (nodes.contains(sv))
+            v = nodes[sv];
+        else {
+            if (reNumInt.match(sv).hasMatch())
+                v = sv.toInt();
+            else {
+                v = amount + 1;
+            }
+        }
+
         weight = model->item(i, 2)->text().toDouble();
-        if ((u < amount) && (v < amount) && weight) {
+        if (weight) {
+            if (addedEdges.contains(qMakePair(u, v))) {
+                auto result
+                    = QMessageBox::warning(table,
+                                           this->windowTitle(),
+                                           QString("Edge %1 - %2 already exists").arg(u).arg(v),
+                                           QMessageBox::StandardButton::Abort
+                                               | QMessageBox::StandardButton::Ignore
+                                               | QMessageBox::StandardButton::Apply);
+                if (result == QMessageBox::StandardButton::NoButton
+                    || result == QMessageBox::StandardButton::Abort) {
+                    return;
+                } else if (result == QMessageBox::StandardButton::Ignore) {
+                    continue;
+                } else if (result == QMessageBox::StandardButton::Apply) {
+                }
+            }
+            if (amount <= u) {
+                graph.addNode(amount, su);
+                nodes[su] = amount;
+                u = amount++;
+            }
+            if (amount <= v) {
+                graph.addNode(amount, sv);
+                nodes[sv] = amount;
+                v = amount++;
+            }
             bandwidth = model->item(i, 3)->text().toDouble();
             flow = model->item(i, 4)->text().toDouble();
-            graph.setEdgeWeight(u, v, weight);
+            if (graph.edgeExists(u, v))
+                graph.setEdgeWeight(u, v, weight);
+            else
+                graph.setEdge(u, v, weight);
             graph.setEdgeBandwidth(u, v, bandwidth);
             graph.setEdgeFlow(u, v, flow);
+            addedEdges.insert(qMakePair(u, v));
         } else {
             graph.removeEdge(u, v);
         }
     }
+    graph.graphView->initScene();
     graph.graphView->scene()->update();
     updateTables();
 }
@@ -415,11 +483,7 @@ void MainWindow::updateEdgesList(QTableView *list)
         return;
     }
     model->setColumnCount(edges[0].count());
-    model->setHeaderData(0, Qt::Horizontal, "U");
-    model->setHeaderData(1, Qt::Horizontal, "V");
-    model->setHeaderData(2, Qt::Horizontal, "Weight");
-    model->setHeaderData(3, Qt::Horizontal, "Band");
-    model->setHeaderData(4, Qt::Horizontal, "Flow");
+
     int count = edges.count();
     int oldRowCount = model->rowCount();
     int colCount = edges[0].count();
@@ -442,9 +506,7 @@ void MainWindow::updateEdgesList(QTableView *list)
         item = model->item(i, 1);
         item->setFlags(item->flags()&(~Qt::ItemIsEditable));
     }
-    for(int i = colCount; i--;){
-        list->setColumnWidth(i, 20);
-    }
+
     emit model->dataChanged(model->item(0,0)->index(),model->item(count-1, colCount-1)->index());
 }
 
@@ -471,8 +533,30 @@ void MainWindow::updateTables()
         if (tableName == "Edges") {
             updateEdgesList(list);
         }
+        addRowToList(static_cast<QStandardItemModel *>(list->model()));
     }
     graph.unsavedChanges = false;
+}
+
+void MainWindow::addRowToList(QStandardItemModel *model)
+{
+    int colCount = model->columnCount();
+    int rowCount = model->rowCount();
+    QList<QStandardItem *> items(colCount);
+    for (int i = colCount; i--;)
+        items[i] = new QStandardItem("");
+    model->insertRow(rowCount, items);
+}
+
+void MainWindow::listDataChanged(const QModelIndex &topLeft,
+                                 const QModelIndex &bottomRight,
+                                 const QVector<int> &)
+{
+    auto model = static_cast<QStandardItemModel *>(sender());
+    int lastRow = model->rowCount() - 1;
+    if (topLeft.row() == lastRow && bottomRight.row() == lastRow) {
+        addRowToList(model);
+    }
 }
 
 void MainWindow::myCopy()

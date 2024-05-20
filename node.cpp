@@ -169,7 +169,7 @@ QString Node::getDisplayName() const
     return this->displayName;
 }
 
-void Node::setDisplayName(QString &name)
+void Node::setDisplayName(const QString &name)
 {
     this->displayName = name;
 }

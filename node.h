@@ -36,7 +36,7 @@ public:
     void setIndex(unsigned int i);
 
     QString getDisplayName() const;
-    void setDisplayName(QString &name);
+    void setDisplayName(const QString &name);
 
     Node& operator=(const Node&);
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *widget) override;

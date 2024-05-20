@@ -262,6 +262,18 @@ void Graph::setMatrixBandwidth(Matrix2D& matrix)
     }
 }
 
+void Graph::setEdge(unsigned int u, unsigned int v, double w)
+{
+    auto key = qMakePair(nodes[u], nodes[v]);
+    if (edges.contains(key))
+        throw std::runtime_error("Edge already exists");
+    adjacent[u][v] = w;
+    EdgeType bandType = getEdgeType(u, v, bandwidth);
+    EdgeType adjType = getEdgeType(u, v, adjacent);
+    EdgeType type = (bandType > adjType) ? (bandType) : (adjType);
+    edges[key] = new Edge(key.first, key.second, w, type);
+}
+
 void Graph::setEdgeFlow(unsigned int u, unsigned int v, double f)
 {
     auto key = qMakePair(nodes[u],nodes[v]);
@@ -365,32 +377,48 @@ void Graph::removeEdge(unsigned int u, unsigned int v)
     }
 }
 
-void Graph::addNode(unsigned int i)
+void Graph::addNode(unsigned int i, const QString &name = "")
 {
     if(nodes.contains(i))
         throw std::runtime_error("Node already exists");
     nodes[i] = new Node(i, graphView);
-    short adjacentIsLess = adjacent.capacity() < amount+1;
-    short flowIsLess = flow.capacity() < amount+1;
-    if (adjacentIsLess||flowIsLess){
+    if (!name.isEmpty())
+        nodes[i]->setDisplayName(name);
+    bool adjacentIsLess = adjacent.size() < amount + 1;
+    bool flowIsLess = flow.size() < amount + 1;
+    bool bandwidthIsLess = bandwidth.size() < amount + 1;
+    if (adjacentIsLess || flowIsLess || bandwidthIsLess) {
         if(adjacentIsLess)
             adjacent.resize(amount+1);
         if(flowIsLess)
             flow.resize(amount+1);
+        if (bandwidthIsLess)
+            bandwidth.resize(amount + 1);
         for(unsigned int j = 0; j != amount+1; j++){
             if(adjacentIsLess)
                 adjacent[j].resize(amount+1);
             if(flowIsLess)
                 flow[j].resize(amount+1);
-
+            if (bandwidthIsLess)
+                bandwidth[j].resize(amount + 1);
         }
     }
+    amount++;
 }
 
 void Graph::updateNodes()
 {
     for (auto &node : nodes)
         node->update(node->boundingRect());
+}
+
+bool Graph::edgeExists(unsigned int u, unsigned int v)
+{
+    if (!nodes.contains(u))
+        return false;
+    if (!nodes.contains(v))
+        return false;
+    return edges.contains(qMakePair(nodes[u], nodes[v]));
 }
 
 const QFlags<GraphFlags> Graph::getFlags()

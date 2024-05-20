@@ -23,15 +23,17 @@ public:
     void setMatrixFlow(Matrix2D &matrix);
     void setMatrixBandwidth(Matrix2D &matrix);
 
-    void setEdge(Node* u, Node* v, Edge& edge);
+    void setEdge(unsigned int u, unsigned int v, double w);
 
     void setEdgeFlow(unsigned int u, unsigned int v, double f);
     void setEdgeWeight(unsigned int u, unsigned int v, double w);
     void setEdgeBandwidth(unsigned int u, unsigned int v, double b);
 
     void removeEdge(unsigned int u, unsigned int v);
-    void addNode(unsigned int i);
+    void addNode(unsigned int i, const QString &name);
     void updateNodes();
+
+    bool edgeExists(unsigned int u, unsigned int v);
     const QFlags<GraphFlags> getFlags();
     void setFlag(GraphFlags flag, bool set = true);
     void setFlags(QFlags<GraphFlags> flags);
