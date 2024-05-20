@@ -7,6 +7,7 @@
 #include <QException>
 
 typedef QList<QList<double>> Matrix2D;
+typedef QList<QList<int>> Matrix2I;
 
 class Graph
 {

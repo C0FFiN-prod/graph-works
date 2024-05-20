@@ -149,6 +149,7 @@ MainWindow::MainWindow(QWidget *parent)
             &QAction::triggered,
             this,
             std::bind(&MainWindow::updateTables, this));
+
     auto actGroup = new QActionGroup(this);
     actionGroups.append(actGroup);
     actGroup->addAction(ui->actionAutomatic);
@@ -182,6 +183,9 @@ MainWindow::MainWindow(QWidget *parent)
         ((QMenu*)i)->setWindowFlag(Qt::NoDropShadowWindowHint);
         ((QMenu*)i)->setAttribute(Qt::WA_TranslucentBackground);
     }
+
+    // Connecting algorithms
+    connect(ui->actionFloydWarshall, &QAction::triggered, this, &MainWindow::algorithmFloYdWarshall);
 }
 
 MainWindow::~MainWindow()
@@ -609,7 +613,7 @@ void MainWindow::setTableFromMatrix(QTableView *table, T &matrix, int height, in
         model->setHeaderData(i, Qt::Vertical, i);
         table->setColumnWidth(i, 20);
         for (int j = width; j--;) {
-            if ((i > rowCount) || (j > colCount))
+            if ((i >= rowCount) || (j >= colCount))
                 model->setItem(i, j, new QStandardItem(QString::number(matrix[i][j])));
             else {
                 model->item(i, j)->setData(QString::number(matrix[i][j]));
@@ -619,3 +623,12 @@ void MainWindow::setTableFromMatrix(QTableView *table, T &matrix, int height, in
     }
     emit model->dataChanged(model->item(0, 0)->index(), model->item(height - 1, width - 1)->index());
 }
+
+template void MainWindow::setTableFromMatrix(QTableView *table,
+                                             Matrix2D &matrix,
+                                             int height,
+                                             int width);
+template void MainWindow::setTableFromMatrix(QTableView *table,
+                                             Matrix2I &matrix,
+                                             int height,
+                                             int width);

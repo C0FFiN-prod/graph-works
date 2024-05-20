@@ -53,5 +53,9 @@ private:
     QList<QTableView *> graphMatrixViews;
     QList<QTableView *> graphListViews;
     QMap<QString, QSpinBox *> graphCountSpins;
+
+    // Algorithms
+    void algorithmFloYdWarshall();
 };
+
 #endif // MAINWINDOW_H
