@@ -1,10 +1,5 @@
-#include <QTime>
 #include "mainwindow.h"
-#include "qdockwidget.h"
-#include "qheaderview.h"
-#include "qlabel.h"
-#include "qlayout.h"
-#include "qmessagebox.h"
+
 #define INF 1.0 / 0.0
 void MainWindow::algorithmFloYdWarshall()
 {
@@ -16,11 +11,16 @@ void MainWindow::algorithmFloYdWarshall()
     }
 
     Matrix2D d = graph.getMatrixAdjacent();
-    Matrix2I paths(n, QList<int>(n, n));
+    Matrix2I paths(n, QList<int>(n));
     for (i = n; i--;)
-        for (j = n; j--;)
-            if (!d[i][j] || i == j)
+        for (j = n; j--;) {
+            if (d[i][j] || (i == j))
+                paths[i][j] = j;
+            else if (i != j)
                 d[i][j] = INF;
+            else
+                d[i][j] = 0;
+        }
 
     for (k = 0; k < n; ++k)
         for (i = 0; i < n; ++i)
@@ -31,29 +31,10 @@ void MainWindow::algorithmFloYdWarshall()
                         paths[i][j] = k;
                     }
 
-    QDockWidget *dock = new QDockWidget(this);
-    auto container = new QWidget();
-    auto layout = new QVBoxLayout(container);
-    dock->setWidget(container);
-    dock->setFloating(true);
-    dock->setWindowTitle("Floyd Warshall "
-                         + QDateTime().currentDateTime().toString(Qt::RFC2822Date));
-    dock->setFeatures(QDockWidget::DockWidgetClosable);
-    auto table = new QTableView();
-    table->setModel(new QStandardItemModel(0, 0));
-    table->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    table->verticalHeader()->setDefaultSectionSize(20);
-    table->horizontalHeader()->setDefaultSectionSize(40);
-    setTableFromMatrix(table, d);
-    layout->addWidget(new QLabel("Shortest distances"));
-    layout->addWidget(table);
-    table = new QTableView();
-    table->setModel(new QStandardItemModel(0, 0));
-    table->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    table->verticalHeader()->setDefaultSectionSize(20);
-    table->horizontalHeader()->setDefaultSectionSize(40);
-    layout->addWidget(new QLabel("Shortest paths"));
-    layout->addWidget(table);
-    setTableFromMatrix(table, paths);
-    dock->show();
+    QList<QWidget *> widgets{new QLabel("Shortest distances"),
+                             makeTableFromMatrix(d, n, n, false),
+                             new QLabel("Shortest paths"),
+                             makeTableFromMatrix(paths, n, n, false)};
+    QString title = "Floyd Warshall " + QDateTime().currentDateTime().toString(Qt::RFC2822Date);
+    addDockWidget(widgets, title);
 }

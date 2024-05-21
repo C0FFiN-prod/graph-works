@@ -3,8 +3,14 @@
 
 #include <QMainWindow>
 #include <QMap>
+#include <QTime>
 #include "graph.h"
 #include "qactiongroup.h"
+#include "qboxlayout.h"
+#include "qdockwidget.h"
+#include "qheaderview.h"
+#include "qlabel.h"
+#include "qmessagebox.h"
 #include "qpushbutton.h"
 #include "qshortcut.h"
 #include "qspinbox.h"
@@ -53,7 +59,17 @@ private:
     QList<QTableView *> graphMatrixViews;
     QList<QTableView *> graphListViews;
     QMap<QString, QSpinBox *> graphCountSpins;
-
+    void addDockWidget(QList<QWidget *> &widgets,
+                       QString &title,
+                       bool closable = true,
+                       bool floating = true);
+    template<typename T>
+    QTableView *makeTableFromMatrix(T &matrix,
+                                    int height = -1,
+                                    int width = -1,
+                                    bool editable = true,
+                                    int headerVSize = 20,
+                                    int headerHSize = 40);
     // Algorithms
     void algorithmFloYdWarshall();
 };

@@ -562,6 +562,24 @@ void MainWindow::addRowToList(QStandardItemModel *model)
     model->insertRow(rowCount, items);
 }
 
+void MainWindow::addDockWidget(QList<QWidget *> &widgets,
+                               QString &title,
+                               bool closable,
+                               bool floating)
+{
+    QDockWidget *dock = new QDockWidget(this);
+    auto container = new QWidget();
+    auto layout = new QVBoxLayout(container);
+    for (auto &widget : widgets)
+        layout->addWidget(widget);
+    dock->setWidget(container);
+    dock->setFloating(floating);
+    dock->setWindowTitle(title);
+    if (closable)
+        dock->setFeatures(QDockWidget::DockWidgetClosable);
+    dock->show();
+}
+
 void MainWindow::listDataChanged(const QModelIndex &topLeft,
                                  const QModelIndex &bottomRight,
                                  const QVector<int> &)
@@ -632,3 +650,22 @@ template void MainWindow::setTableFromMatrix(QTableView *table,
                                              Matrix2I &matrix,
                                              int height,
                                              int width);
+
+template<typename T>
+QTableView *MainWindow::makeTableFromMatrix(
+    T &matrix, int height, int width, bool editable, int headerVSize, int headerHSize)
+{
+    auto table = new QTableView();
+    table->setModel(new QStandardItemModel(0, 0));
+    if (!editable)
+        table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    table->verticalHeader()->setDefaultSectionSize(headerVSize);
+    table->horizontalHeader()->setDefaultSectionSize(headerHSize);
+    setTableFromMatrix(table, matrix, height, width);
+    return table;
+}
+
+template QTableView *MainWindow::makeTableFromMatrix(
+    Matrix2D &matrix, int height, int width, bool editable, int headerVSize, int headerHSize);
+template QTableView *MainWindow::makeTableFromMatrix(
+    Matrix2I &matrix, int height, int width, bool editable, int headerVSize, int headerHSize);
