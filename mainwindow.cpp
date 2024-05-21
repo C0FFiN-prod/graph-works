@@ -186,6 +186,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Connecting algorithms
     connect(ui->actionFloydWarshall, &QAction::triggered, this, &MainWindow::algorithmFloYdWarshall);
+    connect(ui->actionDijkstra, &QAction::triggered, this, &MainWindow::algorithmDijkstra);
 }
 
 MainWindow::~MainWindow()
@@ -568,7 +569,7 @@ void MainWindow::addDockWidget(QList<QWidget *> &widgets,
                                bool floating)
 {
     QDockWidget *dock = new QDockWidget(this);
-    auto container = new QWidget();
+    auto container = new QWidget(this);
     auto layout = new QVBoxLayout(container);
     for (auto &widget : widgets)
         layout->addWidget(widget);
@@ -627,10 +628,10 @@ void MainWindow::setTableFromMatrix(QTableView *table, T &matrix, int height, in
         model->insertColumns(colCount, width - colCount);
 
     for (int i = height; i--;) {
-        model->setHeaderData(i, Qt::Horizontal, i);
         model->setHeaderData(i, Qt::Vertical, i);
         table->setColumnWidth(i, 20);
         for (int j = width; j--;) {
+            model->setHeaderData(j, Qt::Horizontal, j);
             if ((i >= rowCount) || (j >= colCount))
                 model->setItem(i, j, new QStandardItem(QString::number(matrix[i][j])));
             else {

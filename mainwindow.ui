@@ -84,7 +84,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>18</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -109,6 +109,7 @@
      <string>Algorithms</string>
     </property>
     <addaction name="actionFloydWarshall"/>
+    <addaction name="actionDijkstra"/>
    </widget>
    <widget class="QMenu" name="menuNode_movement">
     <property name="title">
@@ -857,6 +858,11 @@
   <action name="actionFloydWarshall">
    <property name="text">
     <string>Floyd Warshall</string>
+   </property>
+  </action>
+  <action name="actionDijkstra">
+   <property name="text">
+    <string>Dijkstra</string>
    </property>
   </action>
   <zorder>dock_MatrixFlow</zorder>

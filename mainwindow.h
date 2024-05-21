@@ -72,6 +72,7 @@ private:
                                     int headerHSize = 40);
     // Algorithms
     void algorithmFloYdWarshall();
+    void algorithmDijkstra();
 };
 
 #endif // MAINWINDOW_H
