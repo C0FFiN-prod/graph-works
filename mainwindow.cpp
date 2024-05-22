@@ -187,6 +187,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Connecting algorithms
     connect(ui->actionFloydWarshall, &QAction::triggered, this, &MainWindow::algorithmFloYdWarshall);
     connect(ui->actionDijkstra, &QAction::triggered, this, &MainWindow::algorithmDijkstra);
+    connect(ui->actionDinic, &QAction::triggered, this, &MainWindow::algorithmDinic);
 }
 
 MainWindow::~MainWindow()
@@ -447,7 +448,7 @@ void MainWindow::applyEdgesList(QTableView *table)
                 auto result = QMessageBox::warning(
                     table,
                     this->windowTitle(),
-                    QString("Row %1: Edge %2 - %3 already exists").arg(i + 1).arg(u).arg(v),
+                    QString("Row %1: Edge %2 - %3 already exists").arg(i).arg(u).arg(v),
                     QMessageBox::StandardButton::Abort | QMessageBox::StandardButton::Ignore
                         | QMessageBox::StandardButton::Apply);
                 if (result == QMessageBox::StandardButton::NoButton

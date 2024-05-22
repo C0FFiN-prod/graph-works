@@ -1,5 +1,6 @@
 #include <QBitArray>
 #include "mainwindow.h"
+#include "ui_mainwindow.h"
 #define INF 1.0 / 0.0
 void MainWindow::algorithmFloYdWarshall()
 {
@@ -38,6 +39,20 @@ void MainWindow::algorithmFloYdWarshall()
     QString title = "Floyd Warshall " + QDateTime().currentDateTime().toString();
     addDockWidget(widgets, title);
 }
+
+int minDistance(int n, QList<double> &dist, QBitArray &sptSet)
+{
+    // Initialize min value
+    double min = INF;
+    int min_index = -1;
+
+    for (int v = 0; v < n; v++)
+        if (sptSet[v] == false && dist[v] <= min)
+            min = dist[v], min_index = v;
+
+    return min_index;
+};
+
 void MainWindow::algorithmDijkstra()
 {
     int k, i, n = graph.getAmount();
@@ -55,22 +70,11 @@ void MainWindow::algorithmDijkstra()
     // path tree or shortest distance from src to i is
     // finalized
 
-    auto minDistance = [](int n, QList<double> dist, QBitArray sptSet) {
-        // Initialize min value
-        double min = INF, min_index;
-
-        for (int v = 0; v < n; v++)
-            if (sptSet[v] == false && dist[v] <= min)
-                min = dist[v], min_index = v;
-
-        return min_index;
-    };
-
     // Initialize all distances as INFINITE and stpSet[] as
     // false
     for (i = 0; i < n; i++)
         dist[i] = INF, sptSet[i] = false;
-    int src;
+    int src, u;
     if ((src = graph.getSourceIndex()) == -1)
         src = 0;
 
@@ -82,7 +86,7 @@ void MainWindow::algorithmDijkstra()
         // Pick the minimum distance vertex from the set of
         // vertices not yet processed. u is always equal to
         // src in the first iteration.
-        double u = minDistance(n, dist, sptSet);
+        u = minDistance(n, dist, sptSet);
 
         // Mark the picked vertex as processed
         sptSet[u] = true;
@@ -95,7 +99,7 @@ void MainWindow::algorithmDijkstra()
             // there is an edge from u to v, and total
             // weight of path from src to  v through u is
             // smaller than current value of dist[v]
-            if (!sptSet[k] && d[u][k] && dist[u] != INT_MAX && dist[u] + d[u][k] < dist[k])
+            if (!sptSet[k] && d[u][k] && dist[u] != INF && dist[u] + d[u][k] < dist[k])
                 dist[k] = dist[u] + d[u][k];
     }
     Matrix2D distM(1, dist);
@@ -104,5 +108,104 @@ void MainWindow::algorithmDijkstra()
         new QLabel("Shortest distances from node " + graph.getNodeName(src)),
         makeTableFromMatrix(distM, 1, n, false),
     };
+    addDockWidget(widgets, title);
+}
+
+#include "graph.h" // Assuming this header contains the necessary class and method declarations
+#include <algorithm>
+#include <queue>
+
+bool MaxFlowDinicBFS(int s, int t, QList<int> &d, Matrix2D &f, const Matrix2D &c, int n)
+{
+    std::queue<int> q;
+    q.push(s);
+
+    std::fill(d.begin(), d.end(), -1);
+    d[s] = 0;
+
+    while (!q.empty()) {
+        int v = q.front();
+        q.pop();
+
+        for (int to = 0; to < n; ++to) {
+            if (d[to] == -1 && f[v][to] < c[v][to]) {
+                q.push(to);
+                d[to] = d[v] + 1;
+            }
+        }
+    }
+
+    return d[t] != -1;
+}
+
+double MaxFlowDinicDFS(int v,
+                       int s,
+                       int t,
+                       const Matrix2D &c,
+                       Matrix2D &f,
+                       QList<int> &d,
+                       QList<int> &ptr,
+                       double flow,
+                       int n)
+{
+    if (flow == 0)
+        return 0;
+
+    if (v == t)
+        return flow;
+
+    for (; ptr[v] < n; ++ptr[v]) {
+        int to = ptr[v];
+
+        if (d[to] != d[v] + 1)
+            continue;
+
+        double pushed = MaxFlowDinicDFS(to, s, t, c, f, d, ptr, fmin(flow, c[v][to] - f[v][to]), n);
+
+        if (pushed != 0) {
+            f[v][to] += pushed;
+            f[to][v] -= pushed;
+            return pushed;
+        }
+    }
+
+    return 0;
+}
+
+void MainWindow::algorithmDinic()
+{
+    int n = graph.getAmount();
+    if (n < 2) {
+        QMessageBox::warning(this, this->windowTitle(), "Too few nodes");
+        return;
+    }
+
+    int s, t;
+    if ((s = graph.getSourceIndex()) == -1)
+        s = 0;
+    if ((t = graph.getDestIndex()) == -1)
+        t = n - 1;
+
+    Matrix2D c = graph.getMatrixBandwidth();
+    Matrix2D f(n, QList<double>(n, 0));
+    QList<int> d(n, -1);
+    QList<int> ptr(n, 0);
+
+    double maxFlow = 0;
+
+    while (MaxFlowDinicBFS(s, t, d, f, c, n)) {
+        std::fill(ptr.begin(), ptr.end(), 0);
+
+        double pushed;
+        do {
+            pushed = MaxFlowDinicDFS(s, s, t, c, f, d, ptr, INF, n);
+            maxFlow += pushed;
+        } while (pushed != 0);
+    }
+    QString title = "Dinic " + QDateTime::currentDateTime().toString();
+    this->ui->textEdit_Console->appendPlainText(title);
+    this->ui->textEdit_Console->appendPlainText(QString("Max Flow = %1").arg(maxFlow));
+    QList<QWidget *> widgets{new QLabel("Optimized flow matrix"),
+                             makeTableFromMatrix(f, n, n, false)};
     addDockWidget(widgets, title);
 }

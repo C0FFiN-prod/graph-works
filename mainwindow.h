@@ -73,6 +73,7 @@ private:
     // Algorithms
     void algorithmFloYdWarshall();
     void algorithmDijkstra();
+    void algorithmDinic();
 };
 
 #endif // MAINWINDOW_H
