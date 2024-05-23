@@ -15,6 +15,13 @@ void MainWindow::algorithmFloYdWarshall()
     Matrix2I paths(n, QList<int>(n));
     for (i = n; i--;)
         for (j = n; j--;) {
+            if (d[i][j] < 0) {
+                QMessageBox::warning(this,
+                                     this->windowTitle(),
+                                     "For this algorithm graph must not contain negative weights");
+                return;
+            }
+
             if (d[i][j] || (i == j))
                 paths[i][j] = j;
             else if (i != j)
@@ -36,7 +43,7 @@ void MainWindow::algorithmFloYdWarshall()
                              makeTableFromMatrix(d, n, n, false),
                              new QLabel("Shortest paths"),
                              makeTableFromMatrix(paths, n, n, false)};
-    QString title = "Floyd Warshall " + QDateTime().currentDateTime().toString();
+    QString title("Floyd Warshall " + QDateTime().currentDateTime().toString());
     addDockWidget(widgets, title);
 }
 
@@ -103,7 +110,7 @@ void MainWindow::algorithmDijkstra()
                 dist[k] = dist[u] + d[u][k];
     }
     Matrix2D distM(1, dist);
-    QString title = "Dijkstra " + QDateTime::currentDateTime().toString();
+    QString title("Dijkstra " + QDateTime::currentDateTime().toString());
     QList<QWidget *> widgets = {
         new QLabel("Shortest distances from node " + graph.getNodeName(src)),
         makeTableFromMatrix(distM, 1, n, false),
@@ -202,10 +209,65 @@ void MainWindow::algorithmDinic()
             maxFlow += pushed;
         } while (pushed != 0);
     }
-    QString title = "Dinic " + QDateTime::currentDateTime().toString();
-    this->ui->textEdit_Console->appendPlainText(title);
-    this->ui->textEdit_Console->appendPlainText(QString("Max Flow = %1").arg(maxFlow));
-    QList<QWidget *> widgets{new QLabel("Optimized flow matrix"),
-                             makeTableFromMatrix(f, n, n, false)};
-    addDockWidget(widgets, title);
+    QString title("Dinic " + QDateTime::currentDateTime().toString());
+    consoleLog(title);
+    consoleLog("Max Flow = " + QString::number(maxFlow));
+    addDockWidget({new QLabel("Optimized flow matrix"), makeTableFromMatrix(f, n, n, false)}, title);
 }
+
+// The main function that finds shortest distances from src to
+// all other vertices using Bellman-Ford algorithm. The function
+// also detects negative weight cycle
+void MainWindow::algorithmBellmanFord()
+{
+    // Step 1: Initialize distances from src to all other vertices
+    // as INFINITE
+    int src, n = graph.getAmount();
+    if (n < 2) {
+        QMessageBox::warning(this, this->windowTitle(), "Too few nodes");
+        return;
+    }
+    if ((src = graph.getSourceIndex()) == -1)
+        src = 0;
+    QList<double> dist(n, INF);
+    auto edges(graph.getListEdges());
+    dist[src] = 0;
+    int i, u, v;
+    double w;
+    // Step 2: Relax all edges |V| - 1 times. A simple shortest
+    // path from src to any other vertex can have at-most |V| - 1
+    // edges
+    for (i = 0; i < n - 1; i++)
+        // Update dist value and parent index of the adjacent vertices of
+        // the picked vertex. Consider only those vertices which are still in
+        // queue
+        for (auto &edge : edges) {
+            u = edge[0].toInt();
+            v = edge[1].toInt();
+            w = edge[2].toDouble();
+            if ((dist[u] != INF) && (dist[u] + w < dist[v]))
+                dist[v] = dist[u] + w;
+        }
+
+    // Step 3: check for negative-weight cycles. The above step
+    // guarantees shortest distances if graph doesn't contain
+    // negative weight cycle. If we get a shorter path, then there
+    // is a cycle.
+
+    QString title = "Bellmann Ford " + QDateTime::currentDateTime().toString();
+
+    for (auto &edge : edges) {
+        u = edge[0].toInt();
+        v = edge[1].toInt();
+        w = edge[2].toDouble();
+        if ((dist[u] != INF) && (dist[u] + w < dist[v])) {
+            consoleLog(title);
+            consoleLog("Graph contains negative weight cycle");
+            return;
+        }
+    }
+    addDockWidget({new QLabel("Shortest distances from node " + graph.getNodeName(src)),
+                   makeTableFromMatrix(Matrix2D(1, dist), n, n, false)},
+                  title);
+}
+

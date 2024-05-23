@@ -188,6 +188,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionFloydWarshall, &QAction::triggered, this, &MainWindow::algorithmFloYdWarshall);
     connect(ui->actionDijkstra, &QAction::triggered, this, &MainWindow::algorithmDijkstra);
     connect(ui->actionDinic, &QAction::triggered, this, &MainWindow::algorithmDinic);
+    connect(ui->actionBellmanFord, &QAction::triggered, this, &MainWindow::algorithmBellmanFord);
 }
 
 MainWindow::~MainWindow()
@@ -564,8 +565,13 @@ void MainWindow::addRowToList(QStandardItemModel *model)
     model->insertRow(rowCount, items);
 }
 
-void MainWindow::addDockWidget(QList<QWidget *> &widgets,
-                               QString &title,
+void MainWindow::consoleLog(const QString &text)
+{
+    ui->textEdit_Console->appendPlainText(text);
+}
+
+void MainWindow::addDockWidget(const QList<QWidget *> &widgets,
+                               const QString &title,
                                bool closable,
                                bool floating)
 {
@@ -611,7 +617,7 @@ void MainWindow::myPaste()
 }
 
 template<typename T>
-void MainWindow::setTableFromMatrix(QTableView *table, T &matrix, int height, int width)
+void MainWindow::setTableFromMatrix(QTableView *table, const T &matrix, int height, int width)
 {
     if ((height == -1) || (height > matrix.size()))
         height = matrix.size();
@@ -645,17 +651,17 @@ void MainWindow::setTableFromMatrix(QTableView *table, T &matrix, int height, in
 }
 
 template void MainWindow::setTableFromMatrix(QTableView *table,
-                                             Matrix2D &matrix,
+                                             const Matrix2D &matrix,
                                              int height,
                                              int width);
 template void MainWindow::setTableFromMatrix(QTableView *table,
-                                             Matrix2I &matrix,
+                                             const Matrix2I &matrix,
                                              int height,
                                              int width);
 
 template<typename T>
 QTableView *MainWindow::makeTableFromMatrix(
-    T &matrix, int height, int width, bool editable, int headerVSize, int headerHSize)
+    const T &matrix, int height, int width, bool editable, int headerVSize, int headerHSize)
 {
     auto table = new QTableView();
     table->setModel(new QStandardItemModel(0, 0));
@@ -668,6 +674,6 @@ QTableView *MainWindow::makeTableFromMatrix(
 }
 
 template QTableView *MainWindow::makeTableFromMatrix(
-    Matrix2D &matrix, int height, int width, bool editable, int headerVSize, int headerHSize);
+    const Matrix2D &matrix, int height, int width, bool editable, int headerVSize, int headerHSize);
 template QTableView *MainWindow::makeTableFromMatrix(
-    Matrix2I &matrix, int height, int width, bool editable, int headerVSize, int headerHSize);
+    const Matrix2I &matrix, int height, int width, bool editable, int headerVSize, int headerHSize);

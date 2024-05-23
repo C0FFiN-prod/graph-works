@@ -54,17 +54,18 @@ private:
     void updateTables();
     void addRowToList(QStandardItemModel *table);
     template<typename T>
-    void setTableFromMatrix(QTableView *table, T &matrix, int height = -1, int width = -1);
+    void setTableFromMatrix(QTableView *table, const T &matrix, int height = -1, int width = -1);
     QList<QActionGroup *> actionGroups;
     QList<QTableView *> graphMatrixViews;
     QList<QTableView *> graphListViews;
     QMap<QString, QSpinBox *> graphCountSpins;
-    void addDockWidget(QList<QWidget *> &widgets,
-                       QString &title,
+    void consoleLog(const QString &text);
+    void addDockWidget(const QList<QWidget *> &widgets,
+                       const QString &title,
                        bool closable = true,
                        bool floating = true);
     template<typename T>
-    QTableView *makeTableFromMatrix(T &matrix,
+    QTableView *makeTableFromMatrix(const T &matrix,
                                     int height = -1,
                                     int width = -1,
                                     bool editable = true,
@@ -74,6 +75,8 @@ private:
     void algorithmFloYdWarshall();
     void algorithmDijkstra();
     void algorithmDinic();
+    void algorithmBellmanFord();
+    void algorithmEdmondsKarp();
 };
 
 #endif // MAINWINDOW_H

@@ -111,6 +111,7 @@
     <addaction name="actionFloydWarshall"/>
     <addaction name="actionDijkstra"/>
     <addaction name="actionDinic"/>
+    <addaction name="actionBellmanFord"/>
    </widget>
    <widget class="QMenu" name="menuNode_movement">
     <property name="title">
@@ -869,6 +870,11 @@
   <action name="actionDinic">
    <property name="text">
     <string>Dinic</string>
+   </property>
+  </action>
+  <action name="actionBellmanFord">
+   <property name="text">
+    <string>Bellman Ford</string>
    </property>
   </action>
   <zorder>dock_MatrixFlow</zorder>
