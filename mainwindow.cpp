@@ -601,6 +601,7 @@ void MainWindow::addDockWidget(const QList<QWidget *> &widgets,
     if (closable)
         dock->setFeatures(QDockWidget::DockWidgetClosable);
     dock->show();
+}
 void MainWindow::deleteSelectedObjects(const QFlags<DeleteOptions> &options)
 {
     //QHash<QGraphicsItem *, DeleteOptions> toDelete;

@@ -880,6 +880,8 @@
   <action name="actionBellmanFord">
    <property name="text">
     <string>Bellman Ford</string>
+   </property>
+  </action>
   <action name="actionDeleteEdges">
    <property name="icon">
     <iconset resource="resource.qrc">

@@ -1,6 +1,5 @@
 #include <QBitArray>
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
 #define INF 1.0 / 0.0
 void MainWindow::algorithmFloYdWarshall()
 {
