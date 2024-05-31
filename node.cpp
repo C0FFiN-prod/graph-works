@@ -14,8 +14,10 @@ Node::Node(int index, GraphWidget *graphWidget)
     , index(index)
     , displayName(QString::number(index))
 {
+    selectionColor = Qt::black;
     setFlag(ItemIsMovable);
     setFlag(ItemSendsGeometryChanges);
+    setFlag(ItemIsSelectable);
     setCacheMode(DeviceCoordinateCache);
     setZValue(1);
     this->setPos(QRandomGenerator::global()->bounded(300), QRandomGenerator::global()->bounded(300));
@@ -24,7 +26,7 @@ Node::Node(int index, GraphWidget *graphWidget)
 Node::Node()
     : graph(nullptr)
     , index(0)
-    , displayName("0")
+    , displayName("0"), selectionColor(Qt::black)
 {}
 
 
@@ -176,9 +178,15 @@ void Node::setDisplayName(const QString &name)
 
 void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
+    if(isSelected()){
+        selectionColor = QColor(0,120,212);
+
+    }else{
+        selectionColor = Qt::black;
+    }
     // drawing circle
     painter->fillPath(shape(), QBrush(Qt::white));
-    painter->setPen(QPen(Qt::black, 2));
+    painter->setPen(QPen(selectionColor, 2));
     painter->drawPath(shape());
     //font setting up
     QFont font = painter->font();
@@ -227,8 +235,18 @@ QVariant Node::itemChange(GraphicsItemChange change, const QVariant &value)
 
 void Node::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    update();
     QGraphicsItem::mousePressEvent(event);
+    if(!(event->modifiers() & Qt::ControlModifier)){
+        for(auto item: this->scene()->items()){
+            if(item!=this){
+                item->setSelected(false);
+
+            }
+        }
+    }
+    setSelected(!isSelected());
+    update();
+
 }
 
 void Node::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)

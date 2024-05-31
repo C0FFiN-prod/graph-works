@@ -5,6 +5,7 @@
 #include <QMessageBox>
 #include <QToolTip>
 #include <QClipboard>
+#include <QQueue>
 #include <set>
 #include <QShortcut>
 MainWindow::MainWindow(QWidget *parent)
@@ -102,6 +103,20 @@ MainWindow::MainWindow(QWidget *parent)
             this->graph.unsetFlag(GraphFlags::ShowFlow);
         graph.graphView->scene()->update();
     });
+    connect(ui->actionDeleteNode,
+            &QAction::triggered,
+            this,
+            std::bind(&MainWindow::deleteSelectedObjects, this, DeleteOptions::Nodes));
+    connect(ui->actionDeleteEdges,
+            &QAction::triggered,
+            this,
+            std::bind(&MainWindow::deleteSelectedObjects, this, DeleteOptions::Edges));
+    connect(ui->actionDeleteSelected,
+            &QAction::triggered,
+            this,
+            std::bind(&MainWindow::deleteSelectedObjects,
+                      this,
+                      QFlags<DeleteOptions>(DeleteOptions::Nodes | DeleteOptions::Edges)));
 
     auto view = ui->menuView_mode;
     auto docks = this->findChildren<QDockWidget *>();
@@ -586,6 +601,48 @@ void MainWindow::addDockWidget(const QList<QWidget *> &widgets,
     if (closable)
         dock->setFeatures(QDockWidget::DockWidgetClosable);
     dock->show();
+void MainWindow::deleteSelectedObjects(const QFlags<DeleteOptions> &options)
+{
+    //QHash<QGraphicsItem *, DeleteOptions> toDelete;
+    QSet<QPair<QGraphicsItem *, DeleteOptions>> toDelete;
+    for (auto &item : graph.graphView->items()) {
+        if (item != nullptr) {
+            if (item->isSelected()) {
+                if (Node *node = qgraphicsitem_cast<Node *>(item)) {
+                    if (options.testFlag(DeleteOptions::Nodes)) {
+                        toDelete.insert(qMakePair(node, DeleteOptions::Nodes));
+                    }
+                } else if (Edge *edge = qgraphicsitem_cast<Edge *>(item)) {
+                    if (options.testFlag(DeleteOptions::Edges)) {
+                        toDelete.insert(qMakePair(edge, DeleteOptions::Edges));
+                    }
+                }
+            }
+        }
+    }
+    for (auto &i : toDelete) {
+        auto deleteConnected = [&i](const QPair<QGraphicsItem *, DeleteOptions> &j) {
+            return ((Node *) i.first)->edgeList.contains((Edge *) (j.first));
+        };
+        unsigned src;
+        unsigned dst;
+        switch (i.second) {
+        case DeleteOptions::Nodes:
+            toDelete.removeIf(deleteConnected);
+
+            graph.removeNode(((Node *) i.first)->getIndex());
+            break;
+        case DeleteOptions::Edges:
+            src = ((Edge *) i.first)->sourceNode()->getIndex();
+            dst = ((Edge *) i.first)->destNode()->getIndex();
+            graph.removeEdge(src, dst);
+            break;
+        default:
+            break;
+        }
+    }
+    updateTables();
+    graph.graphView->initScene();
 }
 
 void MainWindow::listDataChanged(const QModelIndex &topLeft,

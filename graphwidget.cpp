@@ -5,6 +5,7 @@
 #include <QKeyEvent>
 #include <QRandomGenerator>
 
+
 GraphWidget::GraphWidget(QMap<QPair<Node*, Node*>, Edge*>* edges, QMap<unsigned int, Node*>* nodes, QFlags<GraphFlags> *flags, QWidget *parent)
     : QGraphicsView(parent), scenePtr(nullptr), edges(edges), nodes(nodes), flags(flags)
 {
@@ -22,6 +23,7 @@ GraphWidget::GraphWidget(QMap<QPair<Node*, Node*>, Edge*>* edges, QMap<unsigned 
     setMinimumSize(300, 200);
     setTransformationAnchor(QGraphicsView::NoAnchor);
     setMouseTracking(true);
+
 //    setOptimizationFlag(QGraphicsView::DontAdjustForAntialiasing);
 }
 
@@ -34,13 +36,15 @@ void GraphWidget::runTimer()
 void GraphWidget::initScene()
 {
     for(auto& node: *nodes){
-        if(!isItemOnScene(scene(), qgraphicsitem_cast<Node *>(node))){
+        if(!isItemOnScene(scene(), qgraphicsitem_cast<Node *>(node))&& node!=nullptr){
             scene()->addItem(node);
         }
     }
     for(auto& edge: *edges){
-        if(!isItemOnScene(scene(), qgraphicsitem_cast<Edge *>(edge))){
+        if(!isItemOnScene(scene(), qgraphicsitem_cast<Edge *>(edge)) && edge!=nullptr){
             scene()->addItem(edge);
+            scene()->addItem(&edge->info);
+
         }
     }
 }

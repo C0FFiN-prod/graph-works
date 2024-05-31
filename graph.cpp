@@ -381,6 +381,38 @@ void Graph::removeEdge(unsigned int u, unsigned int v)
         }
     }
 }
+void Graph::removeNode(unsigned int index)
+{
+    Node *toRemove = nodes[index];
+
+    for (auto &i : toRemove->edgeList) {
+        int source = i->sourceNode()->getIndex();
+        int dest = i->destNode()->getIndex();
+        this->removeEdge(source, dest);
+        this->removeEdge(dest, source);
+    }
+    toRemove = nodes.take(index);
+    if (index < amount && toRemove != nullptr) {
+        adjacent.removeAt(index);
+        flow.removeAt(index);
+        bandwidth.removeAt(index);
+
+        for (unsigned i = 0; i < amount - 1; i++) {
+            adjacent[i].removeAt(index);
+            flow[i].removeAt(index);
+            bandwidth[i].removeAt(index);
+        }
+    }
+
+    for (unsigned int i = index + 1; i < amount; i++) {
+        auto toChange = nodes.take(i);
+        toChange->setIndex(i - 1);
+        nodes.insert(i - 1, toChange);
+    }
+    graphView->scene()->removeItem(toRemove);
+    amount--;
+    delete toRemove;
+}
 
 void Graph::addNode(unsigned int i, const QString &name = "")
 {

@@ -3,6 +3,8 @@
 
 #include "node.h"
 #include "edge.h"
+#include "textbox.h"
+
 #include "graphenums.h"
 #include <QGraphicsView>
 

@@ -1,12 +1,14 @@
 #include "edge.h"
 #include "node.h"
+#include "qgraphicsscene.h"
+#include "qgraphicssceneevent.h"
 
 #include <QPainter>
 #include <QtMath>
 
 QFlags<GraphFlags> *Edge::graphFlags = nullptr;
 
-void drawTextAt(QPainter *painter, QPointF offsetPnt, QString& text){
+void Edge::drawTextAt(QPainter *painter, QPointF offsetPnt, QString& text){
     //setting up font parameters
     if(text.isEmpty()) return;
     QFont font = painter->font();
@@ -27,28 +29,33 @@ void drawTextAt(QPainter *painter, QPointF offsetPnt, QString& text){
     //drawing background
     painter->setBrush(QColor(255, 255, 255, 255));
     painter->setPen(Qt::NoPen);
-    painter->drawEllipse(backgroundRect);
+    //painter->drawEllipse(backgroundRect);
 
     //drawing text
     painter->setPen(Qt::black);
-    painter->drawText(backgroundRect, Qt::AlignVCenter | Qt::AlignHCenter, text);
+    this->info.moveTo(offsetPnt.toPoint());
+    this->info.setText(text);
+    this->info.setZValue(1);
+    //this->info.setTransform(info.transform().rotate(info.rotation()-angle));
+    //painter->drawText(backgroundRect, Qt::AlignVCenter | Qt::AlignHCenter, text);
 }
-void drawArrowAt(QPainter *painter, QPointF at, double angle, double arrowSize){
+void drawArrowAt(QPainter *painter, QPointF at, double angle, double arrowSize, QColor color){
     QPointF destArrowP1 = at + QPointF(sin(angle - M_PI / 3) * arrowSize, cos(angle - M_PI / 3) * arrowSize);
     QPointF destArrowP2 = at + QPointF(sin(angle - M_PI + M_PI / 3) * arrowSize, cos(angle - M_PI + M_PI / 3) * arrowSize);
-    painter->setBrush(Qt::black);
+    painter->setBrush(color);
     painter->drawPolygon(QPolygonF() << at << destArrowP1 << destArrowP2);
 
 }
 
 
 Edge::Edge(Node *sourceNode, Node *destNode, double weight, EdgeType edgeType = EdgeType::SingleDirection)
-    : edgeType(edgeType), source(sourceNode), dest(destNode), flow(0), weight(weight), bandwidth(0)
+    : edgeType(edgeType), source(sourceNode), dest(destNode), flow(0), weight(weight), bandwidth(0), selectionColor(Qt::black)
 {
-    setAcceptedMouseButtons(Qt::NoButton);
+    setFlag(ItemIsSelectable);
+    //setAcceptedMouseButtons(Qt::NoButton);
     source->addEdge(this);
     dest->addEdge(this);
-    adjust();
+    //adjust();
     sourceNode->connectToNode(destNode);
 }
 
@@ -152,14 +159,62 @@ QRectF Edge::boundingRect() const
     }
 }
 
+QPainterPath Edge::shape() const
+{
+    QPainterPath path;
+    QPolygon rect;
+    int edgeWidth=2;
+    double teta = atan2((sourcePoint.y()-destPoint.y()),(sourcePoint.x()-destPoint.x()));
+    QPointF offsetPnt(cos(teta+M_PI/2), sin(teta+M_PI/2));
+
+    rect << (-offsetPnt*edgeWidth + this->destPoint).toPoint();
+    rect << (-offsetPnt*edgeWidth + this->sourcePoint).toPoint();    //points with offset on left side
+    if(this->edgeType==EdgeType::BiDirectionalDiff){                //points with curvines on right side
+        rect << (-offsetPnt*curvines + (this->destPoint+this->sourcePoint)/2).toPoint();
+        rect << (-offsetPnt*edgeWidth + this->destPoint).toPoint();
+    }else{                                                          //points with offset on right side
+        rect << (offsetPnt*edgeWidth + this->sourcePoint).toPoint();
+        rect << (offsetPnt*edgeWidth + this->destPoint).toPoint();
+    }
+    path.addPolygon(rect);
+    return path;
+}
+
+
+void Edge::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    if(!(event->modifiers() & Qt::ControlModifier)){
+        for(auto item: this->scene()->items()){
+            if(item!=this){
+                item->setSelected(false);
+
+            }
+        }
+    }
+    //update();
+    QGraphicsItem::mousePressEvent(event);
+
+    setSelected(!isSelected());
+    update();
+}
+
 void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
+    if(isSelected()){
+        selectionColor = QColor(0,120,212);
+
+    }else{
+        selectionColor = Qt::black;
+    }
+
     if (!source || !dest)
         return;
 
     QLineF line(sourcePoint, destPoint);
     if (qFuzzyCompare(line.length(), qreal(0.)))
         return;
+
+
 
     //calculate curve points
     QPointF midPoint = QPointF((line.p1().x()+ line.p2().x())/2,(line.p1().y()+ line.p2().y())/2 );
@@ -185,12 +240,12 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 
     if(this->edgeType==EdgeType::SingleDirection){
         //draw straight line
-        painter->setPen(QPen(Qt::black, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        painter->setPen(QPen(selectionColor, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         painter->drawLine(line);
 
-        drawArrowAt(painter, destPoint, atan2(-line.dy(), line.dx()), 10);
+        drawArrowAt(painter, destPoint, atan2(-line.dy(), line.dx()), 10, selectionColor);
 
-        drawTextAt(painter, midPoint, text);
+        this->drawTextAt(painter, midPoint, text);
 
     }else if(this->edgeType==EdgeType::BiDirectionalDiff){
         //calculate offset point and angle for curviness
@@ -199,25 +254,34 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 
         //draw curve line
         QPainterPath path;
-        painter->setPen(QPen(Qt::black, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        painter->setPen(QPen(selectionColor, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         path.moveTo(line.p1());
         path.cubicTo(line.p1(),offsetPnt, line.p2());
         painter->drawPath(path);
 
-        drawArrowAt(painter, destPoint, M_PI-atan2(offsetPnt.y()-destPoint.y(), offsetPnt.x()-destPoint.x()), 10);
+        drawArrowAt(painter, destPoint, M_PI-atan2(offsetPnt.y()-destPoint.y(), offsetPnt.x()-destPoint.x()), 10, selectionColor);
 
         drawTextAt(painter,  QPointF(midPoint.x() + curvines/2 * cos(teta+M_PI/2), midPoint.y() + curvines/2 * sin(teta+M_PI/2)), text);
 
     }else if(this->edgeType==EdgeType::BiDirectionalSame){
         if(this->source->getIndex()<this->dest->getIndex()){
         //draw straight line
-        painter->setPen(QPen(Qt::black, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        painter->setPen(QPen(selectionColor, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         painter->drawLine(line);
 
         //if weight needs to be drawn
             drawTextAt(painter, midPoint, text);
         }
     }
+    // {//debug
+    //     painter->setPen(Qt::red);
+    //     painter->setBrush(QColor(255,255,0,55));
+
+    //     //painter->drawRect(boundingRect());
+    //     painter->drawPath(shape());
+
+    // }
+
 
 }
 

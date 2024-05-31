@@ -15,5 +15,10 @@ enum EdgeType {
     Loop = 3,
     Error = -1
 };
+enum DeleteOptions {
+    Nodes = 1,
+    Edges = 2,
+
+};
 
 #endif // GRAPHENUMS_H
