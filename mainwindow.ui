@@ -84,7 +84,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>18</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -161,7 +161,9 @@
    <addaction name="actionDeleteGraph"/>
    <addaction name="actionAddNode"/>
    <addaction name="actionDeleteNode"/>
+   <addaction name="actionDeleteEdges"/>
    <addaction name="actionRefreshTables"/>
+   <addaction name="actionDeleteSelected"/>
   </widget>
   <widget class="QDockWidget" name="dock_MatrixAdj">
    <property name="features">
@@ -722,6 +724,9 @@
    <property name="text">
     <string>DeleteNode</string>
    </property>
+   <property name="toolTip">
+    <string>Delete selected node</string>
+   </property>
    <property name="menuRole">
     <enum>QAction::NoRole</enum>
    </property>
@@ -851,6 +856,39 @@
    </property>
    <property name="toolTip">
     <string>Display Name</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionDeleteEdges">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/ico/icons/deleteEdge.svg</normaloff>:/ico/icons/deleteEdge.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Delete edge</string>
+   </property>
+   <property name="toolTip">
+    <string>Delete selected edge</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionDeleteSelected">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/ico/icons/deleteSelected.svg</normaloff>:/ico/icons/deleteSelected.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Delete selected</string>
+   </property>
+   <property name="toolTip">
+    <string>Delete selected objects</string>
+   </property>
+   <property name="shortcut">
+    <string>Del</string>
    </property>
    <property name="menuRole">
     <enum>QAction::NoRole</enum>

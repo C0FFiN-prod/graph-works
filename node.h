@@ -53,7 +53,7 @@ protected:
 private:
     QSet<Node *> children;
     QSet<Node *> parents;
-
+    QColor selectionColor;
     QPointF newPos;
     GraphWidget *graph;
     int index;

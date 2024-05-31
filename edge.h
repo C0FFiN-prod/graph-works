@@ -1,6 +1,7 @@
 #ifndef EDGE_H
 #define EDGE_H
 #include "graphenums.h"
+#include "textbox.h"
 #include <QGraphicsItem>
 #define txtOffset 15
 #define curvines 25
@@ -32,19 +33,26 @@ public:
     int type() const override { return Type; }
     ~Edge();
     static void setFlagsPtr(QFlags<GraphFlags> *flagsPtr);
+    TextBox info;
 protected:
     QRectF boundingRect() const override;
+    QPainterPath shape() const override;
+    //void setSelected(bool selected);
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
-
+    void drawTextAt(QPainter *painter, QPointF offsetPnt, QString& text);
 private:
     static QFlags<GraphFlags> *graphFlags;
     EdgeType edgeType;
     Node *source, *dest;
+
+
     double flow;
     double weight;
     double bandwidth;
     QPointF sourcePoint;
     QPointF destPoint;
+    QColor selectionColor;
     qreal arrowSize = 10;
 };
 #endif // EDGE_H

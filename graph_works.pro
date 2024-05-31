@@ -14,7 +14,8 @@ SOURCES += \
     graphwidget.cpp \
     main.cpp \
     mainwindow.cpp \
-    node.cpp
+    node.cpp \
+    textbox.cpp
 
 HEADERS += \
     edge.h \
@@ -22,7 +23,8 @@ HEADERS += \
     graphenums.h \
     graphwidget.h \
     mainwindow.h \
-    node.h
+    node.h \
+    textbox.h
 
 FORMS += \
     mainwindow.ui
