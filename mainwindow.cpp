@@ -8,9 +8,14 @@
 #include <QQueue>
 #include <set>
 #include <QShortcut>
-MainWindow::MainWindow(QWidget *parent)
+
+const QRegularExpression MainWindow::reValidDoubleLine("([0-9]+(\\.[0-9]+)?(\t|\n))+");
+const QRegularExpression MainWindow::reValidDouble("[0-9]+(\\.[0-9]+)?");
+const QRegularExpression MainWindow::reValidInt("[0-9]+");
+MainWindow::MainWindow(const QString &title, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
+    , title(title)
 {
     ui->setupUi(this);    
     auto spinBoxes = this->findChildren<QSpinBox *>();
@@ -213,6 +218,21 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionDijkstra, &QAction::triggered, this, &MainWindow::algorithmDijkstra);
     connect(ui->actionDinic, &QAction::triggered, this, &MainWindow::algorithmDinic);
     connect(ui->actionBellmanFord, &QAction::triggered, this, &MainWindow::algorithmBellmanFord);
+
+    connect(ui->actionSave,
+            &QAction::triggered,
+            this,
+            std::bind(&MainWindow::saveGraphToCSV, this, false));
+    connect(ui->actionSaveAs,
+            &QAction::triggered,
+            this,
+            std::bind(&MainWindow::saveGraphToCSV, this, true));
+    connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::readGraphFromCSV);
+    connect(ui->actionNew, &QAction::triggered, this, &MainWindow::newGraph);
+    connect(ui->actionClearGraph, &QAction::triggered, this, &MainWindow::clearGraph);
+    connect(ui->actionClearConsole, &QAction::triggered, this, &MainWindow::clearConsole);
+
+    updateFileStatus();
 }
 
 MainWindow::~MainWindow()
@@ -222,7 +242,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::buttonClearConsoleClicked()
+void MainWindow::clearConsole()
 {
     ui->textEdit_Console->clear();
 }
@@ -231,9 +251,9 @@ void MainWindow::pasteClipboardToTable(QTableView *dest)
 {
     if(!dest->hasFocus()) return;
     static QRegularExpression reSplit("\t|(?=\n)");
-    static QRegularExpression reValid("([0-9]+(\\.[0-9]+)?(\t|\n))+");
     QString text = QApplication::clipboard()->text();
-    if(!reValid.match(text).hasMatch()) return;
+    if (!reValidDoubleLine.match(text).hasMatch())
+        return;
     QStandardItemModel * model = static_cast<QStandardItemModel*>(dest->model());
     QItemSelectionModel * selection = dest->selectionModel();
     QModelIndexList indexes = selection->selectedIndexes();
@@ -406,10 +426,17 @@ void MainWindow::applyGraphMatrix(QTableView *table)
         model->setRowCount(newAmount);
     }
     Matrix2D m(newAmount);
+    bool ok;
     for(int i = 0; i < newAmount; i++){
         m[i].resize(newAmount);
         for(int j = 0; j < newAmount; j++){
-            m[i][j] = model->item(i, j)->text().toDouble();
+            m[i][j] = model->item(i, j)->text().toDouble(&ok);
+            if (!ok) {
+                QMessageBox::warning(this,
+                                     title,
+                                     QString("Cell (%1,%2) contains invalid data").arg(i).arg(j));
+                return;
+            }
         }
     }
     if(table->objectName().contains("Adj"))
@@ -421,6 +448,7 @@ void MainWindow::applyGraphMatrix(QTableView *table)
     graph.graphView->initScene();
     graph.graphView->scene()->update();
     updateTables();
+    updateFileStatus();
 }
 
 void MainWindow::applyEdgesList(QTableView *table)
@@ -510,6 +538,7 @@ void MainWindow::applyEdgesList(QTableView *table)
     graph.graphView->initScene();
     graph.graphView->scene()->update();
     updateTables();
+    updateFileStatus();
 }
 
 void MainWindow::updateEdgesList(QTableView *list)
@@ -584,7 +613,6 @@ void MainWindow::updateTables()
         }
         addRowToList(static_cast<QStandardItemModel *>(list->model()));
     }
-    graph.unsavedChanges = false;
 }
 
 void MainWindow::addRowToList(QStandardItemModel *model)
@@ -660,6 +688,7 @@ void MainWindow::deleteSelectedObjects(const QFlags<DeleteOptions> &options)
         }
     }
     updateTables();
+    updateFileStatus();
     graph.graphView->initScene();
 }
 
@@ -770,28 +799,12 @@ template QTableView *MainWindow::makeTableFromMatrix(
 template QTableView *MainWindow::makeTableFromMatrix(
     const Matrix2I &matrix, int height, int width, bool editable, int headerVSize, int headerHSize);
 
-// void MainWindow::on_actionSelectSourceNode_triggered()
-// {
-//     for (auto &item : graph.graphView->items()) {
-//         if (item != nullptr) {
-//             if (item->isSelected()) {
-//                 if (Node *node = qgraphicsitem_cast<Node *>(item)) {
-//                     graph.setSourceIndex(node->getIndex());
-//                 }
-//             }
-//         }
-//     }
-// }
-
-// void MainWindow::on_actionSelectDestinationNode_triggered()
-// {
-//     for (auto &item : graph.graphView->items()) {
-//         if (item != nullptr) {
-//             if (item->isSelected()) {
-//                 if (Node *node = qgraphicsitem_cast<Node *>(item)) {
-//                     graph.setDestIndex(node->getIndex());
-//                 }
-//             }
-//         }
-//     }
-// }
+void MainWindow::updateFileStatus()
+{
+    QString newTitle(title);
+    if (!currentFile.isEmpty())
+        newTitle += " [" + currentFile + ']';
+    if (graph.isUnsaved())
+        newTitle += '*';
+    this->setWindowTitle(newTitle);
+}

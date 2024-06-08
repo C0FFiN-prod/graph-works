@@ -6,7 +6,7 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    MainWindow w;
+    MainWindow w("Graph Works");
 
     QFile styleFile(":/qss/styles/defaultstyle.qss");
     styleFile.open(QFile::ReadOnly);

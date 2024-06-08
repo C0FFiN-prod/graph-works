@@ -33,6 +33,10 @@
         <file>icons/deleteSelected.svg</file>
         <file>icons/destNode.svg</file>
         <file>icons/sourceNode.svg</file>
+        <file>icons/SaveAs.svg</file>
+        <file>icons/New.svg</file>
+        <file>icons/Open.svg</file>
+        <file>icons/ClearConsole.svg</file>
     </qresource>
     <qresource prefix="/qss">
         <file>styles/defaultstyle.qss</file>

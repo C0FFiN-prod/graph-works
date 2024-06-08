@@ -16,6 +16,7 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     node.cpp \
+    saves.cpp \
     textbox.cpp
 
 HEADERS += \

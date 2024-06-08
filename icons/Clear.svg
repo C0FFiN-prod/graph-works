@@ -1,2 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M23.707.293h0a1,1,0,0,0-1.414,0L12,10.586,1.707.293a1,1,0,0,0-1.414,0h0a1,1,0,0,0,0,1.414L10.586,12,.293,22.293a1,1,0,0,0,0,1.414h0a1,1,0,0,0,1.414,0L12,13.414,22.293,23.707a1,1,0,0,0,1.414,0h0a1,1,0,0,0,0-1.414L13.414,12,23.707,1.707A1,1,0,0,0,23.707.293Z"/></svg>
+<svg width="201" height="215" viewBox="0 0 201 215" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M78 91L78 155" stroke="black" stroke-width="20" stroke-linecap="round"/>
+<path d="M124 91L124 155" stroke="black" stroke-width="20" stroke-linecap="round"/>
+<path d="M90.75 10.5C79.7043 10.5 70.75 19.4543 70.75 30.5V41H130.75V30.5C130.75 19.4543 121.796 10.5 110.75 10.5H100.75H90.75Z" fill="black"/>
+<path d="M70.75 41H10.75L30.5 42V185C30.5 196.046 39.4543 205 50.5 205H100.75H151C162.046 205 171 196.046 171 185V42L190.75 41H130.75M70.75 41V30.5C70.75 19.4543 79.7043 10.5 90.75 10.5H100.75H110.75C121.796 10.5 130.75 19.4543 130.75 30.5V41M70.75 41H130.75" stroke="black" stroke-width="20" stroke-linejoin="round"/>
+</svg>

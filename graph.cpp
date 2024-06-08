@@ -68,12 +68,7 @@ Graph::Graph(Matrix2D &matrix):
 
 Graph::~Graph()
 {
-    for(auto edge : std::as_const(edges)){
-        delete edge;
-    }
-    for(auto node : std::as_const(nodes)){
-        delete node;
-    }
+    clear();
 }
 
 
@@ -108,7 +103,7 @@ void Graph::setMatrixAdjacent(Matrix2D &matrix)
 {
     unsigned int i, j;
     resizeGraph(amount, matrix.size());
-
+    unsavedChanges = true;
     for(i = 0; i != amount; i++){
         for(j = i; j != amount; j++){
             if(adjacent[i][j]&&!matrix[i][j]){
@@ -145,14 +140,13 @@ void Graph::setMatrixAdjacent(Matrix2D &matrix)
             adjacent[j][i] = matrix[j][i];
         }
     }
-    unsavedChanges = false;
 }
 
 void Graph::setMatrixFlow(Matrix2D &matrix)
 {
     unsigned int i, j;
     resizeGraph(amount, matrix.size());
-    unsavedChanges = false;
+    unsavedChanges = true;
     for(i = 0; i != amount; i++){
         for(j = i; j != amount; j++){
             if(!adjacent[i][j]&&matrix[i][j]){
@@ -164,14 +158,12 @@ void Graph::setMatrixFlow(Matrix2D &matrix)
                 edges[key]->setBandwidth(matrix[i][j]);
                 edges[key]->setFlow(matrix[i][j]);
                 adjacent[i][j] = 1;
-                unsavedChanges = true;
             }
             else if(adjacent[i][j]){
                 auto edge = edges[qMakePair(nodes[i],nodes[j])];
                 if(edge->getBandwidth() < matrix[i][j]){
                     bandwidth[i][j] = matrix[i][j];
                     edge->setBandwidth(matrix[i][j]);
-                    unsavedChanges = true;
                 }
                 edge->setFlow(matrix[i][j]);
                 edge->setEdgeType(getEdgeType(i, j, bandwidth));
@@ -185,14 +177,12 @@ void Graph::setMatrixFlow(Matrix2D &matrix)
                 edges[key]->setBandwidth(matrix[j][i]);
                 edges[key]->setFlow(matrix[j][i]);
                 adjacent[j][i] = 1;
-                unsavedChanges = true;
             }
             else if ((i!=j)&&adjacent[j][i]){
                 auto edge = edges[qMakePair(nodes[j],nodes[i])];
                 if(edge->getBandwidth() < matrix[j][i]){
                     bandwidth[j][i] = matrix[j][i];
                     edge->setBandwidth(matrix[j][i]);
-                    unsavedChanges = true;
                 }
                 edge->setFlow(matrix[j][i]);
                 edge->setEdgeType(getEdgeType(j, i, bandwidth));
@@ -207,7 +197,7 @@ void Graph::setMatrixBandwidth(Matrix2D& matrix)
 {
     unsigned int i, j;
     resizeGraph(amount, matrix.size());
-    unsavedChanges = false;
+    unsavedChanges = true;
     for(i = 0; i != amount; i++){
         for(j = i; j != amount; j++){
             if(adjacent[i][j]&&!matrix[i][j]){
@@ -221,7 +211,6 @@ void Graph::setMatrixBandwidth(Matrix2D& matrix)
                 edges[key]->setBandwidth(matrix[i][j]);
                 edges[key]->setFlow(flow[i][j]);
                 adjacent[i][j] = 1;
-                unsavedChanges = true;
             }
             else if(adjacent[i][j]){
                 auto edge = edges[qMakePair(nodes[i],nodes[j])];
@@ -229,7 +218,6 @@ void Graph::setMatrixBandwidth(Matrix2D& matrix)
                 if(edge->getFlow() > matrix[i][j]){
                     flow[i][j] = matrix[i][j];
                     edge->setFlow(matrix[i][j]);
-                    unsavedChanges = true;
                 }
                 edge->setEdgeType(getEdgeType(i, j, matrix));
             }
@@ -244,7 +232,6 @@ void Graph::setMatrixBandwidth(Matrix2D& matrix)
                 edges[key]->setBandwidth(matrix[j][i]);
                 edges[key]->setFlow(flow[j][i]);
                 adjacent[j][i] = 1;
-                unsavedChanges = true;
             }
             else if ((i!=j)&&adjacent[j][i]){
                 auto edge = edges[qMakePair(nodes[j],nodes[i])];
@@ -252,7 +239,6 @@ void Graph::setMatrixBandwidth(Matrix2D& matrix)
                 if(edge->getFlow() > matrix[j][i]){
                     flow[j][i] = matrix[j][i];
                     edge->setFlow(matrix[j][i]);
-                    unsavedChanges = true;
                 }
                 edge->setEdgeType(getEdgeType(i, j, matrix));
             }
@@ -267,6 +253,7 @@ void Graph::setEdge(unsigned int u, unsigned int v, double w)
     auto key = qMakePair(nodes[u], nodes[v]);
     if (edges.contains(key))
         throw std::runtime_error("Edge already exists");
+    unsavedChanges = true;
     adjacent[u][v] = w;
     EdgeType bandType = getEdgeType(u, v, bandwidth);
     EdgeType adjType = getEdgeType(u, v, adjacent);
@@ -279,10 +266,10 @@ void Graph::setEdgeFlow(unsigned int u, unsigned int v, double f)
     auto key = qMakePair(nodes[u],nodes[v]);
     if(!edges.contains(key))
         throw std::runtime_error("No such edge");
+    unsavedChanges = true;
     edges[key]->setFlow(f);
     if (edges[key]->getBandwidth() < f) {
         bandwidth[u][v] = f;
-        unsavedChanges = true;
     }
     flow[u][v] = f;
     EdgeType bandType = getEdgeType(u, v, bandwidth);
@@ -304,6 +291,7 @@ void Graph::setEdgeWeight(unsigned int u, unsigned int v, double w)
         throw std::runtime_error("No such edge");
     if (!w)
         throw std::runtime_error("Weight can't be zero");
+    unsavedChanges = true;
     adjacent[u][v] = w;
     edges[key]->setWeight(w);
     EdgeType bandType = getEdgeType(u, v, bandwidth);
@@ -323,10 +311,10 @@ void Graph::setEdgeBandwidth(unsigned int u, unsigned int v, double b)
     auto key = qMakePair(nodes[u], nodes[v]);
     if (!edges.contains(key))
         throw std::runtime_error("No such edge");
+    unsavedChanges = true;
     edges[key]->setBandwidth(b);
     if (edges[key]->getFlow() > b) {
         flow[u][v] = b;
-        unsavedChanges = true;
     }
     bandwidth[u][v] = b;
     EdgeType bandType = getEdgeType(u, v, bandwidth);
@@ -387,7 +375,7 @@ void Graph::removeNode(unsigned int index)
         throw std::runtime_error("No such node");
 
     Node *toRemove = nodes[index];
-
+    unsavedChanges = true;
     for (auto &i : toRemove->edgeList) {
         int source = i->sourceNode()->getIndex();
         int dest = i->destNode()->getIndex();
@@ -426,6 +414,7 @@ void Graph::addNode(unsigned int i, const QString &name = "")
 {
     if(nodes.contains(i))
         throw std::runtime_error("Node already exists");
+    unsavedChanges = true;
     nodes[i] = new Node(i, graphView);
     if (!name.isEmpty())
         nodes[i]->setDisplayName(name);
@@ -540,6 +529,30 @@ void Graph::setDestIndex(unsigned int destIndex)
             i->setDefaultColor(NodeColors::DefaultColor);
         }
     }
+}
+bool Graph::isUnsaved()
+{
+    return unsavedChanges;
+}
+
+void Graph::changesSaved()
+{
+    unsavedChanges = false;
+    graphView->initScene();
+}
+
+void Graph::clear()
+{
+    amount = 0;
+    for (auto edge : std::as_const(edges)) {
+        delete edge;
+    }
+    for (auto node : std::as_const(nodes)) {
+        delete node;
+    }
+    edges.clear();
+    nodes.clear();
+    graphView->scene()->clear();
 }
 
 void Graph::resizeGraph(unsigned int oldAmount, unsigned int newAmount)

@@ -26,12 +26,12 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    MainWindow(const QString &title, QWidget *parent = nullptr);
     Graph graph;
     ~MainWindow();
 
 private slots:
-    void buttonClearConsoleClicked();
+    void clearConsole();
     void viewModeChecked(bool checked);
     void myCopy();
     void myPaste();
@@ -42,6 +42,8 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+    QString title;
+    const static QRegularExpression reValidDouble, reValidDoubleLine, reValidInt;
     QMap<QWidget *, QPushButton *> pins;
     QMap<QString, QWidget *> docksViewMode;
     void unpinTab(int index);
@@ -80,6 +82,14 @@ private:
     void algorithmDinic();
     void algorithmBellmanFord();
     void algorithmEdmondsKarp();
-};
 
+    // Saves
+    QString currentFile = "";
+    void updateFileStatus();
+    void saveGraphToCSV(bool saveToNew);
+    void readGraphFromCSV();
+    void newGraph();
+    bool checkForSave();
+    void clearGraph();
+};
 #endif // MAINWINDOW_H
