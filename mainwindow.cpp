@@ -103,6 +103,7 @@ MainWindow::MainWindow(QWidget *parent)
             this->graph.unsetFlag(GraphFlags::ShowFlow);
         graph.graphView->scene()->update();
     });
+    connect(ui->actionAddNode, &QAction::triggered, this, &MainWindow::addNode);
     connect(ui->actionDeleteNode,
             &QAction::triggered,
             this,
@@ -549,7 +550,15 @@ void MainWindow::updateEdgesList(QTableView *list)
 
     //emit model->dataChanged(model->item(0,0)->index(),model->item(count-1, colCount-1)->index());
 }
-
+void MainWindow::addNode()
+{
+    int amount = graph.getAmount();
+    graph.addNode(amount, QString::number(amount));
+    for (auto &spin : graphCountSpins) {
+        spin->setValue(amount + 1);
+    }
+    graph.graphView->initScene();
+}
 void MainWindow::updateTables()
 {
     static QRegularExpression nameRe("(table_(Matrix|List))|(_Graph)");

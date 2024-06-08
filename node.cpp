@@ -24,10 +24,10 @@ Node::Node(int index, GraphWidget *graphWidget)
 }
 
 Node::Node()
-    : graph(nullptr)
+    : defaulColor(NodeColors::DefaultColor)
+    , graph(nullptr)
     , index(0)
     , displayName("0")
-    , defaulColor(NodeColors::DefaultColor)
 {}
 
 

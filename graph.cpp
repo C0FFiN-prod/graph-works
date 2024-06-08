@@ -412,9 +412,9 @@ void Graph::removeNode(unsigned int index)
         toChange->setIndex(i - 1);
         nodes.insert(i - 1, toChange);
     }
-    if (index == getSourceIndex()) {
+    if ((int) index == getSourceIndex()) {
         src = nullptr;
-    } else if (index == getDestIndex()) {
+    } else if ((int) index == getDestIndex()) {
         dst = nullptr;
     }
     graphView->scene()->removeItem(toRemove);
