@@ -164,6 +164,7 @@ MainWindow::MainWindow(QWidget *parent)
             &QAction::triggered,
             this,
             std::bind(&MainWindow::updateTables, this));
+
     auto actGroup = new QActionGroup(this);
     actionGroups.append(actGroup);
     actGroup->addAction(ui->actionAutomatic);
@@ -197,6 +198,12 @@ MainWindow::MainWindow(QWidget *parent)
         ((QMenu*)i)->setWindowFlag(Qt::NoDropShadowWindowHint);
         ((QMenu*)i)->setAttribute(Qt::WA_TranslucentBackground);
     }
+
+    // Connecting algorithms
+    connect(ui->actionFloydWarshall, &QAction::triggered, this, &MainWindow::algorithmFloYdWarshall);
+    connect(ui->actionDijkstra, &QAction::triggered, this, &MainWindow::algorithmDijkstra);
+    connect(ui->actionDinic, &QAction::triggered, this, &MainWindow::algorithmDinic);
+    connect(ui->actionBellmanFord, &QAction::triggered, this, &MainWindow::algorithmBellmanFord);
 }
 
 MainWindow::~MainWindow()
@@ -457,7 +464,7 @@ void MainWindow::applyEdgesList(QTableView *table)
                 auto result = QMessageBox::warning(
                     table,
                     this->windowTitle(),
-                    QString("Row %1: Edge %2 - %3 already exists").arg(i + 1).arg(u).arg(v),
+                    QString("Row %1: Edge %2 - %3 already exists").arg(i).arg(u).arg(v),
                     QMessageBox::StandardButton::Abort | QMessageBox::StandardButton::Ignore
                         | QMessageBox::StandardButton::Apply);
                 if (result == QMessageBox::StandardButton::NoButton
@@ -573,6 +580,28 @@ void MainWindow::addRowToList(QStandardItemModel *model)
     model->insertRow(rowCount, items);
 }
 
+void MainWindow::consoleLog(const QString &text)
+{
+    ui->textEdit_Console->appendPlainText(text);
+}
+
+void MainWindow::addDockWidget(const QList<QWidget *> &widgets,
+                               const QString &title,
+                               bool closable,
+                               bool floating)
+{
+    QDockWidget *dock = new QDockWidget(this);
+    auto container = new QWidget(this);
+    auto layout = new QVBoxLayout(container);
+    for (auto &widget : widgets)
+        layout->addWidget(widget);
+    dock->setWidget(container);
+    dock->setFloating(floating);
+    dock->setWindowTitle(title);
+    if (closable)
+        dock->setFeatures(QDockWidget::DockWidgetClosable);
+    dock->show();
+}
 void MainWindow::deleteSelectedObjects(const QFlags<DeleteOptions> &options)
 {
     //QHash<QGraphicsItem *, DeleteOptions> toDelete;
@@ -646,7 +675,7 @@ void MainWindow::myPaste()
 }
 
 template<typename T>
-void MainWindow::setTableFromMatrix(QTableView *table, T &matrix, int height, int width)
+void MainWindow::setTableFromMatrix(QTableView *table, const T &matrix, int height, int width)
 {
     if ((height == -1) || (height > matrix.size()))
         height = matrix.size();
@@ -664,11 +693,11 @@ void MainWindow::setTableFromMatrix(QTableView *table, T &matrix, int height, in
         model->insertColumns(colCount, width - colCount);
 
     for (int i = height; i--;) {
-        model->setHeaderData(i, Qt::Horizontal, i);
         model->setHeaderData(i, Qt::Vertical, i);
         table->setColumnWidth(i, 20);
         for (int j = width; j--;) {
-            if ((i > rowCount) || (j > colCount))
+            model->setHeaderData(j, Qt::Horizontal, j);
+            if ((i >= rowCount) || (j >= colCount))
                 model->setItem(i, j, new QStandardItem(QString::number(matrix[i][j])));
             else {
                 model->item(i, j)->setData(QString::number(matrix[i][j]));
@@ -678,3 +707,31 @@ void MainWindow::setTableFromMatrix(QTableView *table, T &matrix, int height, in
     }
     emit model->dataChanged(model->item(0, 0)->index(), model->item(height - 1, width - 1)->index());
 }
+
+template void MainWindow::setTableFromMatrix(QTableView *table,
+                                             const Matrix2D &matrix,
+                                             int height,
+                                             int width);
+template void MainWindow::setTableFromMatrix(QTableView *table,
+                                             const Matrix2I &matrix,
+                                             int height,
+                                             int width);
+
+template<typename T>
+QTableView *MainWindow::makeTableFromMatrix(
+    const T &matrix, int height, int width, bool editable, int headerVSize, int headerHSize)
+{
+    auto table = new QTableView();
+    table->setModel(new QStandardItemModel(0, 0));
+    if (!editable)
+        table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    table->verticalHeader()->setDefaultSectionSize(headerVSize);
+    table->horizontalHeader()->setDefaultSectionSize(headerHSize);
+    setTableFromMatrix(table, matrix, height, width);
+    return table;
+}
+
+template QTableView *MainWindow::makeTableFromMatrix(
+    const Matrix2D &matrix, int height, int width, bool editable, int headerVSize, int headerHSize);
+template QTableView *MainWindow::makeTableFromMatrix(
+    const Matrix2I &matrix, int height, int width, bool editable, int headerVSize, int headerHSize);

@@ -104,13 +104,14 @@
     <addaction name="actionPaste"/>
     <addaction name="actionRefreshTables"/>
    </widget>
-   <widget class="QMenu" name="menuAlgorithm">
-    <property name="enabled">
-     <bool>false</bool>
-    </property>
+   <widget class="QMenu" name="menuAlgorithms">
     <property name="title">
-     <string>Algorithm</string>
+     <string>Algorithms</string>
     </property>
+    <addaction name="actionFloydWarshall"/>
+    <addaction name="actionDijkstra"/>
+    <addaction name="actionDinic"/>
+    <addaction name="actionBellmanFord"/>
    </widget>
    <widget class="QMenu" name="menuNode_movement">
     <property name="title">
@@ -134,7 +135,7 @@
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
-   <addaction name="menuAlgorithm"/>
+   <addaction name="menuAlgorithms"/>
    <addaction name="menuNode_movement"/>
    <addaction name="menuView_mode"/>
   </widget>
@@ -859,6 +860,26 @@
    </property>
    <property name="menuRole">
     <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionFloydWarshall">
+   <property name="text">
+    <string>Floyd Warshall</string>
+   </property>
+  </action>
+  <action name="actionDijkstra">
+   <property name="text">
+    <string>Dijkstra</string>
+   </property>
+  </action>
+  <action name="actionDinic">
+   <property name="text">
+    <string>Dinic</string>
+   </property>
+  </action>
+  <action name="actionBellmanFord">
+   <property name="text">
+    <string>Bellman Ford</string>
    </property>
   </action>
   <action name="actionDeleteEdges">

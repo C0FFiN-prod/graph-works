@@ -3,8 +3,14 @@
 
 #include <QMainWindow>
 #include <QMap>
+#include <QTime>
 #include "graph.h"
 #include "qactiongroup.h"
+#include "qboxlayout.h"
+#include "qdockwidget.h"
+#include "qheaderview.h"
+#include "qlabel.h"
+#include "qmessagebox.h"
 #include "qpushbutton.h"
 #include "qshortcut.h"
 #include "qspinbox.h"
@@ -49,10 +55,29 @@ private:
     void addRowToList(QStandardItemModel *table);
     void deleteSelectedObjects(const QFlags<DeleteOptions> &options);
     template<typename T>
-    void setTableFromMatrix(QTableView *table, T &matrix, int height = -1, int width = -1);
+    void setTableFromMatrix(QTableView *table, const T &matrix, int height = -1, int width = -1);
     QList<QActionGroup *> actionGroups;
     QList<QTableView *> graphMatrixViews;
     QList<QTableView *> graphListViews;
     QMap<QString, QSpinBox *> graphCountSpins;
+    void consoleLog(const QString &text);
+    void addDockWidget(const QList<QWidget *> &widgets,
+                       const QString &title,
+                       bool closable = true,
+                       bool floating = true);
+    template<typename T>
+    QTableView *makeTableFromMatrix(const T &matrix,
+                                    int height = -1,
+                                    int width = -1,
+                                    bool editable = true,
+                                    int headerVSize = 20,
+                                    int headerHSize = 40);
+    // Algorithms
+    void algorithmFloYdWarshall();
+    void algorithmDijkstra();
+    void algorithmDinic();
+    void algorithmBellmanFord();
+    void algorithmEdmondsKarp();
 };
+
 #endif // MAINWINDOW_H

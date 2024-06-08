@@ -7,6 +7,7 @@
 #include <QException>
 
 typedef QList<QList<double>> Matrix2D;
+typedef QList<QList<int>> Matrix2I;
 
 class Graph
 {
@@ -45,6 +46,9 @@ public:
     unsigned int getAmount();
     bool unsavedChanges = false;
 
+    int getSourceIndex();
+    int getDestIndex();
+
 private:
     void resizeGraph(unsigned int oldAmount, unsigned int newAmount);
     QFlags<GraphFlags> flags;
@@ -56,6 +60,9 @@ private:
 
     //QMap<QPair<unsigned int, unsigned int>, EdgeStruct> edges;
     //QMap<unsigned int, Node> nodes;
+
+    Node *src = nullptr;
+    Node *dst = nullptr;
 
     Matrix2D adjacent;
     Matrix2D flow;

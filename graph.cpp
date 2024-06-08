@@ -491,6 +491,23 @@ unsigned int Graph::getAmount()
     return this->amount;
 }
 
+int Graph::getSourceIndex()
+{
+    if (src == nullptr)
+        return -1;
+    if (nodes.values().contains(src))
+        return src->getIndex();
+    return -1;
+}
+int Graph::getDestIndex()
+{
+    if (dst == nullptr)
+        return -1;
+    if (nodes.values().contains(dst))
+        return src->getIndex();
+    return -1;
+}
+
 void Graph::resizeGraph(unsigned int oldAmount, unsigned int newAmount)
 {
     unsigned int i, j;
