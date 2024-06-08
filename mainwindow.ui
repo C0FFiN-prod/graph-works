@@ -91,18 +91,27 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionSave_as"/>
+    <addaction name="actionNew"/>
+    <addaction name="actionOpen"/>
+    <addaction name="actionSave"/>
+    <addaction name="actionSaveAs"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
      <string>Edit</string>
     </property>
     <addaction name="separator"/>
-    <addaction name="actionUndo"/>
-    <addaction name="actionRedo"/>
     <addaction name="actionCopy"/>
     <addaction name="actionPaste"/>
     <addaction name="actionRefreshTables"/>
+    <addaction name="actionClearConsole"/>
+    <addaction name="separator"/>
+    <addaction name="actionAddNode"/>
+    <addaction name="actionDeleteNode"/>
+    <addaction name="actionDeleteEdges"/>
+    <addaction name="actionDeleteSelected"/>
+    <addaction name="separator"/>
+    <addaction name="actionClearGraph"/>
    </widget>
    <widget class="QMenu" name="menuAlgorithms">
     <property name="title">
@@ -140,32 +149,6 @@
    <addaction name="menuView_mode"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <widget class="QToolBar" name="toolBar">
-   <property name="enabled">
-    <bool>true</bool>
-   </property>
-   <property name="windowTitle">
-    <string>toolBar</string>
-   </property>
-   <property name="toolTip">
-    <string/>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-   <addaction name="actionUndo"/>
-   <addaction name="actionRedo"/>
-   <addaction name="actionLaunchAlg"/>
-   <addaction name="actionDeleteGraph"/>
-   <addaction name="actionAddNode"/>
-   <addaction name="actionDeleteNode"/>
-   <addaction name="actionDeleteEdges"/>
-   <addaction name="actionRefreshTables"/>
-   <addaction name="actionDeleteSelected"/>
-  </widget>
   <widget class="QDockWidget" name="dock_MatrixAdj">
    <property name="features">
     <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
@@ -530,6 +513,12 @@
    </widget>
   </widget>
   <widget class="QDockWidget" name="dock_Bandwidth">
+   <property name="features">
+    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <property name="allowedAreas">
+    <set>Qt::LeftDockWidgetArea</set>
+   </property>
    <property name="windowTitle">
     <string>Bandwidth Matrix</string>
    </property>
@@ -609,34 +598,34 @@
     </layout>
    </widget>
   </widget>
-  <action name="actionUndo">
+  <widget class="QToolBar" name="toolBar">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="toolTip">
+    <string/>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionAddNode"/>
+   <addaction name="actionDeleteNode"/>
+   <addaction name="actionDeleteEdges"/>
+   <addaction name="actionRefreshTables"/>
+   <addaction name="actionDeleteSelected"/>
+   <addaction name="separator"/>
+   <addaction name="actionClearGraph"/>
+  </widget>
+  <action name="actionSaveAs">
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/ico/icons/Undo.svg</normaloff>:/ico/icons/Undo.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Undo</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Z</string>
-   </property>
-  </action>
-  <action name="actionRedo">
-   <property name="icon">
-    <iconset resource="resource.qrc">
-     <normaloff>:/ico/icons/Redo.svg</normaloff>:/ico/icons/Redo.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Redo</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+Z</string>
-   </property>
-  </action>
-  <action name="actionSave_as">
-   <property name="icon">
-    <iconset resource="resource.qrc">
-     <normaloff>:/ico/icons/Save.svg</normaloff>:/ico/icons/Save.svg</iconset>
+     <normaloff>:/ico/icons/SaveAs.svg</normaloff>:/ico/icons/SaveAs.svg</iconset>
    </property>
    <property name="text">
     <string>Save as</string>
@@ -690,28 +679,19 @@
     <enum>QAction::NoRole</enum>
    </property>
   </action>
-  <action name="actionDeleteGraph">
-   <property name="icon">
-    <iconset resource="resource.qrc">
-     <normaloff>:/ico/icons/Clear.svg</normaloff>:/ico/icons/Clear.svg</iconset>
-   </property>
-   <property name="text">
-    <string>DeleteGraph</string>
-   </property>
-   <property name="menuRole">
-    <enum>QAction::NoRole</enum>
-   </property>
-  </action>
   <action name="actionAddNode">
    <property name="icon">
     <iconset resource="resource.qrc">
      <normaloff>:/ico/icons/addNode.svg</normaloff>:/ico/icons/addNode.svg</iconset>
    </property>
    <property name="text">
-    <string>AddNode</string>
+    <string>Add Node</string>
    </property>
    <property name="toolTip">
     <string>Add new node</string>
+   </property>
+   <property name="shortcut">
+    <string>N</string>
    </property>
    <property name="menuRole">
     <enum>QAction::NoRole</enum>
@@ -723,38 +703,34 @@
      <normaloff>:/ico/icons/deleteNode.svg</normaloff>:/ico/icons/deleteNode.svg</iconset>
    </property>
    <property name="text">
-    <string>DeleteNode</string>
+    <string>Delete Node</string>
    </property>
    <property name="toolTip">
     <string>Delete selected node</string>
+   </property>
+   <property name="shortcut">
+    <string>X</string>
    </property>
    <property name="menuRole">
     <enum>QAction::NoRole</enum>
    </property>
   </action>
   <action name="actionClearConsole">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/ico/icons/ClearConsole.svg</normaloff>:/ico/icons/ClearConsole.svg</iconset>
+   </property>
    <property name="text">
-    <string>ClearConsole</string>
+    <string>Clear Console</string>
+   </property>
+   <property name="toolTip">
+    <string>Clear Console</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+L</string>
    </property>
    <property name="menuRole">
     <enum>QAction::NoRole</enum>
-   </property>
-  </action>
-  <action name="actionUnpin_current_tab">
-   <property name="icon">
-    <iconset resource="resource.qrc">
-     <normaloff>:/ico/icons/Unpin.svg</normaloff>:/ico/icons/Unpin.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Unpin current tab</string>
-   </property>
-  </action>
-  <action name="actionShown_tabs">
-   <property name="text">
-    <string>Shown tabs</string>
    </property>
   </action>
   <action name="actionCopy">
@@ -888,7 +864,7 @@
      <normaloff>:/ico/icons/deleteEdge.svg</normaloff>:/ico/icons/deleteEdge.svg</iconset>
    </property>
    <property name="text">
-    <string>Delete edge</string>
+    <string>Delete Edge</string>
    </property>
    <property name="toolTip">
     <string>Delete selected edge</string>
@@ -903,13 +879,64 @@
      <normaloff>:/ico/icons/deleteSelected.svg</normaloff>:/ico/icons/deleteSelected.svg</iconset>
    </property>
    <property name="text">
-    <string>Delete selected</string>
+    <string>Delete Selected</string>
    </property>
    <property name="toolTip">
     <string>Delete selected objects</string>
    </property>
    <property name="shortcut">
     <string>Del</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionSave">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/ico/icons/Save.svg</normaloff>:/ico/icons/Save.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Save</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionNew">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/ico/icons/New.svg</normaloff>:/ico/icons/New.svg</iconset>
+   </property>
+   <property name="text">
+    <string>New</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="actionOpen">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/ico/icons/Open.svg</normaloff>:/ico/icons/Open.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Open</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionClearGraph">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/ico/icons/Clear.svg</normaloff>:/ico/icons/Clear.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Clear Graph</string>
+   </property>
+   <property name="toolTip">
+    <string>Clear Graph</string>
    </property>
    <property name="menuRole">
     <enum>QAction::NoRole</enum>

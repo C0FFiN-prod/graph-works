@@ -44,12 +44,16 @@ public:
     //void removeNode(unsigned int i);
     GraphWidget *graphView;
     unsigned int getAmount();
-    bool unsavedChanges = false;
 
     int getSourceIndex();
     int getDestIndex();
 
+    bool isUnsaved();
+    void changesSaved();
+    void clear();
+
 private:
+    bool unsavedChanges = false;
     void resizeGraph(unsigned int oldAmount, unsigned int newAmount);
     QFlags<GraphFlags> flags;
     EdgeType getEdgeType(int i, int j, Matrix2D &matrix);
