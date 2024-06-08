@@ -14,7 +14,7 @@ Node::Node(int index, GraphWidget *graphWidget)
     , index(index)
     , displayName(QString::number(index))
 {
-    selectionColor = Qt::black;
+    defaulColor = Qt::black;
     setFlag(ItemIsMovable);
     setFlag(ItemSendsGeometryChanges);
     setFlag(ItemIsSelectable);
@@ -26,7 +26,8 @@ Node::Node(int index, GraphWidget *graphWidget)
 Node::Node()
     : graph(nullptr)
     , index(0)
-    , displayName("0"), selectionColor(Qt::black)
+    , displayName("0")
+    , defaulColor(NodeColors::DefaultColor)
 {}
 
 
@@ -179,14 +180,15 @@ void Node::setDisplayName(const QString &name)
 void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
     if(isSelected()){
-        selectionColor = QColor(0,120,212);
+        painter->setPen(QPen(QColor(NodeColors::SelectionColor), 2));
 
     }else{
-        selectionColor = Qt::black;
+        painter->setPen(QPen(defaulColor, 2));
     }
     // drawing circle
     painter->fillPath(shape(), QBrush(Qt::white));
-    painter->setPen(QPen(selectionColor, 2));
+
+    //painter->setPen(QPen(color, 2));
     painter->drawPath(shape());
     //font setting up
     QFont font = painter->font();
@@ -216,6 +218,11 @@ Node::~Node()
     for(auto& parent: std::as_const(parents)){
         parent->disconnectFromNode(this);
     }
+}
+
+void Node::setDefaultColor(const NodeColors clr)
+{
+    defaulColor = QColor(clr);
 }
 
 QVariant Node::itemChange(GraphicsItemChange change, const QVariant &value)

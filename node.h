@@ -3,6 +3,7 @@
 
 #include <QGraphicsItem>
 #include <QList>
+#include "graphenums.h"
 
 #define nodeSize 35
 #define strokeWidth 1
@@ -43,6 +44,7 @@ public:
     void extracted();
     ~Node();
     QSet<Edge *> edgeList;
+    void setDefaultColor(const NodeColors clr);
 
 protected:
     QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;
@@ -53,7 +55,7 @@ protected:
 private:
     QSet<Node *> children;
     QSet<Node *> parents;
-    QColor selectionColor;
+    QColor defaulColor;
     QPointF newPos;
     GraphWidget *graph;
     int index;

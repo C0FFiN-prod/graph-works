@@ -117,6 +117,14 @@ MainWindow::MainWindow(QWidget *parent)
             std::bind(&MainWindow::deleteSelectedObjects,
                       this,
                       QFlags<DeleteOptions>(DeleteOptions::Nodes | DeleteOptions::Edges)));
+    connect(ui->actionSelectSourceNode,
+            &QAction::triggered,
+            this,
+            std::bind(&MainWindow::markSelectedAs, this, SelectOptions::Source));
+    connect(ui->actionSelectDestinationNode,
+            &QAction::triggered,
+            this,
+            std::bind(&MainWindow::markSelectedAs, this, SelectOptions::Destination));
 
     auto view = ui->menuView_mode;
     auto docks = this->findChildren<QDockWidget *>();
@@ -646,6 +654,23 @@ void MainWindow::deleteSelectedObjects(const QFlags<DeleteOptions> &options)
     graph.graphView->initScene();
 }
 
+void MainWindow::markSelectedAs(const QFlags<SelectOptions> &option)
+{
+    for (auto &item : graph.graphView->items()) {
+        if (item != nullptr) {
+            if (item->isSelected()) {
+                if (Node *node = qgraphicsitem_cast<Node *>(item)) {
+                    if (option == SelectOptions::Source) {
+                        graph.setSourceIndex(node->getIndex());
+                    } else if (option == SelectOptions::Destination) {
+                        graph.setDestIndex(node->getIndex());
+                    }
+                }
+            }
+        }
+    }
+}
+
 void MainWindow::listDataChanged(const QModelIndex &topLeft,
                                  const QModelIndex &bottomRight,
                                  const QVector<int> &)
@@ -735,3 +760,29 @@ template QTableView *MainWindow::makeTableFromMatrix(
     const Matrix2D &matrix, int height, int width, bool editable, int headerVSize, int headerHSize);
 template QTableView *MainWindow::makeTableFromMatrix(
     const Matrix2I &matrix, int height, int width, bool editable, int headerVSize, int headerHSize);
+
+// void MainWindow::on_actionSelectSourceNode_triggered()
+// {
+//     for (auto &item : graph.graphView->items()) {
+//         if (item != nullptr) {
+//             if (item->isSelected()) {
+//                 if (Node *node = qgraphicsitem_cast<Node *>(item)) {
+//                     graph.setSourceIndex(node->getIndex());
+//                 }
+//             }
+//         }
+//     }
+// }
+
+// void MainWindow::on_actionSelectDestinationNode_triggered()
+// {
+//     for (auto &item : graph.graphView->items()) {
+//         if (item != nullptr) {
+//             if (item->isSelected()) {
+//                 if (Node *node = qgraphicsitem_cast<Node *>(item)) {
+//                     graph.setDestIndex(node->getIndex());
+//                 }
+//             }
+//         }
+//     }
+// }

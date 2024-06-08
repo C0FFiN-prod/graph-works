@@ -20,5 +20,11 @@ enum DeleteOptions {
     Edges = 2,
 
 };
-
+enum NodeColors {
+    SelectionColor = 0x0078d4,
+    DefaultColor = 0x000000,
+    SourceColor = 0xFFD300,
+    DestColor = 0x3914AF
+};
+enum SelectOptions { Source = 1, Destination = 3 };
 #endif // GRAPHENUMS_H

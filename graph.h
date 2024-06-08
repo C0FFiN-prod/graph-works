@@ -49,6 +49,9 @@ public:
     int getSourceIndex();
     int getDestIndex();
 
+    void setSourceIndex(unsigned int sourceIndex);
+    void setDestIndex(unsigned int destIndex);
+
 private:
     void resizeGraph(unsigned int oldAmount, unsigned int newAmount);
     QFlags<GraphFlags> flags;

@@ -54,6 +54,7 @@ private:
     void updateTables();
     void addRowToList(QStandardItemModel *table);
     void deleteSelectedObjects(const QFlags<DeleteOptions> &options);
+    void markSelectedAs(const QFlags<SelectOptions> &option);
     template<typename T>
     void setTableFromMatrix(QTableView *table, const T &matrix, int height = -1, int width = -1);
     QList<QActionGroup *> actionGroups;

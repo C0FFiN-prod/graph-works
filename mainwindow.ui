@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>693</height>
+    <height>700</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -165,6 +165,8 @@
    <addaction name="actionDeleteEdges"/>
    <addaction name="actionRefreshTables"/>
    <addaction name="actionDeleteSelected"/>
+   <addaction name="actionSelectSourceNode"/>
+   <addaction name="actionSelectDestinationNode"/>
   </widget>
   <widget class="QDockWidget" name="dock_MatrixAdj">
    <property name="features">
@@ -910,6 +912,36 @@
    </property>
    <property name="shortcut">
     <string>Del</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionSelectSourceNode">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/ico/icons/destNode.svg</normaloff>:/ico/icons/destNode.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Select source node</string>
+   </property>
+   <property name="toolTip">
+    <string>Make selected node source</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionSelectDestinationNode">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/ico/icons/sourceNode.svg</normaloff>:/ico/icons/sourceNode.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Select destination node</string>
+   </property>
+   <property name="toolTip">
+    <string>Make selected node destination</string>
    </property>
    <property name="menuRole">
     <enum>QAction::NoRole</enum>

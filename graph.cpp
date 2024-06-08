@@ -383,6 +383,9 @@ void Graph::removeEdge(unsigned int u, unsigned int v)
 }
 void Graph::removeNode(unsigned int index)
 {
+    if (!nodes.contains(index))
+        throw std::runtime_error("No such node");
+
     Node *toRemove = nodes[index];
 
     for (auto &i : toRemove->edgeList) {
@@ -408,6 +411,11 @@ void Graph::removeNode(unsigned int index)
         auto toChange = nodes.take(i);
         toChange->setIndex(i - 1);
         nodes.insert(i - 1, toChange);
+    }
+    if (index == getSourceIndex()) {
+        src = nullptr;
+    } else if (index == getDestIndex()) {
+        dst = nullptr;
     }
     graphView->scene()->removeItem(toRemove);
     amount--;
@@ -504,8 +512,34 @@ int Graph::getDestIndex()
     if (dst == nullptr)
         return -1;
     if (nodes.values().contains(dst))
-        return src->getIndex();
+        return dst->getIndex();
     return -1;
+}
+
+void Graph::setSourceIndex(unsigned int sourceIndex)
+{
+    if (nodes.contains(sourceIndex)) {
+        src = nodes[sourceIndex];
+        src->setDefaultColor(NodeColors::SourceColor);
+    }
+    for (auto &i : nodes) {
+        if (i != dst && i != src) {
+            i->setDefaultColor(NodeColors::DefaultColor);
+        }
+    }
+}
+
+void Graph::setDestIndex(unsigned int destIndex)
+{
+    if (nodes.contains(destIndex)) {
+        dst = nodes[destIndex];
+        dst->setDefaultColor(NodeColors::DestColor);
+    }
+    for (auto &i : nodes) {
+        if (i != dst && i != src) {
+            i->setDefaultColor(NodeColors::DefaultColor);
+        }
+    }
 }
 
 void Graph::resizeGraph(unsigned int oldAmount, unsigned int newAmount)
