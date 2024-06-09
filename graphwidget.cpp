@@ -39,13 +39,14 @@ void GraphWidget::initScene()
         if(!isItemOnScene(scene(), qgraphicsitem_cast<Node *>(node))&& node!=nullptr){
             scene()->addItem(node);
         }
+        node->update();
     }
     for(auto& edge: *edges){
         if(!isItemOnScene(scene(), qgraphicsitem_cast<Edge *>(edge)) && edge!=nullptr){
             scene()->addItem(edge);
             scene()->addItem(&edge->info);
-
         }
+        edge->update();
     }
 }
 

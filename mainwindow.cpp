@@ -338,7 +338,7 @@ void MainWindow::setNodesAmountMatrix(QTableView *table, int newAmount)
             }
 
         }
-    } else if (oldAmount == newAmount){
+    } else if (oldAmount == newAmount && oldAmount) {
         if (model->item(oldAmount-1, oldAmount-1)->flags() == Qt::NoItemFlags){
             int j, i = oldAmount-1;
             for (j=i+1; j--;){
@@ -346,7 +346,7 @@ void MainWindow::setNodesAmountMatrix(QTableView *table, int newAmount)
                 model->item(j, i)->setFlags(flags);
             }
         }
-    }else if (oldAmount < newAmount) {
+    } else if (oldAmount < newAmount) {
         model->insertColumns(oldAmount, delta);
         model->insertRows(oldAmount, delta);
         for(int i = oldAmount; i!=newAmount; ++i){
@@ -544,18 +544,18 @@ void MainWindow::applyEdgesList(QTableView *table)
 void MainWindow::updateEdgesList(QTableView *list)
 {
     auto edges = graph.getListEdges();
+    int count = edges.count();
+    ui->label_ListEdges_Count->setText(QString::number(count));
     auto model = static_cast<QStandardItemModel *>(list->model());
-    if(edges.empty()) {
+    if (!count) {
         model->setRowCount(0);
         model->setColumnCount(5);
         return;
     }
     model->setColumnCount(edges[0].count());
 
-    int count = edges.count();
     int oldRowCount = model->rowCount();
     int colCount = edges[0].count();
-    ui->label_ListEdges_Count->setText(QString::number(count));
     model->setRowCount(count);
     for(int i = 0; i < count; i++){
         list->setRowHeight(i, 20);

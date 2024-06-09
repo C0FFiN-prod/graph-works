@@ -509,11 +509,14 @@ void Graph::setSourceIndex(unsigned int sourceIndex)
 {
     if (nodes.contains(sourceIndex)) {
         src = nodes[sourceIndex];
+        if (src == dst)
+            dst = nullptr;
         src->setDefaultColor(NodeColors::SourceColor);
     }
     for (auto &i : nodes) {
         if (i != dst && i != src) {
             i->setDefaultColor(NodeColors::DefaultColor);
+            i->update(i->boundingRect());
         }
     }
 }
@@ -522,11 +525,14 @@ void Graph::setDestIndex(unsigned int destIndex)
 {
     if (nodes.contains(destIndex)) {
         dst = nodes[destIndex];
+        if (src == dst)
+            src = nullptr;
         dst->setDefaultColor(NodeColors::DestColor);
     }
     for (auto &i : nodes) {
         if (i != dst && i != src) {
             i->setDefaultColor(NodeColors::DefaultColor);
+            i->update(i->boundingRect());
         }
     }
 }
@@ -543,7 +549,7 @@ void Graph::changesSaved()
 
 void Graph::clear()
 {
-    amount = 0;
+    resizeGraph(amount, 0);
     for (auto edge : std::as_const(edges)) {
         delete edge;
     }
@@ -552,7 +558,8 @@ void Graph::clear()
     }
     edges.clear();
     nodes.clear();
-    graphView->scene()->clear();
+    unsavedChanges = true;
+    //graphView->scene()->clear();
 }
 
 void Graph::resizeGraph(unsigned int oldAmount, unsigned int newAmount)

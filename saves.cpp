@@ -85,13 +85,29 @@ void MainWindow::clearGraph()
     if (!checkForSave())
         return;
     graph.clear();
+    for (auto &m : graphMatrixViews) {
+        auto model = static_cast<QStandardItemModel *>(m->model());
+        model->setColumnCount(0);
+        model->setRowCount(0);
+    }
+    for (auto &m : graphListViews) {
+        auto model = static_cast<QStandardItemModel *>(m->model());
+        model->setRowCount(0);
+        if (m->objectName().contains("ListEdges"))
+            updateEdgesList(m);
+        addRowToList(model);
+    }
+    for (auto &spin : graphCountSpins) {
+        spin->setValue(0);
+    }
+    updateFileStatus();
 }
 void MainWindow::readGraphFromCSV()
 {
     if (!checkForSave())
         return;
     QString filePath(QFileDialog::getOpenFileName(this, "Save as", "", "CSV Files (*.csv)"));
-    if (filePath == currentFile || filePath.isEmpty())
+    if ((filePath == currentFile && !graph.isUnsaved()) || filePath.isEmpty())
         return;
     graph.clear();
     QFile file(filePath);
@@ -168,20 +184,8 @@ void MainWindow::readGraphFromCSV()
 
 void MainWindow::newGraph()
 {
-    if (!checkForSave())
-        return;
+    clearGraph();
     currentFile.clear();
-    graph.clear();
     graph.changesSaved();
-    for (auto &m : graphMatrixViews) {
-        auto model = static_cast<QStandardItemModel *>(m->model());
-        model->setColumnCount(0);
-        model->setRowCount(0);
-    }
-    for (auto &m : graphListViews) {
-        auto model = static_cast<QStandardItemModel *>(m->model());
-        model->setRowCount(0);
-        addRowToList(model);
-    }
     updateFileStatus();
 }
