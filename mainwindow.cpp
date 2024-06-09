@@ -801,10 +801,11 @@ template QTableView *MainWindow::makeTableFromMatrix(
 
 void MainWindow::updateFileStatus()
 {
-    QString newTitle(title);
-    if (!currentFile.isEmpty())
-        newTitle += " [" + currentFile + ']';
+    QString newTitle;
     if (graph.isUnsaved())
         newTitle += '*';
+    if (!currentFile.isEmpty())
+        newTitle += currentFile + " - ";
+    newTitle += title;
     this->setWindowTitle(newTitle);
 }

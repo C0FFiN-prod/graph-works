@@ -90,10 +90,10 @@ void MainWindow::readGraphFromCSV()
 {
     if (!checkForSave())
         return;
-    graph.clear();
     QString filePath(QFileDialog::getOpenFileName(this, "Save as", "", "CSV Files (*.csv)"));
     if (filePath == currentFile || filePath.isEmpty())
         return;
+    graph.clear();
     QFile file(filePath);
     file.open(QIODevice::ReadOnly | QIODevice::ExistingOnly | QIODevice::Text);
     QTextStream fstr(&file);
