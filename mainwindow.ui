@@ -121,6 +121,8 @@
     <addaction name="actionDijkstra"/>
     <addaction name="actionDinic"/>
     <addaction name="actionBellmanFord"/>
+    <addaction name="separator"/>
+    <addaction name="actionNetTransportProblem"/>
    </widget>
    <widget class="QMenu" name="menuNode_movement">
     <property name="title">
@@ -978,6 +980,11 @@
    </property>
    <property name="menuRole">
     <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionNetTransportProblem">
+   <property name="text">
+    <string>Net Transport Problem</string>
    </property>
   </action>
   <zorder>dock_MatrixFlow</zorder>

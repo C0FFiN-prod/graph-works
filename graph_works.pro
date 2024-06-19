@@ -17,6 +17,7 @@ SOURCES += \
     mainwindow.cpp \
     node.cpp \
     saves.cpp \
+    simplex_solver.cpp \
     textbox.cpp
 
 HEADERS += \

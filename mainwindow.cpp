@@ -218,6 +218,10 @@ MainWindow::MainWindow(const QString &title, QWidget *parent)
     connect(ui->actionDijkstra, &QAction::triggered, this, &MainWindow::algorithmDijkstra);
     connect(ui->actionDinic, &QAction::triggered, this, &MainWindow::algorithmDinic);
     connect(ui->actionBellmanFord, &QAction::triggered, this, &MainWindow::algorithmBellmanFord);
+    connect(ui->actionNetTransportProblem,
+            &QAction::triggered,
+            this,
+            &MainWindow::algorithmNetTransportProblem);
 
     connect(ui->actionSave,
             &QAction::triggered,

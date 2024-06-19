@@ -6,7 +6,7 @@ void MainWindow::algorithmFloYdWarshall()
     int k, i, j, n = graph.getAmount();
 
     if (n < 2) {
-        QMessageBox::warning(this, this->windowTitle(), "Too few nodes");
+        QMessageBox::warning(this, this->title, "Too few nodes");
         return;
     }
 
@@ -16,7 +16,7 @@ void MainWindow::algorithmFloYdWarshall()
         for (j = n; j--;) {
             if (d[i][j] < 0) {
                 QMessageBox::warning(this,
-                                     this->windowTitle(),
+                                     this->title,
                                      "For this algorithm graph must not contain negative weights");
                 return;
             }
@@ -63,7 +63,7 @@ void MainWindow::algorithmDijkstra()
 {
     int k, i, n = graph.getAmount();
     if (n < 2) {
-        QMessageBox::warning(this, this->windowTitle(), "Too few nodes");
+        QMessageBox::warning(this, this->title, "Too few nodes");
         return;
     }
 
@@ -182,7 +182,7 @@ void MainWindow::algorithmDinic()
 {
     int n = graph.getAmount();
     if (n < 2) {
-        QMessageBox::warning(this, this->windowTitle(), "Too few nodes");
+        QMessageBox::warning(this, this->title, "Too few nodes");
         return;
     }
 
@@ -223,7 +223,7 @@ void MainWindow::algorithmBellmanFord()
     // as INFINITE
     int src, n = graph.getAmount();
     if (n < 2) {
-        QMessageBox::warning(this, this->windowTitle(), "Too few nodes");
+        QMessageBox::warning(this, this->title, "Too few nodes");
         return;
     }
     if ((src = graph.getSourceIndex()) == -1)
@@ -270,3 +270,80 @@ void MainWindow::algorithmBellmanFord()
                   title);
 }
 
+#include "simplex_solver.cpp"
+
+void MainWindow::algorithmNetTransportProblem()
+{
+    int n = graph.getAmount();
+
+    if (n < 2) {
+        QMessageBox::warning(this, this->title, "Too few nodes");
+        return;
+    }
+
+    Matrix2D bandwidths = graph.getMatrixBandwidth();
+    Matrix2D weights = graph.getMatrixAdjacent();
+
+    QList<QPair<int, int>> edges;
+    QList<double> B, C;
+
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            if (i != j && bandwidths[i][j] != 0) {
+                edges.emplace_back(i, j);
+                B.push_back(bandwidths[i][j]);
+                C.push_back(weights[i][j]);
+            }
+        }
+    }
+
+    for (int i = 0; i < n; ++i) {
+        B.push_back(bandwidths[i][i]);
+    }
+
+    n = C.size();
+    Matrix2D A(B.size(), QList<double>(n, 0));
+
+    for (int i = 0; i < n; ++i) {
+        A[i][i] = 1;
+        A[n + edges[i].first][i] = 1;
+        A[n + edges[i].second][i] = -1;
+    }
+    int n_slack = n;
+    int n_art = A.size() - n;
+    C.insert(C.constEnd(), n_slack, 0);
+    C.insert(C.constEnd(), n_art, SIMPLEX_M);
+    Matrix2D tableau(A.size(), QList<double>(n + n_art + n_slack + 1, 0));
+    for (int i = 0; i < n; ++i) {
+        tableau[i][i] = 1;
+        tableau[i][n + i] = 1;
+        tableau[i].back() = B[i];
+    }
+    for (int i = 0; i < n_art; ++i) {
+        tableau[n + i][n + n_slack + i] = 1;
+        int sign = B[n + i] < 0 ? -1 : 1;
+        tableau[n + i].back() = B[n + i] * sign;
+        for (int j = 0; j < n; ++j) {
+            tableau[n + i][j] = A[n + i][j] * sign;
+        }
+    }
+    try {
+        auto [results, f_opt] = simplex(tableau, C, n);
+        n = bandwidths.size();
+        Matrix2D flows(n, QList<double>(n, 0));
+        for (int i = results.size(); i--;) {
+            auto [j, k] = edges[i];
+            flows[j][k] = results[i];
+        }
+        QString title = "Net Transport Problem " + QDateTime::currentDateTime().toString();
+        addDockWidget({new QLabel(QString("Minimal cost = %1").arg(f_opt)),
+                       new QLabel("Optimized flows"),
+                       makeTableFromMatrix(flows, n, n, false)},
+                      title);
+        consoleLog(title);
+        consoleLog(QString("Minimal cost = %1").arg(f_opt));
+
+    } catch (std::runtime_error &e) {
+        QMessageBox::warning(this, title, e.what());
+    }
+}

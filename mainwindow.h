@@ -44,10 +44,7 @@ private:
     Ui::MainWindow *ui;
     QString title;
     const static QRegularExpression reValidDouble, reValidDoubleLine, reValidInt;
-    QMap<QWidget *, QPushButton *> pins;
     QMap<QString, QWidget *> docksViewMode;
-    void unpinTab(int index);
-    void pinTab();
     void pasteClipboardToTable(QTableView *dest);
     void copyTableToClipboard(QTableView *src);
     void applyGraphMatrix(QTableView *table);
@@ -58,6 +55,7 @@ private:
     void deleteSelectedObjects(const QFlags<DeleteOptions> &options);
     void addNode();
     void markSelectedAs(const QFlags<SelectOptions> &option);
+    void clearGraph();
     template<typename T>
     void setTableFromMatrix(QTableView *table, const T &matrix, int height = -1, int width = -1);
     QList<QActionGroup *> actionGroups;
@@ -81,7 +79,6 @@ private:
     void algorithmDijkstra();
     void algorithmDinic();
     void algorithmBellmanFord();
-    void algorithmEdmondsKarp();
 
     // Saves
     QString currentFile = "";
@@ -90,6 +87,6 @@ private:
     void readGraphFromCSV();
     void newGraph();
     bool checkForSave();
-    void clearGraph();
+    void algorithmNetTransportProblem();
 };
 #endif // MAINWINDOW_H
