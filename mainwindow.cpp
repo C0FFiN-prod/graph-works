@@ -235,6 +235,7 @@ MainWindow::MainWindow(const QString &title, QWidget *parent)
     connect(ui->actionNew, &QAction::triggered, this, &MainWindow::newGraph);
     connect(ui->actionClearGraph, &QAction::triggered, this, &MainWindow::clearGraph);
     connect(ui->actionClearConsole, &QAction::triggered, this, &MainWindow::clearConsole);
+    connect(ui->button_ClearConsole, &QPushButton::pressed, this, &MainWindow::clearConsole);
 
     updateFileStatus();
 }

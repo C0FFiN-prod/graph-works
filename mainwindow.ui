@@ -495,7 +495,7 @@
         </spacer>
        </item>
        <item>
-        <widget class="QPushButton" name="button_MatrixAdj_Apply_10">
+        <widget class="QPushButton" name="button_ClearConsole">
          <property name="text">
           <string>Clear</string>
          </property>
