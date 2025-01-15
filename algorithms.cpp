@@ -272,6 +272,22 @@ void MainWindow::algorithmBellmanFord()
 
 #include "simplex_solver.cpp"
 
+void printVector(QList<double>& row){
+    auto debug = qDebug();
+    for(auto& cell : row){
+        debug << cell << '\t';
+    }
+}
+
+void printMatrix(Matrix2D& matrix){
+    qDebug() << "----------------------------";
+    for(auto& row : matrix){
+        printVector(row);
+    }
+    qDebug() << "----------------------------";
+}
+
+
 void MainWindow::algorithmNetTransportProblem()
 {
     int n = graph.getAmount();
@@ -286,8 +302,11 @@ void MainWindow::algorithmNetTransportProblem()
 
     QList<QPair<int, int>> edges;
     QList<double> B, C;
-
+    int absSum = 0;
+    int sum = 0;
     for (int i = 0; i < n; ++i) {
+        sum += bandwidths[i][i];
+        absSum += abs(bandwidths[i][i]);
         for (int j = 0; j < n; ++j) {
             if (i != j && bandwidths[i][j] != 0) {
                 edges.emplace_back(i, j);
@@ -297,10 +316,25 @@ void MainWindow::algorithmNetTransportProblem()
         }
     }
 
+    int hasVirtualNode = sum == 0 ? 0 : 1;
+    if(hasVirtualNode) {
+        for(int i = 0; i < n; ++i){
+            if((sum > 0 && bandwidths[i][i] < 0)
+                || (sum < 0 && bandwidths[i][i] > 0)){
+                edges.emplace_back(n, i);
+                B.push_back(absSum*absSum);
+                C.push_back(0);
+            }
+        }
+    }
+
     for (int i = 0; i < n; ++i) {
         B.push_back(bandwidths[i][i]);
     }
 
+    if(hasVirtualNode) B.push_back(sum);
+
+    //printVector(B);
     n = C.size();
     Matrix2D A(B.size(), QList<double>(n, 0));
 
@@ -309,10 +343,13 @@ void MainWindow::algorithmNetTransportProblem()
         A[n + edges[i].first][i] = 1;
         A[n + edges[i].second][i] = -1;
     }
+    //printMatrix(A);
+
     int n_slack = n;
     int n_art = A.size() - n;
     C.insert(C.constEnd(), n_slack, 0);
     C.insert(C.constEnd(), n_art, SIMPLEX_M);
+    //printVector(C);
     Matrix2D tableau(A.size(), QList<double>(n + n_art + n_slack + 1, 0));
     for (int i = 0; i < n; ++i) {
         tableau[i][i] = 1;
@@ -327,21 +364,26 @@ void MainWindow::algorithmNetTransportProblem()
             tableau[n + i][j] = A[n + i][j] * sign;
         }
     }
+    printMatrix(tableau);
     try {
         auto [results, f_opt] = simplex(tableau, C, n);
-        n = bandwidths.size();
+        printMatrix(tableau);
+
+        n = bandwidths.size() + hasVirtualNode;
         Matrix2D flows(n, QList<double>(n, 0));
         for (int i = results.size(); i--;) {
             auto [j, k] = edges[i];
             flows[j][k] = results[i];
         }
+        if(hasVirtualNode) flows[n-1][n-1] = sum;
         QString title = "Net Transport Problem " + QDateTime::currentDateTime().toString();
-        addDockWidget({new QLabel(QString("Minimal cost = %1").arg(f_opt)),
+        QString message = QString("Minimal cost = %1\n").arg(f_opt) + (hasVirtualNode ? QString(sum > 0 ?"Leftovers = %1" : "Shortages = %1").arg(abs(sum)) : "");
+        addDockWidget({new QLabel(message),
                        new QLabel("Optimized flows"),
                        makeTableFromMatrix(flows, n, n, false)},
                       title);
         consoleLog(title);
-        consoleLog(QString("Minimal cost = %1").arg(f_opt));
+        consoleLog(message);
 
     } catch (std::runtime_error &e) {
         QMessageBox::warning(this, title, e.what());
