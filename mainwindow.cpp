@@ -687,6 +687,8 @@ void MainWindow::deleteSelectedObjects(const QFlags<DeleteOptions> &options)
             src = ((Edge *) i.first)->sourceNode()->getIndex();
             dst = ((Edge *) i.first)->destNode()->getIndex();
             graph.removeEdge(src, dst);
+            if (((Edge *) i.first)->getEdgeType() == EdgeType::BiDirectionalSame)
+                graph.removeEdge(dst, src);
             break;
         default:
             break;

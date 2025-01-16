@@ -242,16 +242,18 @@ QVariant Node::itemChange(GraphicsItemChange change, const QVariant &value)
 
 void Node::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    QGraphicsItem::mousePressEvent(event);
-    if(!(event->modifiers() & Qt::ControlModifier)){
-        for(auto item: this->scene()->items()){
-            if(item!=this){
-                item->setSelected(false);
-
-            }
+    if (event->modifiers() & Qt::ControlModifier) {
+        QGraphicsItem::mousePressEvent(event);
+        return;
+    }
+    event->accept();
+    for (auto item : this->scene()->items()) {
+        if (item != this) {
+            item->setSelected(false);
         }
     }
-    setSelected(!isSelected());
+
+    this->setSelected(!isSelected());
     update();
 
 }

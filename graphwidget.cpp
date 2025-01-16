@@ -1,4 +1,5 @@
 #include "graphwidget.h"
+#include "qgraphicssceneevent.h"
 
 #include <QScrollBar>
 #include <math.h>
@@ -35,7 +36,9 @@ void GraphWidget::runTimer()
 
 void GraphWidget::initScene()
 {
-    for(auto& node: *nodes){
+    QSet<QPair<int, int>> addedBiDirectionalSameIndicies;
+
+    for (auto &node : *nodes) {
         if(!isItemOnScene(scene(), qgraphicsitem_cast<Node *>(node))&& node!=nullptr){
             scene()->addItem(node);
         }
@@ -108,15 +111,16 @@ void GraphWidget::wheelEvent(QWheelEvent *event)
 }
 #endif
 void GraphWidget::mousePressEvent(QMouseEvent *event){
-    if((event->button() == Qt::MiddleButton) &&
-        (this->dragMode()==QGraphicsView::NoDrag)){
+    if ((event->button() == Qt::MiddleButton) && (this->dragMode() == QGraphicsView::NoDrag)) {
         // Start dragging and save the last mouse position
         setCursor(Qt::ClosedHandCursor);
         dragging = true;
         prevScenePos = event->position();
         event->accept();
-    } else
+    } else {
         QGraphicsView::mousePressEvent(event);
+    }
+    return;
 }
 void GraphWidget::mouseMoveEvent(QMouseEvent *event){
     if(dragging){
@@ -127,9 +131,9 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event){
         horizontalScrollBar()->setValue(horizontalScrollBar()->value() - diff.x());
         verticalScrollBar()->setValue(verticalScrollBar()->value() - diff.y());
         event->accept();
-    }
-    else
+    } else {
         QGraphicsView::mouseMoveEvent(event);
+    }
 }
 void GraphWidget::mouseReleaseEvent(QMouseEvent *event){
     if((event->button() == Qt::MiddleButton)){
