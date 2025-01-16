@@ -359,7 +359,9 @@ void Graph::removeEdge(unsigned int u, unsigned int v)
         bandwidth[u][v] = 0;
     }
     if(edges.contains(key)){
-        graphView->scene()->removeItem(edges[key]);
+        if (graphView->scene()->items().contains(edges[key])) {
+            graphView->scene()->removeItem(edges[key]);
+        }
         nodes[u]->disconnectFromNode(nodes[v]);
         delete edges.take(key);
 

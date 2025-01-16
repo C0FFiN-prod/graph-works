@@ -26,6 +26,8 @@ public:
     double getFlow() const;
     double getBandwidth() const;
     EdgeType getEdgeType();
+    int getDestinationInd();
+    int getSourceInd();
 
     void adjust();
 
@@ -52,7 +54,7 @@ private:
     double bandwidth;
     QPointF sourcePoint;
     QPointF destPoint;
-    QColor selectionColor;
+    QColor currentColor;
     qreal arrowSize = 10;
 };
 #endif // EDGE_H
