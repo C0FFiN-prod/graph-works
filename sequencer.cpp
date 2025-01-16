@@ -10,9 +10,9 @@ void Sequencer::setDelay(unsigned int ms) { this->delay = ms; }
 int Sequencer::addFrame(int frameIndex)
 {
     qsizetype n = frames.length();
-    if (n < abs(frameIndex))
+    if (n < frameIndex || n+1 < -frameIndex)
         throw std::runtime_error("Frame index is out of range");
-    qsizetype newFrameIndex = (frameIndex < 0 ? n : 0) + frameIndex;
+    qsizetype newFrameIndex = (frameIndex < 0 ? n + 1 : 0) + frameIndex;
     frames.insert(newFrameIndex,Frame());
     return newFrameIndex;
 }
@@ -139,8 +139,8 @@ void Sequencer::set_edge_color(QColor color, unsigned int srcNodeIndex, unsigned
         throw std::runtime_error("Source/dest node not found");
     }
     if (!graphView->getEdges()->contains(key))
-        throw std::runtime_error("No such edge found");
-    this->graphView->getEdges()->find(key).value()->setCurrentColor(color);
+        throw std::runtime_error(QString("No such edge found for %1,%2").arg(srcNodeIndex).arg(destNodeIndex).toStdString());
+    this->graphView->getEdges()->value(key)->setCurrentColor(color);
 }
 
 void Sequencer::resetAllColors()

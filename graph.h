@@ -30,6 +30,7 @@ public:
     void setEdgeWeight(unsigned int u, unsigned int v, double w);
     void setEdgeBandwidth(unsigned int u, unsigned int v, double b);
     QString getNodeName(unsigned int u);
+    Edge* getEdge(unsigned int u, unsigned int v);
     void removeEdge(unsigned int u, unsigned int v);
     void removeNode(unsigned int index);
     void addNode(unsigned int i, const QString &name);

@@ -334,6 +334,17 @@ QString Graph::getNodeName(unsigned int u)
     return nodes[u]->getDisplayName();
 }
 
+Edge *Graph::getEdge(unsigned int u, unsigned int v)
+{
+    QPair<Node *, Node *> key
+        = QPair<Node *, Node *>(this->graphView->getNodes()->value(u, nullptr),
+                                this->graphView->getNodes()->value(v, nullptr));
+    if (!key.first || !key.second) {
+        throw std::runtime_error("Source/dest node not found");
+    }
+    return graphView->getEdges()->value(key, nullptr);
+}
+
 EdgeType Graph::getEdgeType(int i, int j, Matrix2D& matrix)
 {
     if(i==j && matrix[i][j]!=0){
