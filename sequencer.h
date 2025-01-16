@@ -23,6 +23,7 @@ private:
     int position = -1;
     GraphWidget* graphView;
     QList<QList<QString>> frames;
+    QMap<QString, TextBox*> textBoxes;
     unsigned int delay = 1000;
 
     //commands

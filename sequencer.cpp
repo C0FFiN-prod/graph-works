@@ -56,10 +56,9 @@ void Sequencer::next() {
     }
     if (position < frames.size() - 1) {
         position++;
-    } else {
-        position = frames.size() - 1; // Упираемся в последний кадр
+        draw();
     }
-    draw();
+
 }
 
 void Sequencer::prev() {
@@ -68,10 +67,9 @@ void Sequencer::prev() {
     }
     if (position > 0) {
         position--;
-    } else {
-        position = 0; // Упираемся в первый кадр
+        draw();
     }
-    draw();
+
 }
 
 void Sequencer::processCommand(const QString &command)
@@ -164,9 +162,18 @@ void Sequencer::draw()
 {
     for (auto &command : frames[position]) {
         processCommand(command);
-        qDebug() << "Executed commmand \"" << command << "\"";
+        qDebug() << "Executed commmand " << command;
     }
     graphView->initScene();
 }
 
-void Sequencer::clear() {}
+void Sequencer::clear() {
+    for(auto& tb : textBoxes){
+        graphView->scene()->removeItem(tb);
+    }
+    resetAllColors();
+    frames.clear();
+    graphView->initScene();
+    position = -1;
+    qDebug() << "Sequencer cleared";
+}
