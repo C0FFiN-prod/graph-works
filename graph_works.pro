@@ -17,6 +17,7 @@ SOURCES += \
     mainwindow.cpp \
     node.cpp \
     saves.cpp \
+    sequencer.cpp \
     simplex_solver.cpp \
     textbox.cpp
 
@@ -27,6 +28,7 @@ HEADERS += \
     graphwidget.h \
     mainwindow.h \
     node.h \
+    sequencer.h \
     textbox.h
 
 FORMS += \
