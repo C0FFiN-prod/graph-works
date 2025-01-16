@@ -73,7 +73,7 @@ CMakeLists.txt.user*
 *.exe
 
 /build
-
+build/
 
 CMakeLists.txt.user
 CMakeCache.txt
