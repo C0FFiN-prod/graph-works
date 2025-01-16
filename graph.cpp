@@ -514,6 +514,7 @@ void Graph::setSourceIndex(unsigned int sourceIndex)
         if (src == dst)
             dst = nullptr;
         src->setDefaultColor(NodeColors::SourceColor);
+        src->resetColor();
     }
     for (auto &i : nodes) {
         if (i != dst && i != src) {
@@ -530,6 +531,7 @@ void Graph::setDestIndex(unsigned int destIndex)
         if (src == dst)
             src = nullptr;
         dst->setDefaultColor(NodeColors::DestColor);
+        dst->resetColor();
     }
     for (auto &i : nodes) {
         if (i != dst && i != src) {

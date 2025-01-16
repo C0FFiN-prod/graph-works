@@ -57,7 +57,7 @@ Edge::Edge(Node *sourceNode,
     , flow(0)
     , weight(weight)
     , bandwidth(0)
-    , currentColor(NodeColors::DefaultColor)
+    , defaultColor(NodeColors::DefaultColor)
 {
     setFlag(ItemIsSelectable, true);
     //setAcceptedMouseButtons(Qt::NoButton);
@@ -143,6 +143,21 @@ void Edge::adjust()
     } else {
         sourcePoint = destPoint = line.p1();
     }
+}
+
+void Edge::setCurrentColor(QColor clr)
+{
+    this->currentColor = clr;
+}
+
+void Edge::resetColor()
+{
+    this->currentColor = defaultColor;
+}
+
+void Edge::setDefaultColor(QColor clr)
+{
+    this->defaultColor = clr;
 }
 
 Edge::~Edge()
@@ -236,12 +251,12 @@ void Edge::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
+    QColor tempClr;
     if(isSelected()){
-        // currentColor = QColor(0, 120, 212);
-        currentColor = QColor(NodeColors::SelectionColor);
+        tempClr = QColor(NodeColors::SelectionColor);
 
-    }else{
-        currentColor = QColor(NodeColors::DefaultColor);
+    } else {
+        tempClr = currentColor;
     }
 
     if (!source || !dest)
@@ -277,10 +292,10 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 
     if(this->edgeType==EdgeType::SingleDirection){
         //draw straight line
-        painter->setPen(QPen(currentColor, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        painter->setPen(QPen(tempClr, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         painter->drawLine(line);
 
-        drawArrowAt(painter, destPoint, atan2(-line.dy(), line.dx()), 10, currentColor);
+        drawArrowAt(painter, destPoint, atan2(-line.dy(), line.dx()), 10, tempClr);
 
         this->drawTextAt(painter, midPoint, text);
 
@@ -291,7 +306,7 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 
         //draw curve line
         QPainterPath path;
-        painter->setPen(QPen(currentColor, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        painter->setPen(QPen(tempClr, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         path.moveTo(line.p1());
         path.cubicTo(line.p1(),offsetPnt, line.p2());
         painter->drawPath(path);
@@ -300,14 +315,14 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
                     destPoint,
                     M_PI - atan2(offsetPnt.y() - destPoint.y(), offsetPnt.x() - destPoint.x()),
                     10,
-                    currentColor);
+                    tempClr);
 
         drawTextAt(painter,  QPointF(midPoint.x() + curvines/2 * cos(teta+M_PI/2), midPoint.y() + curvines/2 * sin(teta+M_PI/2)), text);
 
     }else if(this->edgeType==EdgeType::BiDirectionalSame){
         if(this->source->getIndex()<this->dest->getIndex()){
         //draw straight line
-        painter->setPen(QPen(currentColor, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        painter->setPen(QPen(tempClr, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         painter->drawLine(line);
 
         //if weight needs to be drawn
@@ -324,3 +339,8 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
     //     painter->drawPath(shape());
     // }
 }
+
+/*
+TODO:
+    fix multiple selection of qt!
+*/

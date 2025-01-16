@@ -14,6 +14,7 @@ const QRegularExpression MainWindow::reValidDouble("[0-9]+(\\.[0-9]+)?");
 const QRegularExpression MainWindow::reValidInt("[0-9]+");
 MainWindow::MainWindow(const QString &title, QWidget *parent)
     : QMainWindow(parent)
+    , sequencer(Sequencer(graph.graphView))
     , ui(new Ui::MainWindow)
     , title(title)
 {
@@ -85,7 +86,7 @@ MainWindow::MainWindow(const QString &title, QWidget *parent)
             table->setModel(new QStandardItemModel(0,0));
     }
 
-    connect(ui->actionBandwidth, &QAction::triggered, this, [this](bool checked){
+    connect(ui->actionBandwidth, &QAction::triggered, this, [this](bool checked) {
         if(checked)
             this->graph.setFlag(GraphFlags::ShowBandwidth);
         else
@@ -131,7 +132,6 @@ MainWindow::MainWindow(const QString &title, QWidget *parent)
             &QAction::triggered,
             this,
             std::bind(&MainWindow::markSelectedAs, this, SelectOptions::Destination));
-
     auto view = ui->menuView_mode;
     auto docks = this->findChildren<QDockWidget *>();
     if(!docks.empty()){
@@ -238,6 +238,24 @@ MainWindow::MainWindow(const QString &title, QWidget *parent)
     connect(ui->button_ClearConsole, &QPushButton::pressed, this, &MainWindow::clearConsole);
 
     updateFileStatus();
+
+    // Connecting sequencer actions
+    sequencer.addFrame(0);
+    sequencer.addFrame(1);
+    sequencer.addFrame(2);
+    sequencer.addFrame(3);
+    sequencer.addCommand("SET_COLOR node 0 #ff0000", 0);
+    sequencer.addCommand("SET_COLOR edge 0,1 #ff0000", 0);
+    sequencer.addCommand("SET_COLOR node 0 #00ff00", 1);
+    sequencer.addCommand("SET_COLOR edge 0,1 #00ff00", 1);
+    sequencer.addCommand("SET_COLOR node 0 #0000ff", 2);
+    sequencer.addCommand("SET_COLOR edge 0,1 #0000ff", 2);
+    sequencer.addCommand("RESET_COLORS", 3);
+    connect(ui->actionNextFrame, &QAction::triggered, this, [this]() { sequencer.next(); });
+    connect(ui->actionPreviousFrame, &QAction::triggered, this, [this]() { sequencer.prev(); });
+    connect(ui->actionFirstFrame, &QAction::triggered, this, [this]() { sequencer.first(); });
+    connect(ui->actionLastFrame, &QAction::triggered, this, [this]() { sequencer.last(); });
+    connect(ui->actionClearSequence, &QAction::triggered, this, [this]() { sequencer.clear(); });
 }
 
 MainWindow::~MainWindow()
@@ -714,6 +732,7 @@ void MainWindow::markSelectedAs(const QFlags<SelectOptions> &option)
             }
         }
     }
+    graph.graphView->initScene();
 }
 
 void MainWindow::listDataChanged(const QModelIndex &topLeft,

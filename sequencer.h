@@ -11,6 +11,7 @@ public:
     int addFrame(int frameIndex = -1);
     void removeFrame(int frameIndex = -1);
     void addCommand(const QString& command, int frameIndex = -1);
+    void processCommand(const QString &command);
     void clear();
     void first();
     void last();
@@ -23,6 +24,11 @@ private:
     GraphWidget* graphView;
     QList<QList<QString>> frames;
     unsigned int delay = 1000;
+
+    //commands
+    void set_node_color(QColor color, unsigned int index);
+    void set_edge_color(QColor color, unsigned int srcNodeIndex, unsigned int destNodeIndex);
+    void resetAllColors();
 };
 
 #endif // SEQUENCER_H

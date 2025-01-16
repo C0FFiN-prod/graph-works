@@ -31,6 +31,10 @@ public:
 
     void adjust();
 
+    void setCurrentColor(QColor clr);
+    void setDefaultColor(QColor clr);
+    void resetColor();
+
     enum { Type = UserType + 2 };
     int type() const override { return Type; }
     ~Edge();
@@ -55,6 +59,7 @@ private:
     QPointF sourcePoint;
     QPointF destPoint;
     QColor currentColor;
+    QColor defaultColor;
     qreal arrowSize = 10;
 };
 #endif // EDGE_H

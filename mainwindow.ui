@@ -176,6 +176,13 @@
    <addaction name="actionDeleteSelected"/>
    <addaction name="separator"/>
    <addaction name="actionClearGraph"/>
+   <addaction name="separator"/>
+   <addaction name="actionFirstFrame"/>
+   <addaction name="actionPreviousFrame"/>
+   <addaction name="actionNextFrame"/>
+   <addaction name="actionLastFrame"/>
+   <addaction name="actionClearSequence"/>
+   <addaction name="separator"/>
   </widget>
   <widget class="QDockWidget" name="dock_MatrixAdj">
    <property name="features">
@@ -985,6 +992,96 @@
   <action name="actionNetTransportProblem">
    <property name="text">
     <string>Net Transport Problem</string>
+   </property>
+  </action>
+  <action name="actionNextFrame">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/ico/icons/next.svg</normaloff>:/ico/icons/next.svg</iconset>
+   </property>
+   <property name="text">
+    <string>NextFrame</string>
+   </property>
+   <property name="toolTip">
+    <string>show next step of algorithm</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+Right</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionPreviousFrame">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/ico/icons/previous.svg</normaloff>:/ico/icons/previous.svg</iconset>
+   </property>
+   <property name="text">
+    <string>PreviousFrame</string>
+   </property>
+   <property name="toolTip">
+    <string>show previous step of algorithm</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+Left</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionLastFrame">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/ico/icons/last.svg</normaloff>:/ico/icons/last.svg</iconset>
+   </property>
+   <property name="text">
+    <string>LastFrame</string>
+   </property>
+   <property name="toolTip">
+    <string>show last frame of algorithm</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+Shift+Right</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionFirstFrame">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/ico/icons/first.svg</normaloff>:/ico/icons/first.svg</iconset>
+   </property>
+   <property name="text">
+    <string>FirstFrame</string>
+   </property>
+   <property name="toolTip">
+    <string>show first frame of algorithm</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+Shift+Left</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionClearSequence">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/ico/icons/cross-small.svg</normaloff>:/ico/icons/cross-small.svg</iconset>
+   </property>
+   <property name="text">
+    <string>ClearSequence</string>
+   </property>
+   <property name="toolTip">
+    <string>clear current algorithm visualization</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
    </property>
   </action>
   <zorder>dock_MatrixFlow</zorder>

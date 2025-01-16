@@ -16,6 +16,7 @@
 #include "qspinbox.h"
 #include "qstandarditemmodel.h"
 #include "qtableview.h"
+#include "sequencer.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -28,6 +29,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(const QString &title, QWidget *parent = nullptr);
     Graph graph;
+    Sequencer sequencer;
     ~MainWindow();
 
 private slots:

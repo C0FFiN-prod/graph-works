@@ -21,6 +21,9 @@ public:
     void runTimer();
     void initScene();
     QFlags<GraphFlags> getFlags();
+
+    QMap<QPair<Node *, Node *>, Edge *> *getEdges();
+    QMap<unsigned int, Node *> *getNodes();
 public slots:
     void zoomIn();
     void zoomOut();

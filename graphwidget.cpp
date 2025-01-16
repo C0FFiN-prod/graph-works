@@ -180,3 +180,13 @@ bool isItemOnScene(QGraphicsScene *scene, QGraphicsItem *item)
     }
     return false;
 }
+
+QMap<QPair<Node *, Node *>, Edge *> *GraphWidget::getEdges()
+{
+    return this->edges;
+}
+
+QMap<unsigned int, Node *> *GraphWidget::getNodes()
+{
+    return this->nodes;
+}

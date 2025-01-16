@@ -45,6 +45,8 @@ public:
     ~Node();
     QSet<Edge *> edgeList;
     void setDefaultColor(const NodeColors clr);
+    void setCurrentColor(const QColor clr);
+    void resetColor();
 
 protected:
     QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;
@@ -55,7 +57,8 @@ protected:
 private:
     QSet<Node *> children;
     QSet<Node *> parents;
-    QColor defaulColor;
+    QColor defaultColor;
+    QColor currentColor;
     QPointF newPos;
     GraphWidget *graph;
     int index;
