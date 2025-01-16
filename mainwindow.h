@@ -45,9 +45,11 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QString title;
+    QLabel *currentFrameLabel;
     const static QRegularExpression reValidDouble, reValidDoubleLine, reValidInt;
     QMap<QString, QWidget *> docksViewMode;
     void pasteClipboardToTable(QTableView *dest);
+    void handleSequencerFrameChange();
     void copyTableToClipboard(QTableView *src);
     void applyGraphMatrix(QTableView *table);
     void applyEdgesList(QTableView *table);

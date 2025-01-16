@@ -1,13 +1,13 @@
 #include "mainwindow.h"
+#include <QClipboard>
+#include <QMessageBox>
+#include <QQueue>
+#include <QShortcut>
+#include <QStandardItemModel>
+#include <QToolTip>
 #include "qspinbox.h"
 #include "ui_mainwindow.h"
-#include <QStandardItemModel>
-#include <QMessageBox>
-#include <QToolTip>
-#include <QClipboard>
-#include <QQueue>
 #include <set>
-#include <QShortcut>
 
 const QRegularExpression MainWindow::reValidDoubleLine("([0-9]+(\\.[0-9]+)?(\t|\n))+");
 const QRegularExpression MainWindow::reValidDouble("[0-9]+(\\.[0-9]+)?");
@@ -18,7 +18,10 @@ MainWindow::MainWindow(const QString &title, QWidget *parent)
     , ui(new Ui::MainWindow)
     , title(title)
 {
-    ui->setupUi(this);    
+    ui->setupUi(this);
+    currentFrameLabel = new QLabel("", this);
+    ui->toolBar->addWidget(currentFrameLabel);
+
     auto spinBoxes = this->findChildren<QSpinBox *>();
     auto pushButtons = this->findChildren<QPushButton *>();
     for(auto* table : this->findChildren<QTableView *>()){
@@ -251,11 +254,26 @@ MainWindow::MainWindow(const QString &title, QWidget *parent)
     sequencer.addCommand("SET_COLOR node 0 #0000ff", 2);
     sequencer.addCommand("SET_COLOR edge 0,1 #0000ff", 2);
     sequencer.addCommand("RESET_COLORS", 3);
-    connect(ui->actionNextFrame, &QAction::triggered, this, [this]() { sequencer.next(); });
-    connect(ui->actionPreviousFrame, &QAction::triggered, this, [this]() { sequencer.prev(); });
-    connect(ui->actionFirstFrame, &QAction::triggered, this, [this]() { sequencer.first(); });
-    connect(ui->actionLastFrame, &QAction::triggered, this, [this]() { sequencer.last(); });
-    connect(ui->actionClearSequence, &QAction::triggered, this, [this]() { sequencer.clear(); });
+    connect(ui->actionNextFrame, &QAction::triggered, this, [this]() {
+        sequencer.next();
+        handleSequencerFrameChange();
+    });
+    connect(ui->actionPreviousFrame, &QAction::triggered, this, [this]() {
+        sequencer.prev();
+        handleSequencerFrameChange();
+    });
+    connect(ui->actionFirstFrame, &QAction::triggered, this, [this]() {
+        sequencer.first();
+        handleSequencerFrameChange();
+    });
+    connect(ui->actionLastFrame, &QAction::triggered, this, [this]() {
+        sequencer.last();
+        handleSequencerFrameChange();
+    });
+    connect(ui->actionClearSequence, &QAction::triggered, this, [this]() {
+        sequencer.clear();
+        handleSequencerFrameChange();
+    });
 }
 
 MainWindow::~MainWindow()
@@ -327,6 +345,25 @@ void MainWindow::pasteClipboardToTable(QTableView *dest)
         }
     }
     emit model->dataChanged(indexes.first(),model->item(row+i-1, col+j-1)->index());
+}
+
+void MainWindow::handleSequencerFrameChange()
+{
+    int currentPosition = sequencer.getPosition();
+    int maxPosition = sequencer.getFramesLength() - 1;
+    currentFrameLabel->setText(QString::number(currentPosition + 1) + " / "
+                               + QString::number(maxPosition + 1));
+    ui->actionFirstFrame->setDisabled(false);
+    ui->actionNextFrame->setDisabled(false);
+    ui->actionPreviousFrame->setDisabled(false);
+    ui->actionLastFrame->setDisabled(false);
+    if (currentPosition == maxPosition) {
+        ui->actionNextFrame->setDisabled(true);
+        ui->actionLastFrame->setDisabled(true);
+    } else if (currentPosition == 0) {
+        ui->actionPreviousFrame->setDisabled(true);
+        ui->actionFirstFrame->setDisabled(true);
+    }
 }
 
 void MainWindow::viewModeChecked(bool checked)

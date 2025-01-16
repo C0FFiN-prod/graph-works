@@ -19,6 +19,9 @@ public:
     void prev();
     void play();
     void draw();
+    int getPosition();
+    int getFramesLength();
+
 private:
     int position = -1;
     GraphWidget* graphView;

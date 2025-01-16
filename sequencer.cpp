@@ -167,6 +167,16 @@ void Sequencer::draw()
     graphView->initScene();
 }
 
+int Sequencer::getPosition()
+{
+    return this->position;
+}
+
+int Sequencer::getFramesLength()
+{
+    return this->frames.length();
+}
+
 void Sequencer::clear() {
     for(auto& tb : textBoxes){
         graphView->scene()->removeItem(tb);
