@@ -85,7 +85,7 @@ private:
     void algorithmDinic();
     void algorithmBellmanFord();
 
-    void initSequencer();
+    void initSequencer(bool isSequenceStateless = false);
 
     // Saves
     QString currentFile = "";

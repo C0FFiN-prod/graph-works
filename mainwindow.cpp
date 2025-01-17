@@ -417,8 +417,9 @@ void MainWindow::handleSequencerFrameChange()
     }
 }
 
-void MainWindow::initSequencer()
+void MainWindow::initSequencer(bool isSequenceStateless)
 {
+    sequencer.isSequenceStateless = isSequenceStateless;
     if (this->sequencer.getFramesLength() == 0) {
         qDebug() << "Sequencer cannot be prepared: frames are empty";
         return;

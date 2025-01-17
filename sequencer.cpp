@@ -83,9 +83,16 @@ void Sequencer::goToFrame(int targetFrameInd)
     graphView->initScene();
     position = -1;
     qDebug() << "Changes cleared";
-    while (position < targetFrameInd) {
-        position++;
-        draw();
+    if (!isSequenceStateless) {
+        while (position < targetFrameInd) {
+            position++;
+            draw();
+        }
+    } else {
+        if (targetFrameInd >= 0) {
+            position = targetFrameInd;
+            draw();
+        }
     }
 }
 

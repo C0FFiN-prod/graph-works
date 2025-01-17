@@ -6,6 +6,7 @@
 class Sequencer
 {
 public:
+    bool isSequenceStateless = false;
     Sequencer(GraphWidget* graphView);
     void setDelay(unsigned int ms);
     int addFrame(int frameIndex = -1);

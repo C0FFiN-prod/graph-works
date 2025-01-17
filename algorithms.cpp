@@ -175,7 +175,7 @@ void MainWindow::algorithmFloYdWarshall()
     sequencer.addFrame();
     sequencer.addCommand("RESET_COLORS");
     sequencer.addCommand("REMOVE_TYPE_TEXT point");
-    initSequencer();
+    initSequencer(true);
     QList<QWidget *> widgets{new QLabel("Shortest distances"),
                              makeTableFromMatrix(d, n, n, false),
                              new QLabel("Shortest paths"),
@@ -416,7 +416,7 @@ void MainWindow::algorithmDinic()
     addDockWidget({new QLabel("Optimized flow matrix"), makeTableFromMatrix(f, n, n, false)}, title);
 
     // Инициализация анимации
-    initSequencer();
+    initSequencer(true);
 }
 
 // The main function that finds shortest distances from src to
