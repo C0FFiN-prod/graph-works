@@ -20,8 +20,29 @@ MainWindow::MainWindow(const QString &title, QWidget *parent)
     , title(title)
 {
     ui->setupUi(this);
-    currentFrameLabel = new QLabel("", this);
-    ui->toolBar->addWidget(currentFrameLabel);
+
+    //setting up extra widgets
+    currentFrameLabel = new QLabel("0/0", this);
+    ui->toolBar->insertWidget(ui->actionFirstFrame, currentFrameLabel);
+    delayBetweenFramesSlider = new QSlider(Qt::Orientation::Horizontal, this);
+    delayBetweenFramesSlider->setOrientation(Qt::Horizontal);
+    delayBetweenFramesSlider->setMaximum(1000);
+    delayBetweenFramesSlider->setMinimum(0);
+    delayBetweenFramesSlider->setMaximumSize(100, 20);
+
+    connect(delayBetweenFramesSlider, &QSlider::valueChanged, [this](int value) {
+        QToolTip::showText(delayBetweenFramesSlider->mapToGlobal(
+                               delayBetweenFramesSlider->rect().center()),
+                           QString::number(value) + " ms",
+                           delayBetweenFramesSlider);
+    });
+
+    // Скрываем tooltip, когда слайдер не активен
+    connect(delayBetweenFramesSlider, &QSlider::sliderReleased, this, []() {
+        QToolTip::hideText();
+    });
+
+    ui->toolBar->addWidget(delayBetweenFramesSlider);
 
     auto spinBoxes = this->findChildren<QSpinBox *>();
     auto pushButtons = this->findChildren<QPushButton *>();
@@ -247,12 +268,12 @@ MainWindow::MainWindow(const QString &title, QWidget *parent)
     connect(ui->actionNextFrame, &QAction::triggered, this, [this]() {
         sequencer.next();
         handleSequencerFrameChange();
-        QThread::msleep(200);
+        QThread::msleep(delayBetweenFramesSlider->sliderPosition());
     });
     connect(ui->actionPreviousFrame, &QAction::triggered, this, [this]() {
         sequencer.prev();
         handleSequencerFrameChange();
-        QThread::msleep(200);
+        QThread::msleep(delayBetweenFramesSlider->sliderPosition());
     });
     connect(ui->actionFirstFrame, &QAction::triggered, this, [this]() {
         sequencer.first();
@@ -266,6 +287,13 @@ MainWindow::MainWindow(const QString &title, QWidget *parent)
         sequencer.clear();
         handleSequencerFrameChange();
     });
+    //disabling sequencer btns and controls
+    ui->actionFirstFrame->setDisabled(true);
+    ui->actionNextFrame->setDisabled(true);
+    ui->actionPreviousFrame->setDisabled(true);
+    ui->actionLastFrame->setDisabled(true);
+    ui->actionClearSequence->setDisabled(true);
+    delayBetweenFramesSlider->setDisabled(true);
 }
 
 MainWindow::~MainWindow()
@@ -365,6 +393,20 @@ void MainWindow::handleSequencerFrameChange()
         ui->actionPreviousFrame->setDisabled(true);
         ui->actionFirstFrame->setDisabled(true);
     }
+}
+
+void MainWindow::initSequencer()
+{
+    if (this->sequencer.getFramesLength() == 0) {
+        qDebug() << "Sequencer cannot be prepared: frames are empty";
+        return;
+    }
+    delayBetweenFramesSlider->setDisabled(false);
+    ui->actionLastFrame->setDisabled(false);
+    ui->actionNextFrame->setDisabled(false);
+    ui->actionClearSequence->setDisabled(false);
+    currentFrameLabel->setText(QString::number(sequencer.getPosition() + 1) + "/"
+                               + QString::number(sequencer.getFramesLength()));
 }
 
 void MainWindow::viewModeChecked(bool checked)

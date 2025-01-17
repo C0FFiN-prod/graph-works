@@ -577,6 +577,22 @@
      <property name="spacing">
       <number>0</number>
      </property>
+     <item row="1" column="0">
+      <widget class="QTableView" name="table_MatrixBandwidth_Graph">
+       <attribute name="horizontalHeaderMinimumSectionSize">
+        <number>40</number>
+       </attribute>
+       <attribute name="horizontalHeaderDefaultSectionSize">
+        <number>40</number>
+       </attribute>
+       <attribute name="verticalHeaderMinimumSectionSize">
+        <number>20</number>
+       </attribute>
+       <attribute name="verticalHeaderDefaultSectionSize">
+        <number>20</number>
+       </attribute>
+      </widget>
+     </item>
      <item row="0" column="0">
       <layout class="QHBoxLayout" name="horizontalLayout_9">
        <property name="spacing">
@@ -613,22 +629,6 @@
         </widget>
        </item>
       </layout>
-     </item>
-     <item row="1" column="0">
-      <widget class="QTableView" name="table_MatrixBandwidth_Graph">
-       <attribute name="horizontalHeaderMinimumSectionSize">
-        <number>40</number>
-       </attribute>
-       <attribute name="horizontalHeaderDefaultSectionSize">
-        <number>40</number>
-       </attribute>
-       <attribute name="verticalHeaderMinimumSectionSize">
-        <number>20</number>
-       </attribute>
-       <attribute name="verticalHeaderDefaultSectionSize">
-        <number>20</number>
-       </attribute>
-      </widget>
      </item>
     </layout>
    </widget>

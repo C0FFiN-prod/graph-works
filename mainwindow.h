@@ -46,6 +46,7 @@ private:
     Ui::MainWindow *ui;
     QString title;
     QLabel *currentFrameLabel;
+    QSlider *delayBetweenFramesSlider;
     const static QRegularExpression reValidDouble, reValidDoubleLine, reValidInt;
     QMap<QString, QWidget *> docksViewMode;
     void pasteClipboardToTable(QTableView *dest);
@@ -83,6 +84,8 @@ private:
     void algorithmDijkstra();
     void algorithmDinic();
     void algorithmBellmanFord();
+
+    void initSequencer();
 
     // Saves
     QString currentFile = "";

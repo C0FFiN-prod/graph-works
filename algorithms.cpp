@@ -153,6 +153,7 @@ void MainWindow::algorithmFloYdWarshall()
     // Завершающий кадр
     sequencer.addFrame();
     sequencer.addCommand("RESET_COLORS");
+    initSequencer();
     QList<QWidget *> widgets{new QLabel("Shortest distances"),
                              makeTableFromMatrix(d, n, n, false),
                              new QLabel("Shortest paths"),

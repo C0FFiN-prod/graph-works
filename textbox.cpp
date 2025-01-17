@@ -71,14 +71,19 @@ void TextBox::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget
     QPointF offset(-padding,padding);
     QRect backgroundRect = rect.adjusted(-padding*2, -padding*2, padding/2, padding/2);
     backgroundRect.moveCenter((this->centerPoint));
+
     //drawing background
-    painter->setPen(Qt::red);
-    painter->drawRect(backgroundRect);
-    painter->setPen(Qt::NoPen);
-    painter->setBrush(selectionColor);
-    painter->drawEllipse(backgroundRect);
-    //painter->setPen(Qt::yellow);
-    //painter->drawRect(boundingRect());
+    if (rectBackground) {
+        painter->setPen(Qt::black);
+        painter->setBrush(Qt::white);
+        painter->drawRect(backgroundRect);
+
+    } else {
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(Qt::white);
+        painter->drawEllipse(backgroundRect);
+    }
+
     //drawing text
     painter->setPen(Qt::black);
     painter->drawText(backgroundRect, Qt::AlignVCenter | Qt::AlignHCenter, text);
@@ -108,21 +113,18 @@ QString TextBox::getText()
     return this->text;
 }
 
-void TextBox::mousePressEvent(QGraphicsSceneMouseEvent *event)
-{
-    if(!(event->modifiers() & Qt::ControlModifier)){
-        for(auto item: this->scene()->items()){
-            if(item!=this){
-                item->setSelected(false);
+// void TextBox::mousePressEvent(QGraphicsSceneMouseEvent *event)
+// {
+//     if(!(event->modifiers() & Qt::ControlModifier)){
+//         for(auto item: this->scene()->items()){
+//             if(item!=this){
+//                 item->setSelected(false);
 
-            }
-        }
-    }
-    //QGraphicsItem::mousePressEvent(event);
+//             }
+//         }
+//     }
+//     //QGraphicsItem::mousePressEvent(event);
 
-    setSelected(!isSelected());
-    update();
-}
-
-
-
+//     setSelected(!isSelected());
+//     update();
+// }

@@ -285,6 +285,7 @@ void Sequencer::drawTextAtPoint(QString text, int x, int y)
     TextBox *currentTextBox = new TextBox();
     currentTextBox->setCustomText(text);
     currentTextBox->setZValue(1);
+    currentTextBox->rectBackground = true;
 
     this->graphView->scene()->addItem(currentTextBox);
     textBoxes.insert(key, currentTextBox);
