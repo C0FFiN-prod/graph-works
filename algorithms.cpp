@@ -51,11 +51,12 @@ QPair<QSet<QPair<int, int>>, QSet<QPair<int, int>>> getPathSets(
 
 bool highlightCommonEdges(Sequencer* sequencer,
                           QSet<QPair<int, int>>& oldEdges,
-                          QSet<QPair<int, int>>& newEdges) {
+                          QSet<QPair<int, int>>& newEdges,
+                          const QString &color = "ORANGE") {
 
     for (const auto& edge : oldEdges.intersect(newEdges)) {
         sequencer->addCommand(
-            QString("SET_COLOR edge %1,%2 ORANGE").arg(edge.first).arg(edge.second));
+            QString("SET_COLOR edge %1,%2 %3").arg(edge.first).arg(edge.second).arg(color));
     }
     return newEdges == oldEdges;
 }
@@ -184,7 +185,23 @@ void MainWindow::algorithmFloYdWarshall()
     addDockWidget(widgets, title);
 }
 
+QList<int> reconstructPath(int src, int target, const QList<int> &previous) {
+    QList<int> path;
+    for (int at = target; at != -1; at = previous[at]) {
+        path.prepend(at); // Добавляем вершину в начало списка
+    }
+    if (path[0] != src) {
+        return {}; // Путь недостижим
+    }
+    return path;
+}
 
+void markVisited(Sequencer& sequencer, const QBitArray& visited, const QString& color){
+    for(int i = 0; i < visited.size(); ++i){
+        if(visited[i])
+            sequencer.addCommand(QString("SET_COLOR node %1 %2").arg(i).arg(color));
+    }
+}
 
 int minDistance(int n, QList<double> &dist, QBitArray &sptSet)
 {
@@ -201,53 +218,82 @@ int minDistance(int n, QList<double> &dist, QBitArray &sptSet)
 
 void MainWindow::algorithmDijkstra()
 {
-    int k, i, n = graph.getAmount();
+    int n = graph.getAmount();
     if (n < 2) {
         QMessageBox::warning(this, this->title, "Too few nodes");
         return;
     }
 
     Matrix2D d = graph.getMatrixAdjacent();
-    QList<double> dist(n); // The output array.  dist[i] will hold the
-        // shortest
-    // distance from src to i
-    QBitArray sptSet(n); // sptSet[i] will be true if vertex i is
-        // included in shortest
-    // path tree or shortest distance from src to i is
-    // finalized
+    QList<double> dist(n, INF); // Список кратчайших расстояний
+    QBitArray sptSet(n, false); // Множество обработанных вершин
+    QList<int> previous(n, -1); // Хранение предшественников для восстановления пути
 
-    // Initialize all distances as INFINITE and stpSet[] as
-    // false
-    for (i = 0; i < n; i++)
-        dist[i] = INF, sptSet[i] = false;
-    int src, u;
-    if ((src = graph.getSourceIndex()) == -1)
-        src = 0;
+    int src = graph.getSourceIndex();
+    if (src == -1) src = 0;
 
-    // Distance of source vertex from itself is always 0
     dist[src] = 0;
 
+    sequencer.clear();
     // Find shortest path for all vertices
-    for (i = 0; i < n - 1; i++) {
+    for (int i = 0; i < n - 1; i++) {
         // Pick the minimum distance vertex from the set of
         // vertices not yet processed. u is always equal to
         // src in the first iteration.
-        u = minDistance(n, dist, sptSet);
+        int u = minDistance(n, dist, sptSet);
+        sptSet[u] = true;
+        // Анимация выбора текущей вершины
+        sequencer.addFrame();
+        sequencer.addCommand(QString("RESET_COLORS"));
+        markVisited(sequencer, sptSet, "GRAY");
+        sequencer.addCommand(QString("SET_COLOR node %1 ORANGE").arg(src));
+        sequencer.addCommand(QString("SET_COLOR node %1 RED").arg(u));
+        sequencer.addCommand(QString("SET_TEXT point 0,-250 Processing node %1").arg(graph.getNodeName(u)));
+        highlightPath(&sequencer, reconstructPath(src, u, previous), "ORANGE");
+        for(int k = 0; k < n; ++k){
+            if (!sptSet[k] && d[u][k] && dist[u] != INF)
+                sequencer.addCommand(QString("SET_COLOR edge %1,%2 RED").arg(u).arg(k));
+        }
 
         // Mark the picked vertex as processed
-        sptSet[u] = true;
+        for (int k = 0; k < n; k++) {
+            if (!sptSet[k] && d[u][k] && dist[u] != INF) {
+                // Анимация обновления расстояний
+                sequencer.addFrame();
+                sequencer.addCommand(QString("RESET_COLORS"));
+                markVisited(sequencer, sptSet, "GRAY");
+                sequencer.addCommand(QString("SET_COLOR node %1 RED").arg(u));
+                sequencer.addCommand(QString("SET_COLOR node %1 BLUE").arg(k));
+                sequencer.addCommand(QString("SET_COLOR node %1 ORANGE").arg(src));
+                highlightPath(&sequencer, reconstructPath(src, u, previous), "ORANGE");
+                sequencer.addCommand(QString("SET_COLOR edge %1,%2 RED").arg(u).arg(k));
+                if(dist[u] + d[u][k] < dist[k]){
+                    sequencer.addCommand(
+                        QString("SET_TEXT point 0,-250 Updating distance to %1: %2 -> %3")
+                            .arg(graph.getNodeName(k))
+                            .arg(dist[k])
+                            .arg(dist[u] + d[u][k]));
 
-        // Update dist value of the adjacent vertices of the
-        // picked vertex.
-        for (k = 0; k < n; k++)
 
-            // Update dist[v] only if is not in sptSet,
-            // there is an edge from u to v, and total
-            // weight of path from src to  v through u is
-            // smaller than current value of dist[v]
-            if (!sptSet[k] && d[u][k] && dist[u] != INF && dist[u] + d[u][k] < dist[k])
-                dist[k] = dist[u] + d[u][k];
+                    dist[k] = dist[u] + d[u][k];
+                    previous[k] = u; // Обновляем предшественника
+                } else {
+                    sequencer.addCommand(
+                        QString("SET_TEXT point 0,-250 Not updating distance to %1: %2")
+                            .arg(graph.getNodeName(k))
+                            .arg(dist[k]));
+                }
+                highlightPath(&sequencer, reconstructPath(src, k, previous), "GREEN");
+            }
+        }
     }
+
+    // Завершающий кадр
+    sequencer.addFrame();
+    sequencer.addCommand("RESET_COLORS");
+    sequencer.addCommand("REMOVE_TYPE_TEXT point");
+    initSequencer(true);
+
     Matrix2D distM(1, dist);
     QString title("Dijkstra " + QDateTime::currentDateTime().toString());
     QList<QWidget *> widgets = {
