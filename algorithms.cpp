@@ -5,9 +5,12 @@ template <typename T>
 QString printVector(const QList<T>& row){
     auto debug = qDebug();
     QString result = "";
+    bool first = true;
     for(auto& cell : row){
         debug << cell << '\t';
-        result.append(QVariant(cell).toString()).append(',');
+        if(!first) result.append(',');
+        else first = false;
+        result.append(QVariant(cell).toString());
     }
     return result;
 }
@@ -108,9 +111,17 @@ void MainWindow::algorithmFloYdWarshall()
                 sequencer.addCommand(QString("SET_COLOR node %1 RED").arg(k));
                 sequencer.addCommand(QString("SET_COLOR node %1 ORANGE").arg(i));
                 sequencer.addCommand(QString("SET_COLOR node %1 BLUE").arg(j));
-                sequencer.addCommand(QString("SET_TEXT point 5,25 [K = %3 I = %1 J = %2]\n").arg(i).arg(j).arg(k)
-                                    +QString("Old path %1\n").arg(printVector(oldPath))
-                                    +QString("New path %1").arg(printVector(newPath)));
+                sequencer.addCommand(
+                    QString("SET_TEXT point 0,-250 Checking paths\nFrom %1 to %2 via %3\n")
+                        .arg(i).arg(j).arg(k)+
+                    QString("Old shortest path from %1 to %2: %3\n")
+                        .arg(i).arg(j).arg(printVector(oldPath))+
+                    QString("New possible path via %1: %2\n")
+                        .arg(k).arg(printVector(newPath))+
+                    QString("Comparing lengths: Old = %1, New = %2")
+                        .arg(d[i][j]).arg(d[i][k] + d[k][j]));
+
+
                 auto[oldEdges, newEdges] = getPathSets(oldPath, newPath);
 
                 // Подсветка путей
@@ -133,18 +144,28 @@ void MainWindow::algorithmFloYdWarshall()
                             highlightPath(&sequencer, oldPath, "DEFAULT");
                             highlightPath(&sequencer, newPath, "GREEN");
                             sequencer.addCommand(
-                                QString("SET_TEXT point 5,5 \"Updated |%1->%2|=%3\"")
+                                QString("SET_TEXT point 0,-250 Path updated: New shortest path from %1 to %2 = %3")
                                     .arg(i)
                                     .arg(j)
                                     .arg(d[i][j]));
                         } else {
                             highlightPath(&sequencer, newPath, "DEFAULT");
                             highlightPath(&sequencer, oldPath, "GREEN");
+                            sequencer.addCommand(
+                                QString("SET_TEXT point 0,-250 No changes: Current shortest path from %1 to %2 = %3")
+                                        .arg(i)
+                                        .arg(j)
+                                        .arg(d[i][j]));
                         }
                     }
                 } else if(!oldEdges.empty()) {
                     sequencer.addFrame();
                     highlightPath(&sequencer, oldPath, "GREEN");
+                    sequencer.addCommand(
+                        QString("SET_TEXT point 0,-250 No changes: Current shortest path from %1 to %2 = %3")
+                            .arg(i)
+                            .arg(j)
+                            .arg(d[i][j]));
                 }
             }
         }
@@ -153,6 +174,7 @@ void MainWindow::algorithmFloYdWarshall()
     // Завершающий кадр
     sequencer.addFrame();
     sequencer.addCommand("RESET_COLORS");
+    sequencer.addCommand("REMOVE_TYPE_TEXT point");
     initSequencer();
     QList<QWidget *> widgets{new QLabel("Shortest distances"),
                              makeTableFromMatrix(d, n, n, false),

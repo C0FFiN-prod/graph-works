@@ -144,11 +144,23 @@
     <addaction name="actionFlow"/>
     <addaction name="separator"/>
    </widget>
+   <widget class="QMenu" name="menuPlayer">
+    <property name="title">
+     <string>Player</string>
+    </property>
+    <addaction name="actionNextFrame"/>
+    <addaction name="actionPreviousFrame"/>
+    <addaction name="actionLastFrame"/>
+    <addaction name="actionFirstFrame"/>
+    <addaction name="separator"/>
+    <addaction name="actionClearSequence"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuAlgorithms"/>
    <addaction name="menuNode_movement"/>
    <addaction name="menuView_mode"/>
+   <addaction name="menuPlayer"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QToolBar" name="toolBar">
