@@ -13,7 +13,7 @@ TextBox::TextBox(): text(""), centerPoint(QPoint(0,0))
 TextBox::TextBox(QString txt, QPoint coords): text(txt), centerPoint(coords)
 {
     selectionColor = Qt::white;
-    setFlag(ItemIsSelectable);
+    // setFlag(ItemIsSelectable);
 }
 
 QRectF TextBox::boundingRect() const
@@ -87,6 +87,17 @@ void TextBox::moveTo(QPoint coords)
 void TextBox::setText(QString text)
 {
     this->text =text;
+}
+
+void TextBox::setCustomText(QString text)
+{
+    this->containsCustomText = true;
+    this->text = text;
+}
+
+QString TextBox::getText()
+{
+    return this->text;
 }
 
 void TextBox::mousePressEvent(QGraphicsSceneMouseEvent *event)

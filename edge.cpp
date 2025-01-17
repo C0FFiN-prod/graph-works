@@ -9,35 +9,10 @@
 QFlags<GraphFlags> *Edge::graphFlags = nullptr;
 
 void Edge::drawTextAt(QPainter *painter, QPointF offsetPnt, QString& text){
-    //setting up font parameters
-    if(text.isEmpty()) return;
-    QFont font = painter->font();
-    font.setBold(false);
-    font.setPointSize(7);
-    painter->setFont(font);
-    painter->setPen(Qt::black);
-
-    //get text bounds
-    QFontMetrics metrics(font);
-    QRect rect = metrics.boundingRect(text);
-
-    //draw padding
-    int padding = 5;
-    QPointF offset(-padding,padding);
-    QRect backgroundRect = rect.adjusted(-padding*2, -padding*2, padding/2, padding/2);
-    backgroundRect.moveCenter((offsetPnt).toPoint());
-    //drawing background
-    painter->setBrush(QColor(255, 255, 255, 255));
-    painter->setPen(Qt::NoPen);
-    //painter->drawEllipse(backgroundRect);
-
-    //drawing text
-    painter->setPen(Qt::black);
     this->info.moveTo(offsetPnt.toPoint());
     this->info.setText(text);
     this->info.setZValue(1);
-    //this->info.setTransform(info.transform().rotate(info.rotation()-angle));
-    //painter->drawText(backgroundRect, Qt::AlignVCenter | Qt::AlignHCenter, text);
+    this->info.paint(painter, nullptr, nullptr);
 }
 void drawArrowAt(QPainter *painter, QPointF at, double angle, double arrowSize, QColor color){
     QPointF destArrowP1 = at + QPointF(sin(angle - M_PI / 3) * arrowSize, cos(angle - M_PI / 3) * arrowSize);
@@ -270,22 +245,26 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 
     //calculate curve points
     QPointF midPoint = QPointF((line.p1().x()+ line.p2().x())/2,(line.p1().y()+ line.p2().y())/2 );
-    QString text = "";
-    bool slashNeeded = false;
-    if(graphFlags->testFlag(GraphFlags::ShowWeights)){
-        text.append(QString::number(this->weight));
-        slashNeeded = true;
-    }
-    if(graphFlags->testFlag(GraphFlags::ShowFlow)){
-        if(slashNeeded)
-            text.append('|');
-        text.append(QString::number(this->flow));
-        slashNeeded = true;
-    }
-    if(graphFlags->testFlag(GraphFlags::ShowBandwidth)){
-        if(slashNeeded)
-            text.append('|');
-        text.append(QString::number(this->bandwidth));
+    QString text = info.getText();
+
+    if (!info.containsCustomText) {
+        bool slashNeeded = false;
+        text = "";
+        if (graphFlags->testFlag(GraphFlags::ShowWeights)) {
+            text.append(QString::number(this->weight));
+            slashNeeded = true;
+        }
+        if (graphFlags->testFlag(GraphFlags::ShowFlow)) {
+            if (slashNeeded)
+                text.append('|');
+            text.append(QString::number(this->flow));
+            slashNeeded = true;
+        }
+        if (graphFlags->testFlag(GraphFlags::ShowBandwidth)) {
+            if (slashNeeded)
+                text.append('|');
+            text.append(QString::number(this->bandwidth));
+        }
     }
 
     //draw lines and arrows
@@ -335,7 +314,7 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
     //     painter->setBrush(QColor(255, 255, 0, 55));
 
     //     painter->drawRect(boundingRect());
-    //     painter->setPen(Qt::blue);
+    // painter->setPen(Qt::blue);
     //     painter->drawPath(shape());
     // }
 }

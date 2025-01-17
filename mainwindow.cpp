@@ -4,6 +4,7 @@
 #include <QQueue>
 #include <QShortcut>
 #include <QStandardItemModel>
+#include <QThread>
 #include <QToolTip>
 #include "qspinbox.h"
 #include "ui_mainwindow.h"
@@ -243,24 +244,15 @@ MainWindow::MainWindow(const QString &title, QWidget *parent)
     updateFileStatus();
 
     // Connecting sequencer actions
-    sequencer.addFrame(0);
-    sequencer.addFrame(1);
-    sequencer.addFrame(2);
-    sequencer.addFrame(3);
-    sequencer.addCommand("SET_COLOR node 0 #ff0000", 0);
-    sequencer.addCommand("SET_COLOR edge 0,1 #ff0000", 0);
-    sequencer.addCommand("SET_COLOR node 0 #00ff00", 1);
-    sequencer.addCommand("SET_COLOR edge 0,1 #00ff00", 1);
-    sequencer.addCommand("SET_COLOR node 0 #0000ff", 2);
-    sequencer.addCommand("SET_COLOR edge 0,1 #0000ff", 2);
-    sequencer.addCommand("RESET_COLORS", 3);
     connect(ui->actionNextFrame, &QAction::triggered, this, [this]() {
         sequencer.next();
         handleSequencerFrameChange();
+        QThread::msleep(200);
     });
     connect(ui->actionPreviousFrame, &QAction::triggered, this, [this]() {
         sequencer.prev();
         handleSequencerFrameChange();
+        QThread::msleep(200);
     });
     connect(ui->actionFirstFrame, &QAction::triggered, this, [this]() {
         sequencer.first();
@@ -353,14 +345,23 @@ void MainWindow::handleSequencerFrameChange()
     int maxPosition = sequencer.getFramesLength() - 1;
     currentFrameLabel->setText(QString::number(currentPosition + 1) + " / "
                                + QString::number(maxPosition + 1));
+
     ui->actionFirstFrame->setDisabled(false);
     ui->actionNextFrame->setDisabled(false);
     ui->actionPreviousFrame->setDisabled(false);
     ui->actionLastFrame->setDisabled(false);
-    if (currentPosition == maxPosition) {
+    ui->actionClearSequence->setDisabled(false);
+
+    if (currentPosition == maxPosition && currentPosition != -1) {
         ui->actionNextFrame->setDisabled(true);
         ui->actionLastFrame->setDisabled(true);
-    } else if (currentPosition == 0) {
+    } else if (currentPosition == maxPosition) {
+        ui->actionFirstFrame->setDisabled(true);
+        ui->actionNextFrame->setDisabled(true);
+        ui->actionPreviousFrame->setDisabled(true);
+        ui->actionLastFrame->setDisabled(true);
+        ui->actionClearSequence->setDisabled(true);
+    } else if (currentPosition < 0) {
         ui->actionPreviousFrame->setDisabled(true);
         ui->actionFirstFrame->setDisabled(true);
     }
