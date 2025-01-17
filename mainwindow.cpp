@@ -47,6 +47,7 @@ MainWindow::MainWindow(const QString &title, QWidget *parent)
     delayBetweenFramesSlider->setOrientation(Qt::Horizontal);
     delayBetweenFramesSlider->setMaximum(1000);
     delayBetweenFramesSlider->setMinimum(0);
+    delayBetweenFramesSlider->setTickInterval(10);
     delayBetweenFramesSlider->setMaximumSize(100, 20);
 
     connect(delayBetweenFramesSlider, &QSlider::valueChanged, [this](int value) {
@@ -287,12 +288,15 @@ MainWindow::MainWindow(const QString &title, QWidget *parent)
     connect(ui->actionNextFrame, &QAction::triggered, this, [this]() {
         long long ms;
         timer([this]() { sequencer.next(); }, ms);
+        qDebug() << "Invoked method next: took " << ms << " ms";
         handleSequencerFrameChange();
         QThread::msleep(qMax(delayBetweenFramesSlider->sliderPosition() - ms, 0));
     });
     connect(ui->actionPreviousFrame, &QAction::triggered, this, [this]() {
         long long ms;
         timer([this]() { sequencer.prev(); }, ms);
+        qDebug() << "Invoked method prev: took " << ms << " ms";
+
         handleSequencerFrameChange();
         QThread::msleep(qMax(delayBetweenFramesSlider->sliderPosition() - ms, 0));
     });

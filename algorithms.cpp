@@ -419,13 +419,8 @@ void MainWindow::algorithmDinic()
     initSequencer(true);
 }
 
-// The main function that finds shortest distances from src to
-// all other vertices using Bellman-Ford algorithm. The function
-// also detects negative weight cycle
 void MainWindow::algorithmBellmanFord()
 {
-    // Step 1: Initialize distances from src to all other vertices
-    // as INFINITE
     int src, n = graph.getAmount();
     if (n < 2) {
         QMessageBox::warning(this, this->title, "Too few nodes");
@@ -433,46 +428,118 @@ void MainWindow::algorithmBellmanFord()
     }
     if ((src = graph.getSourceIndex()) == -1)
         src = 0;
+
     QList<double> dist(n, INF);
-    auto edges(graph.getListEdges());
+    auto edges = graph.getListEdges();
     dist[src] = 0;
-    int i, u, v;
+
+    sequencer.clear();
+
+    // Кадр: Инициализация начальных расстояний
+    sequencer.addFrame();
+    sequencer.addCommand("RESET_COLORS");
+    sequencer.addCommand("REMOVE_ALL_TEXT");
+    sequencer.addCommand("SET_COLOR node " + QString::number(src) + " GREEN");
+    sequencer.addCommand("SET_TEXT point 0,-250 Starting Bellman-Ford algorithm");
+    sequencer.addCommand(
+        "SET_TEXT point 0,-220 Initializing distances: INF for all nodes except source");
+
+    int u, v;
     double w;
-    // Step 2: Relax all edges |V| - 1 times. A simple shortest
-    // path from src to any other vertex can have at-most |V| - 1
-    // edges
-    for (i = 0; i < n - 1; i++)
-        // Update dist value and parent index of the adjacent vertices of
-        // the picked vertex. Consider only those vertices which are still in
-        // queue
+
+    // Основной цикл релаксации
+    for (int i = 0; i < n - 1; ++i) {
+        sequencer.addFrame();
+        sequencer.addCommand("SET_TEXT point 0,-250 Starting iteration " + QString::number(i + 1));
+        sequencer.addCommand("RESET_COLORS");
+
         for (auto &edge : edges) {
             u = edge[0].toInt();
             v = edge[1].toInt();
             w = edge[2].toDouble();
-            if ((dist[u] != INF) && (dist[u] + w < dist[v]))
+
+            // Кадр: Проверка каждого ребра
+            sequencer.addFrame();
+            sequencer.addCommand("SET_COLOR edge " + QString::number(u) + "," + QString::number(v)
+                                 + " BLUE");
+            sequencer.addCommand("SET_TEXT point 0,-250 Checking edge from " + QString::number(u)
+                                 + " to " + QString::number(v) + " with weight "
+                                 + QString::number(w));
+            sequencer.addCommand("SET_TEXT point 0,-220 Current distance to node "
+                                 + QString::number(v) + ": "
+                                 + (dist[v] == INF ? "INF" : QString::number(dist[v])));
+
+            if ((dist[u] != INF) && (dist[u] + w < dist[v])) {
                 dist[v] = dist[u] + w;
+
+                // Кадр: Обновление расстояния до вершины v
+                sequencer.addFrame();
+                sequencer.addCommand("SET_COLOR edge " + QString::number(u) + ","
+                                     + QString::number(v) + " YELLOW");
+                sequencer.addCommand("SET_TEXT point 0,-250 Relaxing edge from "
+                                     + QString::number(u) + " to " + QString::number(v));
+                sequencer.addCommand("SET_TEXT point 0,-220 Updated distance to node "
+                                     + QString::number(v) + ": " + QString::number(dist[v]));
+                sequencer.addCommand("SET_COLOR node " + QString::number(v) + " ORANGE");
+            }
         }
 
-    // Step 3: check for negative-weight cycles. The above step
-    // guarantees shortest distances if graph doesn't contain
-    // negative weight cycle. If we get a shorter path, then there
-    // is a cycle.
+        // Кадр: Завершение итерации
+        sequencer.addFrame();
+        sequencer.addCommand("SET_TEXT point 0,-250 Iteration " + QString::number(i + 1)
+                             + " completed");
+    }
 
-    QString title = "Bellmann Ford " + QDateTime::currentDateTime().toString();
-
+    // Проверка на отрицательные циклы
+    bool hasNegativeCycle = false;
     for (auto &edge : edges) {
         u = edge[0].toInt();
         v = edge[1].toInt();
         w = edge[2].toDouble();
+
+        // Кадр: Проверка каждого ребра на отрицательный цикл
+        sequencer.addFrame();
+        sequencer.addCommand("SET_COLOR edge " + QString::number(u) + "," + QString::number(v)
+                             + " BLUE");
+        sequencer.addCommand("SET_TEXT point 0,-250 Checking for negative weight cycle at edge "
+                             + QString::number(u) + " -> " + QString::number(v));
+
         if ((dist[u] != INF) && (dist[u] + w < dist[v])) {
-            consoleLog(title);
-            consoleLog("Graph contains negative weight cycle");
-            return;
+            hasNegativeCycle = true;
+
+            // Кадр: Обнаружение отрицательного цикла
+            sequencer.addFrame();
+            sequencer.addCommand("SET_COLOR edge " + QString::number(u) + "," + QString::number(v)
+                                 + " RED");
+            sequencer.addCommand("SET_TEXT point 0,-250 Negative weight cycle detected at edge "
+                                 + QString::number(u) + " -> " + QString::number(v));
+            break;
         }
     }
+
+    if (hasNegativeCycle) {
+        QString title = "Bellman-Ford " + QDateTime::currentDateTime().toString();
+        consoleLog(title);
+        consoleLog("Graph contains negative weight cycle");
+        return;
+    }
+
+    // Кадр: Завершение алгоритма
+    sequencer.addFrame();
+    sequencer.addCommand("RESET_COLORS");
+    sequencer.addCommand("REMOVE_ALL_TEXT");
+    sequencer.addCommand("SET_TEXT point 0,-250 Algorithm completed");
+    sequencer.addCommand("SET_TEXT point 0,-220 Shortest distances calculated");
+
+    QString title = "Bellman-Ford " + QDateTime::currentDateTime().toString();
+    consoleLog(title);
+    consoleLog("Shortest distances calculated successfully");
     addDockWidget({new QLabel("Shortest distances from node " + graph.getNodeName(src)),
                    makeTableFromMatrix(Matrix2D(1, dist), n, n, false)},
                   title);
+
+    // Инициализация анимации
+    initSequencer();
 }
 
 #include "simplex_solver.cpp"
