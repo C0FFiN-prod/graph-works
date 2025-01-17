@@ -338,20 +338,85 @@ void MainWindow::algorithmDinic()
     QList<int> ptr(n, 0);
 
     double maxFlow = 0;
+    sequencer.clear();
 
     while (MaxFlowDinicBFS(s, t, d, f, c, n)) {
         std::fill(ptr.begin(), ptr.end(), 0);
 
+        sequencer.addFrame();
+        sequencer.addCommand("RESET_COLORS");
+        sequencer.addCommand("REMOVE_ALL_TEXT");
+        sequencer.addCommand("SET_COLOR node " + QString::number(s) + " GREEN");
+        sequencer.addCommand("SET_COLOR node " + QString::number(t) + " RED");
+        sequencer.addCommand("SET_TEXT point 0,-250 Building level graph");
+
+        for (int i = 0; i < n; ++i) {
+            if (d[i] != -1) {
+                sequencer.addFrame();
+                sequencer.addCommand("REMOVE_ALL_TEXT");
+                sequencer.addCommand("SET_COLOR node " + QString::number(i) + " BLUE");
+                sequencer.addCommand("SET_TEXT point 0,-250 Level of node " + QString::number(i)
+                                     + ": " + QString::number(d[i]) + "");
+            }
+        }
+
         double pushed;
         do {
             pushed = MaxFlowDinicDFS(s, s, t, c, f, d, ptr, INF, n);
-            maxFlow += pushed;
+
+            if (pushed > 0) {
+                maxFlow += pushed;
+            }
+            sequencer.addFrame();
+            sequencer.addCommand("REMOVE_TYPE_TEXT point");
+            sequencer.addCommand("SET_COLOR node " + QString::number(s) + " GREEN");
+            sequencer.addCommand("SET_COLOR node " + QString::number(t) + " RED");
+            sequencer.addCommand(
+                QString("SET_TEXT point 0,-250 DFS: Attempting to push flow = %1").arg(pushed));
+
+            for (int v = 0; v < n; ++v) {
+                if (ptr[v] > 0) {
+                    sequencer.addFrame();
+                    sequencer.addCommand("REMOVE_TYPE_TEXT point");
+                    sequencer.addCommand("SET_COLOR node " + QString::number(v) + " ORANGE");
+                    sequencer.addCommand("SET_TEXT point 0,-250  Pointer at node "
+                                         + QString::number(v) + ": " + QString::number(ptr[v]) + "");
+                }
+            }
+
+            if (pushed > 0) {
+                for (int v = 0; v < n; ++v) {
+                    for (int to = 0; to < n; ++to) {
+                        if (f[v][to] > 0) {
+                            sequencer.addFrame();
+                            sequencer.addCommand("SET_COLOR edge " + QString::number(v) + ","
+                                                 + QString::number(to) + " YELLOW");
+                            sequencer.addCommand(QString("SET_TEXT edge %1,%2 Flow: %3/%4")
+                                                     .arg(v)
+                                                     .arg(to)
+                                                     .arg(f[v][to])
+                                                     .arg(c[v][to]));
+                        }
+                    }
+                }
+            }
         } while (pushed != 0);
     }
+
+    // Кадр: Завершение алгоритма
+    sequencer.addFrame();
+    sequencer.addCommand("RESET_COLORS");
+    sequencer.addCommand("REMOVE_ALL_TEXT");
+    sequencer.addCommand(
+        "SET_TEXT point 0,-250 Algorithm completed: Max Flow = " + QString::number(maxFlow) + "");
+
     QString title("Dinic " + QDateTime::currentDateTime().toString());
     consoleLog(title);
     consoleLog("Max Flow = " + QString::number(maxFlow));
     addDockWidget({new QLabel("Optimized flow matrix"), makeTableFromMatrix(f, n, n, false)}, title);
+
+    // Инициализация анимации
+    initSequencer();
 }
 
 // The main function that finds shortest distances from src to

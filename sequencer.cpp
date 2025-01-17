@@ -278,7 +278,7 @@ void Sequencer::drawTextAtPoint(QString text, int x, int y)
 {
     QString key = QString::number(x) + ',' + QString::number(y) + ":point";
     if (textBoxes.contains(key)) {
-        textBoxes[key]->moveTo(QPoint(x, y));
+        textBoxes[key]->setCustomText(text);
         return;
     }
 
@@ -286,6 +286,7 @@ void Sequencer::drawTextAtPoint(QString text, int x, int y)
     currentTextBox->setCustomText(text);
     currentTextBox->setZValue(1);
     currentTextBox->rectBackground = true;
+    currentTextBox->moveTo(QPoint(x, y));
 
     this->graphView->scene()->addItem(currentTextBox);
     textBoxes.insert(key, currentTextBox);
@@ -326,8 +327,13 @@ void Sequencer::removeTypeText(QString type)
             }
         }
     } else if (type == "point") {
-        for (auto tb : textBoxes.asKeyValueRange()) {
-            graphView->scene()->removeItem(tb.second);
+        for (auto it = textBoxes.begin(); it != textBoxes.end();) {
+            if (it.key().endsWith("point")) {
+                graphView->scene()->removeItem(it.value());
+                it = textBoxes.erase(it);
+            } else {
+                ++it;
+            }
         }
     }
 }
