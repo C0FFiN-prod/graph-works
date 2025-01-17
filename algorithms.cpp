@@ -1,6 +1,65 @@
 #include <QBitArray>
 #include "mainwindow.h"
 #define INF 1.0 / 0.0
+template <typename T>
+QString printVector(const QList<T>& row){
+    auto debug = qDebug();
+    QString result = "";
+    for(auto& cell : row){
+        debug << cell << '\t';
+        result.append(QVariant(cell).toString()).append(',');
+    }
+    return result;
+}
+
+void printMatrix(const Matrix2D& matrix){
+    qDebug() << "----------------------------";
+    for(auto& row : matrix){
+        printVector(row);
+    }
+    qDebug() << "----------------------------";
+}
+
+void highlightPath(Sequencer* sequencer, const QList<int>& path, const QString& color) {
+    for (int i = 0; i < path.size() - 1; ++i) {
+        int from = path[i];
+        int to = path[i + 1];
+        sequencer->addCommand(
+            QString("SET_COLOR edge %1,%2 %3").arg(from).arg(to).arg(color));
+    }
+}
+
+QPair<QSet<QPair<int, int>>, QSet<QPair<int, int>>> getPathSets(
+    const QList<int>& oldPath,
+    const QList<int>& newPath){
+    QSet<QPair<int, int>> oldEdges;
+    QSet<QPair<int, int>> newEdges;
+
+    for (int i = 0; i < oldPath.size() - 1; ++i) {
+        if(oldPath[i] == oldPath[i + 1])continue;
+        oldEdges.insert({oldPath[i], oldPath[i + 1]});
+    }
+    for (int i = 0; i < newPath.size() - 1; ++i) {
+        if(newPath[i] == newPath[i + 1])continue;
+        newEdges.insert({newPath[i], newPath[i + 1]});
+    }
+    return qMakePair(oldEdges, newEdges);
+}
+
+bool highlightCommonEdges(Sequencer* sequencer,
+                          QSet<QPair<int, int>>& oldEdges,
+                          QSet<QPair<int, int>>& newEdges) {
+
+    for (const auto& edge : oldEdges.intersect(newEdges)) {
+        sequencer->addCommand(
+            QString("SET_COLOR edge %1,%2 ORANGE").arg(edge.first).arg(edge.second));
+    }
+    return newEdges == oldEdges;
+}
+
+
+
+
 void MainWindow::algorithmFloYdWarshall()
 {
     int k, i, j, n = graph.getAmount();
@@ -12,6 +71,10 @@ void MainWindow::algorithmFloYdWarshall()
 
     Matrix2D d = graph.getMatrixAdjacent();
     Matrix2I paths(n, QList<int>(n));
+
+    QMap<QPair<int, int>, QList<int>> shortestPaths;
+    sequencer.clear();
+    // Инициализация матриц
     for (i = n; i--;)
         for (j = n; j--;) {
             if (d[i][j] < 0) {
@@ -21,23 +84,75 @@ void MainWindow::algorithmFloYdWarshall()
                 return;
             }
 
-            if (d[i][j] || (i == j))
+            if (d[i][j] || (i == j)) {
                 paths[i][j] = j;
-            else if (i != j)
+                shortestPaths[{i, j}] = {i, j};
+            } else if (i != j) {
                 d[i][j] = INF;
-            else
+                shortestPaths[{i, j}] = {};
+            } else {
                 d[i][j] = 0;
+                shortestPaths[{i, j}] = {i};
+            }
         }
 
-    for (k = 0; k < n; ++k)
-        for (i = 0; i < n; ++i)
-            for (j = 0; j < n; ++j)
-                if (d[i][k] < INF && d[k][j] < INF)
-                    if (d[i][j] > d[i][k] + d[k][j]) {
-                        d[i][j] = d[i][k] + d[k][j];
-                        paths[i][j] = k;
-                    }
+    // Основной цикл алгоритма
+    for (k = 0; k < n; ++k) {
+        for (i = 0; i < n; ++i) {
+            for (j = 0; j < n; ++j) {
+                if(i == j) continue;
+                QList<int> oldPath = shortestPaths[{i, j}];       // Старый путь
+                QList<int> newPath = shortestPaths[{i, k}] + shortestPaths[{k, j}].mid(1); // Новый путь
+                sequencer.addFrame();
+                sequencer.addCommand(QString("RESET_COLORS"));
+                sequencer.addCommand(QString("SET_COLOR node %1 RED").arg(k));
+                sequencer.addCommand(QString("SET_COLOR node %1 ORANGE").arg(i));
+                sequencer.addCommand(QString("SET_COLOR node %1 BLUE").arg(j));
+                sequencer.addCommand(QString("SET_TEXT point 5,25 [K = %3 I = %1 J = %2]\n").arg(i).arg(j).arg(k)
+                                    +QString("Old path %1\n").arg(printVector(oldPath))
+                                    +QString("New path %1").arg(printVector(newPath)));
+                auto[oldEdges, newEdges] = getPathSets(oldPath, newPath);
 
+                // Подсветка путей
+                if(!oldEdges.empty() || !newEdges.empty()){
+                    sequencer.addFrame();
+                    highlightPath(&sequencer, oldPath, "YELLOW"); // Подсветить старый путь
+                    highlightPath(&sequencer, newPath, "RED");   // Подсветить новый путь
+                    highlightCommonEdges(&sequencer, oldEdges, newEdges); // Общие ребра (оранжевый)
+                }
+                if(oldEdges != newEdges){
+                    // Проверяем и обновляем путь
+                    if (d[i][k] < INF && d[k][j] < INF) {
+                        sequencer.addFrame();
+                        if (d[i][j] > d[i][k] + d[k][j]) {
+                            d[i][j] = d[i][k] + d[k][j];
+                            paths[i][j] = k;
+                            shortestPaths[{i, j}] = newPath;
+
+                            // Подсветка лучшего пути
+                            highlightPath(&sequencer, oldPath, "DEFAULT");
+                            highlightPath(&sequencer, newPath, "GREEN");
+                            sequencer.addCommand(
+                                QString("SET_TEXT point 5,5 \"Updated |%1->%2|=%3\"")
+                                    .arg(i)
+                                    .arg(j)
+                                    .arg(d[i][j]));
+                        } else {
+                            highlightPath(&sequencer, newPath, "DEFAULT");
+                            highlightPath(&sequencer, oldPath, "GREEN");
+                        }
+                    }
+                } else if(!oldEdges.empty()) {
+                    sequencer.addFrame();
+                    highlightPath(&sequencer, oldPath, "GREEN");
+                }
+            }
+        }
+    }
+
+    // Завершающий кадр
+    sequencer.addFrame();
+    sequencer.addCommand("RESET_COLORS");
     QList<QWidget *> widgets{new QLabel("Shortest distances"),
                              makeTableFromMatrix(d, n, n, false),
                              new QLabel("Shortest paths"),
@@ -45,6 +160,8 @@ void MainWindow::algorithmFloYdWarshall()
     QString title("Floyd Warshall " + QDateTime().currentDateTime().toString());
     addDockWidget(widgets, title);
 }
+
+
 
 int minDistance(int n, QList<double> &dist, QBitArray &sptSet)
 {
@@ -272,20 +389,7 @@ void MainWindow::algorithmBellmanFord()
 
 #include "simplex_solver.cpp"
 
-void printVector(QList<double>& row){
-    auto debug = qDebug();
-    for(auto& cell : row){
-        debug << cell << '\t';
-    }
-}
 
-void printMatrix(Matrix2D& matrix){
-    qDebug() << "----------------------------";
-    for(auto& row : matrix){
-        printVector(row);
-    }
-    qDebug() << "----------------------------";
-}
 
 
 void MainWindow::algorithmNetTransportProblem()

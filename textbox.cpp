@@ -1,6 +1,7 @@
 #include "TextBox.h"
 #include "qgraphicsscene.h"
 #include "qgraphicssceneevent.h"
+#include "qregularexpression.h"
 
 
 TextBox::TextBox(): text(""), centerPoint(QPoint(0,0))
@@ -56,16 +57,23 @@ void TextBox::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget
     painter->setPen(Qt::black);
 
     //get text bounds
-    QFontMetrics metrics(font);
-    QRect rect = metrics.boundingRect(text);
+    QString maxLine = 0;
+    auto lines = text.split(QRegularExpression("[\n\r]"));
+    for(auto& line : lines)
+        if(line.length() > maxLine.length())
+            maxLine = line;
 
+    QFontMetrics metrics(font);
+    QRect rect = metrics.boundingRect(maxLine);
+    rect.setHeight(rect.height()*lines.length());
     //draw padding
     int padding = 5;
     QPointF offset(-padding,padding);
     QRect backgroundRect = rect.adjusted(-padding*2, -padding*2, padding/2, padding/2);
     backgroundRect.moveCenter((this->centerPoint));
     //drawing background
-
+    painter->setPen(Qt::red);
+    painter->drawRect(backgroundRect);
     painter->setPen(Qt::NoPen);
     painter->setBrush(selectionColor);
     painter->drawEllipse(backgroundRect);
