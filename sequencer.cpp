@@ -229,11 +229,35 @@ void Sequencer::set_edge_color(QString color, unsigned int srcNodeIndex, unsigne
     }
     if (!graphView->getEdges()->contains(key))
         throw std::runtime_error(QString("No such edge found for %1,%2").arg(srcNodeIndex).arg(destNodeIndex).toStdString());
+
+    Edge *currentEdge = this->graphView->getEdges()->value(key);
+
     if (color == "DEFAULT") {
-        this->graphView->getEdges()->value(key)->resetColor();
+        currentEdge->resetColor();
+        if (currentEdge->getEdgeType() == EdgeType::BiDirectionalSame) {
+            key = QPair<Node *, Node *>(this->graphView->getNodes()->value(destNodeIndex, nullptr),
+                                        this->graphView->getNodes()->value(srcNodeIndex, nullptr));
+            if (!graphView->getEdges()->contains(key))
+                throw std::runtime_error(QString("No bidirectional edge found for %1,%2")
+                                             .arg(srcNodeIndex)
+                                             .arg(destNodeIndex)
+                                             .toStdString());
+            this->graphView->getEdges()->value(key)->resetColor();
+        }
         return;
     }
-    this->graphView->getEdges()->value(key)->setCurrentColor(color);
+
+    currentEdge->setCurrentColor(color);
+    if (currentEdge->getEdgeType() == EdgeType::BiDirectionalSame) {
+        key = QPair<Node *, Node *>(this->graphView->getNodes()->value(destNodeIndex, nullptr),
+                                    this->graphView->getNodes()->value(srcNodeIndex, nullptr));
+        if (!graphView->getEdges()->contains(key))
+            throw std::runtime_error(QString("No bidirectional edge found for %1,%2")
+                                         .arg(srcNodeIndex)
+                                         .arg(destNodeIndex)
+                                         .toStdString());
+        this->graphView->getEdges()->value(key)->setCurrentColor(color);
+    }
 }
 
 void Sequencer::drawTextAtEdge(QString text, int source, int destination)
