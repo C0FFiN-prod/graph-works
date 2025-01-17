@@ -13,6 +13,25 @@
 const QRegularExpression MainWindow::reValidDoubleLine("([0-9]+(\\.[0-9]+)?(\t|\n))+");
 const QRegularExpression MainWindow::reValidDouble("[0-9]+(\\.[0-9]+)?");
 const QRegularExpression MainWindow::reValidInt("[0-9]+");
+
+template<typename Func, typename... Args>
+auto timer(Func func, long long &ms, Args &&...args) -> decltype(func(std::forward<Args>(args)...))
+{
+    using namespace std::chrono;
+    auto start = system_clock::now();
+    if constexpr (std::is_void_v<decltype(func(std::forward<Args>(args)...))>) {
+        func(std::forward<Args>(args)...);
+        auto end = system_clock::now();
+        ms = duration_cast<milliseconds>(end - start).count();
+        return;
+    } else {
+        auto result = func(std::forward<Args>(args)...);
+        auto end = system_clock::now();
+        ms = duration_cast<milliseconds>(end - start).count();
+        return result;
+    }
+}
+
 MainWindow::MainWindow(const QString &title, QWidget *parent)
     : QMainWindow(parent)
     , sequencer(Sequencer(graph.graphView))
@@ -266,14 +285,16 @@ MainWindow::MainWindow(const QString &title, QWidget *parent)
 
     // Connecting sequencer actions
     connect(ui->actionNextFrame, &QAction::triggered, this, [this]() {
-        sequencer.next();
+        long long ms;
+        timer([this]() { sequencer.next(); }, ms);
         handleSequencerFrameChange();
-        QThread::msleep(delayBetweenFramesSlider->sliderPosition());
+        QThread::msleep(qMax(delayBetweenFramesSlider->sliderPosition() - ms, 0));
     });
     connect(ui->actionPreviousFrame, &QAction::triggered, this, [this]() {
-        sequencer.prev();
+        long long ms;
+        timer([this]() { sequencer.prev(); }, ms);
         handleSequencerFrameChange();
-        QThread::msleep(delayBetweenFramesSlider->sliderPosition());
+        QThread::msleep(qMax(delayBetweenFramesSlider->sliderPosition() - ms, 0));
     });
     connect(ui->actionFirstFrame, &QAction::triggered, this, [this]() {
         sequencer.first();
@@ -389,6 +410,7 @@ void MainWindow::handleSequencerFrameChange()
         ui->actionPreviousFrame->setDisabled(true);
         ui->actionLastFrame->setDisabled(true);
         ui->actionClearSequence->setDisabled(true);
+        delayBetweenFramesSlider->setDisabled(true);
     } else if (currentPosition < 0) {
         ui->actionPreviousFrame->setDisabled(true);
         ui->actionFirstFrame->setDisabled(true);
