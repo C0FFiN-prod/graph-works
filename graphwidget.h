@@ -17,7 +17,8 @@ class GraphWidget : public QGraphicsView
 
 public:
     GraphWidget(QMap<QPair<Node*, Node*>, Edge*>* edges, QMap<unsigned int, Node*>* nodes, QFlags<GraphFlags> *flags, QWidget *parent = nullptr);
-
+    qsizetype stabilizingIteration = 0;
+    qsizetype getMaxStabilizingIteration();
     void runTimer();
     void initScene();
     QFlags<GraphFlags> getFlags();
@@ -40,6 +41,7 @@ protected:
     void scaleView(qreal scaleFactor);
 
 private:
+    qsizetype maxStabilizintIteration = 1000;
     bool dragging = false;
     QPointF prevScenePos;
     int timerId = 0;

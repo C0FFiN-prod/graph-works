@@ -579,6 +579,9 @@ void MainWindow::applyGraphMatrix(QTableView *table)
     graph.graphView->scene()->update();
     updateTables();
     updateFileStatus();
+    graph.graphView->stabilizingIteration = 0;
+    if (!(graph.getFlags() & GraphFlags::ManualMode))
+        graph.graphView->runTimer();
 }
 
 void MainWindow::applyEdgesList(QTableView *table)

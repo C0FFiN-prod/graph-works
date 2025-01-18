@@ -28,6 +28,11 @@ GraphWidget::GraphWidget(QMap<QPair<Node*, Node*>, Edge*>* edges, QMap<unsigned 
 //    setOptimizationFlag(QGraphicsView::DontAdjustForAntialiasing);
 }
 
+qsizetype GraphWidget::getMaxStabilizingIteration()
+{
+    return maxStabilizintIteration;
+}
+
 void GraphWidget::runTimer()
 {
     if (!timerId)
@@ -75,6 +80,7 @@ void GraphWidget::timerEvent(QTimerEvent *event)
     QList<Node *> nodes;
     QList<Edge *> edges;
     const QList<QGraphicsItem *> items = scene()->items();
+    stabilizingIteration = qMin(++stabilizingIteration, maxStabilizintIteration);
     for (QGraphicsItem *item : items) {
         if (Node *node = qgraphicsitem_cast<Node *>(item)){
             nodes << node;
@@ -147,6 +153,7 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event){
 void GraphWidget::resizeEvent(QResizeEvent *event)
 {
     int w = this->width() - nodeSize, h = this->height() - nodeSize;
+    stabilizingIteration = 0;
     scene()->setSceneRect(-w/2, -h/2, w, h);
     runTimer();
     QGraphicsView::resizeEvent(event);
