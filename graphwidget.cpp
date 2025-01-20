@@ -41,7 +41,7 @@ void GraphWidget::runTimer()
 
 void GraphWidget::initScene()
 {
-    QSet<QPair<int, int>> addedBiDirectionalSameIndicies;
+    // QSet<QPair<int, int>> addedBiDirectionalSameIndicies;
 
     for (auto &node : *nodes) {
         if(!isItemOnScene(scene(), qgraphicsitem_cast<Node *>(node))&& node!=nullptr){
@@ -49,6 +49,7 @@ void GraphWidget::initScene()
         }
         node->update();
     }
+
     for(auto& edge: *edges){
         if(!isItemOnScene(scene(), qgraphicsitem_cast<Edge *>(edge)) && edge!=nullptr){
             scene()->addItem(edge);

@@ -938,8 +938,10 @@ template QTableView *MainWindow::makeTableFromMatrix(
 void MainWindow::updateFileStatus()
 {
     QString newTitle;
-    if (graph.isUnsaved())
+    if (graph.isUnsaved()) {
         newTitle += '*';
+        sequencer.clear();
+    }
     if (!currentFile.isEmpty())
         newTitle += currentFile + " - ";
     newTitle += title;
