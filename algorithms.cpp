@@ -104,7 +104,8 @@ void MainWindow::algorithmFloYdWarshall()
     for (k = 0; k < n; ++k) {
         for (i = 0; i < n; ++i) {
             for (j = 0; j < n; ++j) {
-                if(i == j) continue;
+                if (i == j || k == i || k == j)
+                    continue;
                 QList<int> oldPath = shortestPaths[{i, j}];       // Старый путь
                 QList<int> newPath = shortestPaths[{i, k}] + shortestPaths[{k, j}].mid(1); // Новый путь
                 sequencer.addFrame();
@@ -128,6 +129,7 @@ void MainWindow::algorithmFloYdWarshall()
                 // Подсветка путей
                 if(!oldEdges.empty() || !newEdges.empty()){
                     sequencer.addFrame();
+
                     highlightPath(&sequencer, oldPath, "YELLOW"); // Подсветить старый путь
                     highlightPath(&sequencer, newPath, "RED");   // Подсветить новый путь
                     highlightCommonEdges(&sequencer, oldEdges, newEdges); // Общие ребра (оранжевый)

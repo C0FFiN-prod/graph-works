@@ -941,6 +941,7 @@ void MainWindow::updateFileStatus()
     if (graph.isUnsaved()) {
         newTitle += '*';
         sequencer.clear();
+        handleSequencerFrameChange();
     }
     if (!currentFile.isEmpty())
         newTitle += currentFile + " - ";

@@ -307,6 +307,8 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 
         //if weight needs to be drawn
             drawTextAt(painter, midPoint, text);
+        } else {
+            info.hide();
         }
     }
     // { //debug

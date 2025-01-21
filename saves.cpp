@@ -191,20 +191,29 @@ void MainWindow::readGraphFromCSV()
         fillMatrixFromData(bandwidth);
     Matrix2D adjacent(amount, QList<double>(amount, 0));
     cursor = headers["Adjacent"];
-    fillMatrixFromData(adjacent);
+    if (cursor != -1)
+        fillMatrixFromData(adjacent);
     Matrix2D flow(amount, QList<double>(amount, 0));
     cursor = headers["Flow"];
     if (cursor != -1)
         fillMatrixFromData(flow);
     if (headers["Bandwidth"] != -1)
         graph.setMatrixBandwidth(bandwidth);
-    graph.setMatrixAdjacent(adjacent);
+    if (headers["Adjacent"] != -1)
+        graph.setMatrixAdjacent(adjacent);
     if (headers["Flow"] != -1)
         graph.setMatrixFlow(flow);
     currentFile = filePath;
+
     graph.changesSaved();
     updateTables();
     updateFileStatus();
+
+    graph.graphView->initScene();
+    graph.graphView->scene()->update();
+    graph.graphView->stabilizingIteration = 0;
+    if (!(graph.getFlags() & GraphFlags::ManualMode))
+        graph.graphView->runTimer();
 }
 
 void MainWindow::newGraph()
