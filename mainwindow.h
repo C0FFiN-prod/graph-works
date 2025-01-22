@@ -31,7 +31,6 @@ public:
     Graph graph;
     Sequencer sequencer;
     ~MainWindow();
-
 private slots:
     void clearConsole();
     void viewModeChecked(bool checked);
@@ -84,6 +83,7 @@ private:
     void algorithmDijkstra();
     void algorithmDinic();
     void algorithmBellmanFord();
+    void algorithmSpanningTree(const QString &STType);
 
     void initSequencer(bool isSequenceStateless = false);
 

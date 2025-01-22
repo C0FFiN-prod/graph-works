@@ -1,6 +1,7 @@
 #include <QBitArray>
 #include "mainwindow.h"
 #define INF 1.0 / 0.0
+#define INT_INF 2147483647
 template <typename T>
 QString printVector(const QList<T>& row){
     auto debug = qDebug();
@@ -695,4 +696,204 @@ void MainWindow::algorithmNetTransportProblem()
     } catch (std::runtime_error &e) {
         QMessageBox::warning(this, title, e.what());
     }
+}
+
+namespace spanningTree {
+typedef struct EdgeStruct
+{
+    // QVariantList tuple{key.first->getIndex(), key.second->getIndex(), edge->getWeight(), edge->getBandwidth(), edge->getFlow()};
+    int u, v;
+    double w;
+    EdgeStruct()
+        : u(0)
+        , v(0)
+        , w(0)
+    {}
+    EdgeStruct(Edge *e)
+        : u(e->sourceNode()->getIndex())
+        , v(e->destNode()->getIndex())
+        , w(e->getWeight()){};
+    EdgeStruct(const QVariantList &e)
+        : u(e[0].toInt())
+        , v(e[1].toInt())
+        , w(e[2].toDouble()){};
+    EdgeStruct(const EdgeStruct &e) = default;
+    EdgeStruct &operator=(const EdgeStruct &e) = default;
+} EdgeStruct;
+
+QList<unsigned int> parent, prank;
+unsigned int find(unsigned int i)
+{
+    if (parent[i] == i) {
+        return i;
+    }
+    return find(parent[i]);
+}
+
+void unionSet(unsigned int x, unsigned int y)
+{
+    unsigned int xroot = find(x);
+    unsigned int yroot = find(y);
+
+    if (prank[xroot] < prank[yroot]) {
+        parent[xroot] = yroot;
+    } else if (prank[xroot] > prank[yroot]) {
+        parent[yroot] = xroot;
+    } else {
+        parent[yroot] = xroot;
+        prank[xroot]++;
+    }
+}
+
+unsigned int boruvka(QList<QVariantList> &edges, int n, Matrix2D &tree)
+{
+    EdgeStruct e;
+    QList<EdgeStruct> cheapest(n);
+    int numTrees = n;
+    unsigned int sum = 0;
+    for (int node = 0; node < n; node++) {
+        parent[node] = node;
+        prank[node] = 0;
+        cheapest[node].w = INT_INF;
+    }
+    while (numTrees > 1) {
+        for (int i = 0; i < edges.size(); i++) {
+            e = edges[i];
+            auto set1 = find(e.u), set2 = find(e.v);
+            if (set1 != set2) {
+                if (cheapest[set1].w > e.w) {
+                    cheapest[set1] = e;
+                }
+                if (cheapest[set2].w > e.w) {
+                    cheapest[set2] = e;
+                }
+            }
+        }
+        for (int node = 0; node < n; node++) {
+            if (cheapest[node].w != -1) {
+                e = cheapest[node];
+                auto set1 = find(e.u), set2 = find(e.v);
+                if (set1 != set2) {
+                    sum += e.w;
+                    unionSet(set1, set2);
+                    tree[e.u][e.v] = e.w;
+                    tree[e.v][e.u] = e.w;
+                    numTrees--;
+                }
+            }
+        }
+        for (int node = 0; node < n; node++) {
+            cheapest[node].w = INT_INF;
+        }
+    }
+    return sum;
+}
+unsigned int find_set(unsigned int a) //find the parent of the given node
+{
+    while (parent[a] != a) {
+        parent[a] = parent[parent[a]];
+        a = parent[a];
+    }
+    return a;
+}
+
+void union_find(unsigned int a,
+                unsigned int b) //check if the given two vertices are in the same “union” or not
+{
+    unsigned int d = find_set(a);
+    unsigned int e = find_set(b);
+    parent[d] = parent[e];
+}
+
+unsigned int kruskal(QList<QVariantList> &edges, int n, Matrix2D &tree)
+{
+    int a, b;
+    EdgeStruct e;
+    for (int i = 0; i < n; i++) {
+        parent[i] = i;
+    }
+    std::sort(edges.begin(), edges.end(), [](auto &e1, auto &e2) {
+        return e1[2].toDouble() < e2[2].toDouble();
+    });
+    int cost, minCost = 0;
+    for (int i = 0; i < edges.size(); ++i) {
+        e = edges[i];
+        a = e.u;
+        b = e.v;
+        cost = e.w;
+        if (find_set(a) != find_set(b)) {
+            minCost += cost;
+            union_find(a, b);
+            tree[a][b] = cost;
+            tree[b][a] = cost;
+        }
+    }
+    return minCost;
+}
+unsigned int prim(const Matrix2D &graph, int n, Matrix2D &tree)
+{
+    int sum = 0, min, x, y;
+    QByteArray selected(n, false);
+    selected[0] = true;
+    for (int no_edge = 0; no_edge < n - 1; no_edge++) {
+        min = INT_INF;
+        x = 0;
+        y = 0;
+
+        for (int i = 0; i < n; i++) {
+            if (selected[i]) {
+                for (int j = 0; j < n; j++) {
+                    if (!selected[j] && graph[i][j]) {
+                        if (min > graph[i][j]) {
+                            min = graph[i][j];
+                            x = i;
+                            y = j;
+                        }
+                    }
+                }
+            }
+        }
+        tree[x][y] = min;
+        tree[y][x] = min;
+        sum += min;
+        selected[y] = true;
+    }
+    return sum;
+}
+} // namespace spanningTree
+
+void MainWindow::algorithmSpanningTree(const QString &STType)
+{
+    int n = graph.getAmount();
+
+    if (n < 2) {
+        QMessageBox::warning(this, this->title, "Too few nodes");
+        return;
+    }
+    spanningTree::parent.clear();
+    spanningTree::parent.resize(n);
+    spanningTree::prank.clear();
+    spanningTree::prank.resize(n);
+    Matrix2D minTree(n, QList<double>(n, 0));
+    Matrix2D graphMatrix = graph.getMatrixAdjacent();
+    auto edgeList = graph.getListEdges();
+    qsizetype minTreeSum;
+    if (STType == "PRIM")
+        minTreeSum = spanningTree::prim(graphMatrix, n, minTree);
+    else if (STType == "KRUSKAL")
+        minTreeSum = spanningTree::kruskal(edgeList, n, minTree);
+    else if (STType == "BORUVKA")
+        minTreeSum = spanningTree::boruvka(edgeList, n, minTree);
+    else {
+        QMessageBox::warning(this, this->title, "Unknown spanning tree algorithm");
+        return;
+    }
+    QString title = "Spanning Tree (" + STType + ")" + QDateTime::currentDateTime().toString();
+    QString message = QString("Minimal sum = %1\n").arg(minTreeSum);
+    addDockWidget({new QLabel(message),
+                   new QLabel("Adjacency matrix"),
+                   makeTableFromMatrix(minTree, n, n, false)},
+                  title);
+    consoleLog(title);
+    consoleLog(message);
 }

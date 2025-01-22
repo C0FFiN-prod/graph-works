@@ -117,11 +117,20 @@
     <property name="title">
      <string>Algorithms</string>
     </property>
+    <widget class="QMenu" name="menuSpanning_Tree">
+     <property name="title">
+      <string>Spanning Tree</string>
+     </property>
+     <addaction name="actionBoruvka"/>
+     <addaction name="actionKruskal"/>
+     <addaction name="actionPrim"/>
+    </widget>
     <addaction name="actionFloydWarshall"/>
     <addaction name="actionDijkstra"/>
     <addaction name="actionDinic"/>
     <addaction name="actionBellmanFord"/>
     <addaction name="separator"/>
+    <addaction name="menuSpanning_Tree"/>
     <addaction name="actionNetTransportProblem"/>
    </widget>
    <widget class="QMenu" name="menuNode_movement">
@@ -1094,6 +1103,21 @@
    </property>
    <property name="menuRole">
     <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionBoruvka">
+   <property name="text">
+    <string>Boruvka</string>
+   </property>
+  </action>
+  <action name="actionKruskal">
+   <property name="text">
+    <string>Kruskal</string>
+   </property>
+  </action>
+  <action name="actionPrim">
+   <property name="text">
+    <string>Prim</string>
    </property>
   </action>
   <zorder>dock_MatrixFlow</zorder>
