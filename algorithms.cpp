@@ -32,7 +32,18 @@ void highlightPath(Sequencer* sequencer, const QList<int>& path, const QString& 
             QString("SET_COLOR edge %1,%2 %3").arg(from).arg(to).arg(color));
     }
 }
-
+void highlightSubGraph(Sequencer &sequencer,
+                       const Matrix2D &mainGraph,
+                       const Matrix2D &subGraph,
+                       const QString &color)
+{
+    for (int i = 0; i < subGraph.size(); ++i) {
+        for (int j = 0; j < subGraph.size(); ++j) {
+            if (subGraph[i][j] > 0 && mainGraph[i][j] > 0)
+                sequencer.addCommand(QString("SET_COLOR edge %1,%2 %3").arg(i).arg(j).arg(color));
+        }
+    }
+}
 QPair<QSet<QPair<int, int>>, QSet<QPair<int, int>>> getPathSets(
     const QList<int>& oldPath,
     const QList<int>& newPath){
@@ -745,18 +756,74 @@ void unionSet(unsigned int x, unsigned int y)
     }
 }
 
-unsigned int boruvka(QList<QVariantList> &edges, int n, Matrix2D &tree)
+// unsigned int boruvka(QList<QVariantList> &edges, int n, Matrix2D &tree)
+// {
+//     EdgeStruct e;
+//     QList<EdgeStruct> cheapest(n);
+//     int numTrees = n;
+//     unsigned int sum = 0;
+//     for (int node = 0; node < n; node++) {
+//         parent[node] = node;
+//         prank[node] = 0;
+//         cheapest[node].w = INT_INF;
+//     }
+//     while (numTrees > 1) {
+//         for (int i = 0; i < edges.size(); i++) {
+//             e = edges[i];
+//             auto set1 = find(e.u), set2 = find(e.v);
+//             if (set1 != set2) {
+//                 if (cheapest[set1].w > e.w) {
+//                     cheapest[set1] = e;
+//                 }
+//                 if (cheapest[set2].w > e.w) {
+//                     cheapest[set2] = e;
+//                 }
+//             }
+//         }
+//         for (int node = 0; node < n; node++) {
+//             if (cheapest[node].w != -1) {
+//                 e = cheapest[node];
+//                 auto set1 = find(e.u), set2 = find(e.v);
+//                 if (set1 != set2) {
+//                     sum += e.w;
+//                     unionSet(set1, set2);
+//                     tree[e.u][e.v] = e.w;
+//                     tree[e.v][e.u] = e.w;
+//                     numTrees--;
+//                 }
+//             }
+//         }
+//         for (int node = 0; node < n; node++) {
+//             cheapest[node].w = INT_INF;
+//         }
+//     }
+//     return sum;
+// }
+
+unsigned int boruvka(
+    const Matrix2D &graph, QList<QVariantList> &edges, int n, Matrix2D &tree, Sequencer &sequencer)
 {
     EdgeStruct e;
     QList<EdgeStruct> cheapest(n);
     int numTrees = n;
     unsigned int sum = 0;
+
+    // Инициализация
     for (int node = 0; node < n; node++) {
         parent[node] = node;
         prank[node] = 0;
         cheapest[node].w = INT_INF;
     }
+
+    // Начальный кадр
+    sequencer.addFrame();
+    sequencer.addCommand("RESET_COLORS");
+    highlightSubGraph(sequencer, graph, graph, "LIGHTGRAY");
+    sequencer.addCommand(
+        "SET_TEXT point 0,-250 Starting Borůvka's algorithm\nEach node is its own tree initially");
+
     while (numTrees > 1) {
+        // Найти минимальные рёбра для каждого дерева
         for (int i = 0; i < edges.size(); i++) {
             e = edges[i];
             auto set1 = find(e.u), set2 = find(e.v);
@@ -769,8 +836,25 @@ unsigned int boruvka(QList<QVariantList> &edges, int n, Matrix2D &tree)
                 }
             }
         }
+
+        // Анимация выбора минимальных рёбер
+        sequencer.addFrame();
+        sequencer.addCommand("RESET_COLORS");
+        highlightSubGraph(sequencer, graph, graph, "LIGHTGRAY");
+        highlightSubGraph(sequencer, graph, tree, "GREEN");
         for (int node = 0; node < n; node++) {
-            if (cheapest[node].w != -1) {
+            if (cheapest[node].w != INT_INF) {
+                sequencer.addCommand(QString("SET_COLOR edge %1,%2 ORANGE")
+                                         .arg(cheapest[node].u)
+                                         .arg(cheapest[node].v));
+            }
+        }
+        sequencer.addCommand(QString(
+            "SET_TEXT point 0,-250 Found minimum edges for each tree\nProceed to merge trees"));
+
+        // Объединение деревьев
+        for (int node = 0; node < n; node++) {
+            if (cheapest[node].w != INT_INF) {
                 e = cheapest[node];
                 auto set1 = find(e.u), set2 = find(e.v);
                 if (set1 != set2) {
@@ -779,15 +863,40 @@ unsigned int boruvka(QList<QVariantList> &edges, int n, Matrix2D &tree)
                     tree[e.u][e.v] = e.w;
                     tree[e.v][e.u] = e.w;
                     numTrees--;
+
+                    // Анимация объединения деревьев
+                    sequencer.addFrame();
+                    sequencer.addCommand("RESET_COLORS");
+                    highlightSubGraph(sequencer, graph, graph, "LIGHTGRAY");
+                    highlightSubGraph(sequencer, graph, tree, "GREEN");
+                    sequencer.addCommand(QString("SET_COLOR edge %1,%2 GREEN").arg(e.u).arg(e.v));
+                    sequencer.addCommand(QString("SET_TEXT point 0,-250 Merging trees using edge "
+                                                 "%1-%2 (%3)\nRemaining trees: %4")
+                                             .arg(e.u)
+                                             .arg(e.v)
+                                             .arg(e.w)
+                                             .arg(numTrees));
                 }
             }
         }
+
+        // Сброс минимальных рёбер
         for (int node = 0; node < n; node++) {
             cheapest[node].w = INT_INF;
         }
     }
+
+    // Завершающий кадр
+    sequencer.addFrame();
+    sequencer.addCommand("RESET_COLORS");
+    highlightSubGraph(sequencer, graph, graph, "LIGHTGRAY");
+    highlightSubGraph(sequencer, graph, tree, "GREEN");
+    sequencer.addCommand(
+        QString("SET_TEXT point 0,-250 Algorithm is over\nMinimum cost: %1").arg(sum));
+
     return sum;
 }
+
 unsigned int find_set(unsigned int a) //find the parent of the given node
 {
     while (parent[a] != a) {
@@ -805,41 +914,82 @@ void union_find(unsigned int a,
     parent[d] = parent[e];
 }
 
-unsigned int kruskal(QList<QVariantList> &edges, int n, Matrix2D &tree)
+unsigned int kruskal(
+    const Matrix2D &graph, QList<QVariantList> &edges, int n, Matrix2D &tree, Sequencer &sequencer)
 {
     int a, b;
     EdgeStruct e;
     for (int i = 0; i < n; i++) {
         parent[i] = i;
     }
-    std::sort(edges.begin(), edges.end(), [](auto &e1, auto &e2) {
-        return e1[2].toDouble() < e2[2].toDouble();
-    });
-    int cost, minCost = 0;
+    unsigned int minCost = 0;
+
+    sequencer.addFrame();
+    sequencer.addCommand("RESET_COLORS");
+    highlightSubGraph(sequencer, graph, graph, "LIGHTGRAY");
+    sequencer.addCommand("SET_TEXT point 0,-250 Starting Kruskal's spanning tree algorithm\nNow "
+                         "pick all edges one by one from the sorted list of edges");
+
     for (int i = 0; i < edges.size(); ++i) {
         e = edges[i];
         a = e.u;
         b = e.v;
-        cost = e.w;
+        int cost = e.w;
+
+        // Добавляем новый кадр для анимации
+        sequencer.addFrame();
+        sequencer.addCommand(QString("RESET_COLORS"));
+        highlightSubGraph(sequencer, graph, graph, "LIGHTGRAY");
+        highlightSubGraph(sequencer, graph, tree, "GREEN");
+        QString message = "SET_TEXT point 0,-250 Pick edge %1-%2 (%3)\n";
+
         if (find_set(a) != find_set(b)) {
             minCost += cost;
             union_find(a, b);
             tree[a][b] = cost;
             tree[b][a] = cost;
+
+            // Добавляем пояснение
+            message += "No cycle is formed, include it.";
+            sequencer.addCommand(QString("SET_COLOR edge %1,%2 ORANGE").arg(a).arg(b));
+        } else {
+            // Исключаем ребро
+            message += "Since including this edge results in a cycle, discard it.";
+            sequencer.addCommand(QString("SET_COLOR edge %1,%2 RED").arg(a).arg(b));
         }
+        sequencer.addCommand(message.arg(a).arg(b).arg(cost));
     }
+
+    // Завершающий кадр
+    sequencer.addFrame();
+    sequencer.addCommand(QString("RESET_COLORS"));
+    highlightSubGraph(sequencer, graph, graph, "LIGHTGRAY");
+    highlightSubGraph(sequencer, graph, tree, "GREEN");
+    sequencer.addCommand(
+        QString("SET_TEXT point 0,-250 Algorithm is over\nMinimum cost: %1").arg(minCost));
+
     return minCost;
 }
-unsigned int prim(const Matrix2D &graph, int n, Matrix2D &tree)
+
+unsigned int prim(const Matrix2D &graph, int n, Matrix2D &tree, Sequencer &sequencer)
 {
     int sum = 0, min, x, y;
     QByteArray selected(n, false);
     selected[0] = true;
+
+    // Начальный кадр
+    sequencer.addFrame();
+    sequencer.addCommand("RESET_COLORS");
+    highlightSubGraph(sequencer, graph, graph, "LIGHTGRAY");
+    sequencer.addCommand("SET_TEXT point 0,-250 Starting Prim's algorithm\nPick the minimum edge "
+                         "connecting the tree to a new node");
+
     for (int no_edge = 0; no_edge < n - 1; no_edge++) {
         min = INT_INF;
         x = 0;
         y = 0;
 
+        // Ищем минимальное ребро
         for (int i = 0; i < n; i++) {
             if (selected[i]) {
                 for (int j = 0; j < n; j++) {
@@ -853,13 +1003,45 @@ unsigned int prim(const Matrix2D &graph, int n, Matrix2D &tree)
                 }
             }
         }
+
+        // Добавляем анимацию для выбранного ребра
+        sequencer.addFrame();
+        sequencer.addCommand("RESET_COLORS");
+        highlightSubGraph(sequencer, graph, graph, "LIGHTGRAY");
+        highlightSubGraph(sequencer, graph, tree, "GREEN");
+        sequencer.addCommand(QString("SET_COLOR edge %1,%2 ORANGE").arg(x).arg(y));
+        sequencer.addCommand(
+            QString("SET_TEXT point 0,-250 Pick edge %1-%2 (%3)\nInclude it in the tree")
+                .arg(x)
+                .arg(y)
+                .arg(min));
+
+        // Добавляем ребро в остовное дерево
         tree[x][y] = min;
         tree[y][x] = min;
         sum += min;
         selected[y] = true;
+
+        // Обновляем остовное дерево в анимации
+        sequencer.addFrame();
+        sequencer.addCommand("RESET_COLORS");
+        highlightSubGraph(sequencer, graph, graph, "LIGHTGRAY");
+        highlightSubGraph(sequencer, graph, tree, "GREEN");
+        sequencer.addCommand(
+            QString("SET_TEXT point 0,-250 Tree updated\nCurrent cost: %1").arg(sum));
     }
+
+    // Завершающий кадр
+    sequencer.addFrame();
+    sequencer.addCommand("RESET_COLORS");
+    highlightSubGraph(sequencer, graph, graph, "LIGHTGRAY");
+    highlightSubGraph(sequencer, graph, tree, "GREEN");
+    sequencer.addCommand(
+        QString("SET_TEXT point 0,-250 Algorithm is over\nMinimum cost: %1").arg(sum));
+
     return sum;
 }
+
 } // namespace spanningTree
 
 void MainWindow::algorithmSpanningTree(const QString &STType)
@@ -876,18 +1058,34 @@ void MainWindow::algorithmSpanningTree(const QString &STType)
     spanningTree::prank.resize(n);
     Matrix2D minTree(n, QList<double>(n, 0));
     Matrix2D graphMatrix = graph.getMatrixAdjacent();
-    auto edgeList = graph.getListEdges();
     qsizetype minTreeSum;
+
+    QMap<QPair<int, int>, QVariantList> existingEdges;
+    for (auto &e : graph.getListEdges()) {
+        if (!existingEdges.contains({e[1].toInt(), e[0].toInt()}))
+            existingEdges.insert({e[0].toInt(), e[1].toInt()}, e);
+    }
+    auto edgeList = existingEdges.values();
+    std::sort(edgeList.begin(), edgeList.end(), [](auto &e1, auto &e2) {
+        return e1[2].toDouble() < e2[2].toDouble();
+    });
+
+    sequencer.clear();
+
     if (STType == "PRIM")
-        minTreeSum = spanningTree::prim(graphMatrix, n, minTree);
-    else if (STType == "KRUSKAL")
-        minTreeSum = spanningTree::kruskal(edgeList, n, minTree);
-    else if (STType == "BORUVKA")
-        minTreeSum = spanningTree::boruvka(edgeList, n, minTree);
+        minTreeSum = spanningTree::prim(graphMatrix, n, minTree, sequencer);
+    else if (STType == "KRUSKAL") {
+        minTreeSum = spanningTree::kruskal(graphMatrix, edgeList, n, minTree, sequencer);
+    } else if (STType == "BORUVKA")
+        minTreeSum = spanningTree::boruvka(graphMatrix, edgeList, n, minTree, sequencer);
     else {
+        sequencer.clear();
         QMessageBox::warning(this, this->title, "Unknown spanning tree algorithm");
         return;
     }
+
+    initSequencer(true);
+
     QString title = "Spanning Tree (" + STType + ")" + QDateTime::currentDateTime().toString();
     QString message = QString("Minimal sum = %1\n").arg(minTreeSum);
     addDockWidget({new QLabel(message),

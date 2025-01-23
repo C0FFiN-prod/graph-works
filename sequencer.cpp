@@ -422,5 +422,4 @@ void Sequencer::clear() {
     frames.clear();
     graphView->initScene();
     position = -1;
-    qDebug() << "Sequencer cleared";
 }
