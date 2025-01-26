@@ -189,6 +189,7 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionRefreshTables"/>
+   <addaction name="actionToggleSelected"/>
    <addaction name="actionSelectSourceNode"/>
    <addaction name="actionSelectDestinationNode"/>
    <addaction name="actionAddNode"/>
@@ -1118,6 +1119,21 @@
   <action name="actionPrim">
    <property name="text">
     <string>Prim</string>
+   </property>
+  </action>
+  <action name="actionToggleSelected">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/ico/icons/toggleSelected.svg</normaloff>:/ico/icons/toggleSelected.svg</iconset>
+   </property>
+   <property name="text">
+    <string>ToggleSelected</string>
+   </property>
+   <property name="toolTip">
+    <string>Toggle on/off selected objects</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
    </property>
   </action>
   <zorder>dock_MatrixFlow</zorder>

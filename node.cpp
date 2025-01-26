@@ -135,8 +135,7 @@ void Node::disconnectFromNode(Node *node) {
         return;
     }
     if(node == this){
-
-        if(children.find(this)!=children.end()){
+        if (children.contains(this)) {
             edgeList.removeIf([](Edge* i){
                 return i->getEdgeType() == EdgeType::Loop;
             });
@@ -144,7 +143,7 @@ void Node::disconnectFromNode(Node *node) {
             this->parents.remove(this);
         }
     }else {
-        if(children.find(node)!=children.end()){
+        if (children.contains(node)) {
             edgeList.removeIf([&node](Edge* i){
                 return i->destNode() == node;
             });
@@ -195,9 +194,14 @@ void Node::toggle(bool enabled)
     this->enabled = enabled;
     setDefaultColor(enabled ? NodeColors::DefaultColor : NodeColors::DisabledColor);
     for (auto e : edgeList) {
-        e->setDefaultColor(enabled ? NodeColors::DefaultColor : NodeColors::DisabledColor);
+        e->setDefaultColor(e->isEnabled() && e->sourceNode()->isEnabled()
+                                   && e->destNode()->isEnabled()
+                               ? NodeColors::DefaultColor
+                               : NodeColors::DisabledColor);
+        e->resetColor();
+        // qDebug() << this->index << e->sourceNode()->isEnabled() << e->destNode()->isEnabled();
     }
-    this->update();
+    this->resetColor();
 }
 
 bool Node::isEnabled()
@@ -223,8 +227,6 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
     }else{
         painter->setPen(QPen(currentColor, 2));
     }
-    qDebug() << this->getIndex() << " " << this->isEnabled() << " " << defaultColor << " "
-             << currentColor;
     // drawing circle
     painter->fillPath(shape(), QBrush(Qt::white));
 

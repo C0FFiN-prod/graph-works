@@ -107,33 +107,24 @@ const Matrix2D Graph::getMatrixBandwidth(bool full)
 
 const QList<QVariantList> Graph::getListEdges(bool full)
 {
-    if (full) {
-        QList<QVariantList> edgeList(edges.size());
-        unsigned int i = 0;
-        for (auto [key, edge] : edges.asKeyValueRange()) {
-            QVariantList tuple{key.first->getIndex(),
-                               key.second->getIndex(),
-                               edge->getWeight(),
-                               edge->getBandwidth(),
-                               edge->getFlow()};
-            edgeList[i++] = tuple;
-        }
-        return edgeList;
-    } else {
-        QList<QVariantList> edgeList(edges.size() - disabledEdges.size());
-        unsigned int i = 0;
-        for (auto [key, edge] : edges.asKeyValueRange()) {
-            QVariantList tuple{key.first->getIndex(),
-                               key.second->getIndex(),
-                               edge->getWeight(),
-                               edge->getBandwidth(),
-                               edge->getFlow()};
-            if (!disabledEdges.contains(edge) && enablingMask[tuple[0].toUInt()]
-                && enablingMask[tuple[1].toUInt()])
+    QList<QVariantList> edgeList(full ? edges.size() : 0);
+    unsigned int i = 0;
+    for (auto [key, edge] : edges.asKeyValueRange()) {
+        QVariantList tuple{key.first->getIndex(),
+                           key.second->getIndex(),
+                           edge->getWeight(),
+                           edge->getBandwidth(),
+                           edge->getFlow()};
+        if (full
+            || (!disabledEdges.contains(edge) && enablingMask[tuple[0].toUInt()]
+                && enablingMask[tuple[1].toUInt()])) {
+            if (full)
                 edgeList[i++] = tuple;
+            else
+                edgeList.append(tuple);
         }
-        return edgeList;
     }
+    return edgeList;
 }
 
 
@@ -553,17 +544,22 @@ void Graph::toggleFlag(GraphFlags flag)
 {
     this->flags^=flag;
 }
-
+void Graph::toggleNode(Node *node, bool enabled)
+{
+    if (!enabled && (src == node || dst == node))
+        throw std::runtime_error(
+            QString("Not allowed to disable source or sink.\nNode with index %1")
+                .arg(node->getIndex())
+                .toStdString());
+    unsavedChanges = unsavedChanges || node->isEnabled() != enabled;
+    node->toggle(enabled);
+    enablingMask[node->getIndex()] = enabled;
+}
 void Graph::toggleNode(unsigned int index, bool enabled)
 {
     if (!nodes.contains(index))
         throw std::runtime_error(QString("No such node with index %1").arg(index).toStdString());
-    Node *node = nodes[index];
-    if (!enabled && (src == node || dst == node))
-        throw std::runtime_error(QString("Not allowed disable source or sink.\nNode with index %1")
-                                     .arg(index)
-                                     .toStdString());
-    node->toggle(enabled);
+    toggleNode(nodes[index], enabled);
 }
 
 void Graph::toggleEdge(unsigned int u, unsigned int v, bool enabled)
@@ -584,12 +580,21 @@ void Graph::toggleEdges(const QList<Edge *> &edgeList, bool enabled)
         toggleEdge(edge, enabled);
 }
 
+bool Graph::isEdgeEnabled(Edge *edge)
+{
+    return !disabledEdges.contains(edge);
+}
+bool Graph::isNodeEnabled(Node *node)
+{
+    return node->isEnabled();
+}
+
 void Graph::toggleEdge(Edge *edge, bool enabled)
 {
     bool isBiDirectionalSame = edge->getEdgeType() == EdgeType::BiDirectionalSame;
-    Edge *reverseEdge = isBiDirectionalSame
-                            ? edges[{nodes[edge->getDestinationInd()], nodes[edge->getSourceInd()]}]
-                            : nullptr;
+    Edge *reverseEdge = isBiDirectionalSame ? edges[{edge->destNode(), edge->sourceNode()}]
+                                            : nullptr;
+    unsavedChanges = unsavedChanges || edge->isEnabled() != enabled;
     if (!enabled) {
         disabledEdges.insert(edge);
         if (isBiDirectionalSame) {
@@ -602,11 +607,9 @@ void Graph::toggleEdge(Edge *edge, bool enabled)
             disabledEdges.remove(reverseEdge);
         }
     }
-    edge->setDefaultColor(enabled ? NodeColors::DefaultColor : NodeColors::DisabledColor);
-    edge->resetColor();
+    edge->toggle(enabled);
     if (isBiDirectionalSame) {
-        reverseEdge->setDefaultColor(enabled ? NodeColors::DefaultColor : NodeColors::DisabledColor);
-        reverseEdge->resetColor();
+        reverseEdge->toggle(enabled);
     }
 }
 
@@ -652,7 +655,10 @@ int Graph::getDestIndex()
 void Graph::setSourceIndex(unsigned int sourceIndex)
 {
     if (nodes.contains(sourceIndex)) {
-        src = nodes[sourceIndex];
+        Node *node = nodes[sourceIndex];
+        unsavedChanges = unsavedChanges || src != node;
+        toggleNode(node, true);
+        src = node;
         if (src == dst)
             dst = nullptr;
         src->setDefaultColor(NodeColors::SourceColor);
@@ -660,7 +666,8 @@ void Graph::setSourceIndex(unsigned int sourceIndex)
     }
     for (auto &i : nodes) {
         if (i != dst && i != src) {
-            i->setDefaultColor(NodeColors::DefaultColor);
+            i->setDefaultColor(i->isEnabled() ? NodeColors::DefaultColor
+                                              : NodeColors::DisabledColor);
             i->resetColor();
             i->update(i->boundingRect());
         }
@@ -670,7 +677,10 @@ void Graph::setSourceIndex(unsigned int sourceIndex)
 void Graph::setDestIndex(unsigned int destIndex)
 {
     if (nodes.contains(destIndex)) {
-        dst = nodes[destIndex];
+        Node *node = nodes[destIndex];
+        unsavedChanges = unsavedChanges || dst != node;
+        toggleNode(node, true);
+        dst = node;
         if (src == dst)
             src = nullptr;
         dst->setDefaultColor(NodeColors::DestColor);
@@ -678,7 +688,8 @@ void Graph::setDestIndex(unsigned int destIndex)
     }
     for (auto &i : nodes) {
         if (i != dst && i != src) {
-            i->setDefaultColor(NodeColors::DefaultColor);
+            i->setDefaultColor(i->isEnabled() ? NodeColors::DefaultColor
+                                              : NodeColors::DisabledColor);
             i->resetColor();
             i->update(i->boundingRect());
         }

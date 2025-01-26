@@ -56,6 +56,7 @@ private:
     void updateEdgesList(QTableView *list);
     void updateTables();
     void addRowToList(QStandardItemModel *table);
+    void toggleSelectedObjects(bool toOpposite = true, bool toEnabled = false);
     void deleteSelectedObjects(const QFlags<DeleteOptions> &options);
     void addNode();
     void markSelectedAs(const QFlags<SelectOptions> &option);

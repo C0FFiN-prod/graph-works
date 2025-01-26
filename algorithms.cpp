@@ -44,6 +44,14 @@ void highlightSubGraph(Sequencer &sequencer,
         }
     }
 }
+template<typename Iterable>
+void highlightNodes(Sequencer &sequencer, const Iterable &container, const QString &color)
+{
+    for (auto i : container) {
+        sequencer.addCommand(QString("SET_COLOR node %1 %2").arg(i).arg(color));
+    }
+}
+
 QPair<QSet<QPair<int, int>>, QSet<QPair<int, int>>> getPathSets(
     const QList<int>& oldPath,
     const QList<int>& newPath){
@@ -971,16 +979,17 @@ unsigned int kruskal(
     return minCost;
 }
 
-unsigned int prim(const Matrix2D &graph, int n, Matrix2D &tree, Sequencer &sequencer)
+unsigned int prim(const Matrix2D &graph, int n, Matrix2D &tree, int src, Sequencer &sequencer)
 {
     int sum = 0, min, x, y;
-    QByteArray selected(n, false);
-    selected[0] = true;
+    QSet<int> selected;
+    selected.insert(src);
 
     // Начальный кадр
     sequencer.addFrame();
     sequencer.addCommand("RESET_COLORS");
     highlightSubGraph(sequencer, graph, graph, "LIGHTGRAY");
+    highlightNodes(sequencer, selected, "GREEN");
     sequencer.addCommand("SET_TEXT point 0,-250 Starting Prim's algorithm\nPick the minimum edge "
                          "connecting the tree to a new node");
 
@@ -991,9 +1000,9 @@ unsigned int prim(const Matrix2D &graph, int n, Matrix2D &tree, Sequencer &seque
 
         // Ищем минимальное ребро
         for (int i = 0; i < n; i++) {
-            if (selected[i]) {
+            if (selected.contains(i)) {
                 for (int j = 0; j < n; j++) {
-                    if (!selected[j] && graph[i][j]) {
+                    if (!selected.contains(j) && graph[i][j]) {
                         if (min > graph[i][j]) {
                             min = graph[i][j];
                             x = i;
@@ -1003,32 +1012,35 @@ unsigned int prim(const Matrix2D &graph, int n, Matrix2D &tree, Sequencer &seque
                 }
             }
         }
+        if (x != y) {
+            // Добавляем анимацию для выбранного ребра
+            sequencer.addFrame();
+            sequencer.addCommand("RESET_COLORS");
+            highlightSubGraph(sequencer, graph, graph, "LIGHTGRAY");
+            highlightSubGraph(sequencer, graph, tree, "GREEN");
+            highlightNodes(sequencer, selected, "GREEN");
+            sequencer.addCommand(QString("SET_COLOR edge %1,%2 ORANGE").arg(x).arg(y));
+            sequencer.addCommand(
+                QString("SET_TEXT point 0,-250 Pick edge %1-%2 (%3)\nInclude it in the tree")
+                    .arg(x)
+                    .arg(y)
+                    .arg(min));
 
-        // Добавляем анимацию для выбранного ребра
-        sequencer.addFrame();
-        sequencer.addCommand("RESET_COLORS");
-        highlightSubGraph(sequencer, graph, graph, "LIGHTGRAY");
-        highlightSubGraph(sequencer, graph, tree, "GREEN");
-        sequencer.addCommand(QString("SET_COLOR edge %1,%2 ORANGE").arg(x).arg(y));
-        sequencer.addCommand(
-            QString("SET_TEXT point 0,-250 Pick edge %1-%2 (%3)\nInclude it in the tree")
-                .arg(x)
-                .arg(y)
-                .arg(min));
+            // Добавляем ребро в остовное дерево
+            tree[x][y] = min;
+            tree[y][x] = min;
+            sum += min;
+            selected.insert(y);
 
-        // Добавляем ребро в остовное дерево
-        tree[x][y] = min;
-        tree[y][x] = min;
-        sum += min;
-        selected[y] = true;
-
-        // Обновляем остовное дерево в анимации
-        sequencer.addFrame();
-        sequencer.addCommand("RESET_COLORS");
-        highlightSubGraph(sequencer, graph, graph, "LIGHTGRAY");
-        highlightSubGraph(sequencer, graph, tree, "GREEN");
-        sequencer.addCommand(
-            QString("SET_TEXT point 0,-250 Tree updated\nCurrent cost: %1").arg(sum));
+            // Обновляем остовное дерево в анимации
+            sequencer.addFrame();
+            sequencer.addCommand("RESET_COLORS");
+            highlightSubGraph(sequencer, graph, graph, "LIGHTGRAY");
+            highlightSubGraph(sequencer, graph, tree, "GREEN");
+            highlightNodes(sequencer, selected, "GREEN");
+            sequencer.addCommand(
+                QString("SET_TEXT point 0,-250 Tree updated\nCurrent cost: %1").arg(sum));
+        }
     }
 
     // Завершающий кадр
@@ -1036,6 +1048,7 @@ unsigned int prim(const Matrix2D &graph, int n, Matrix2D &tree, Sequencer &seque
     sequencer.addCommand("RESET_COLORS");
     highlightSubGraph(sequencer, graph, graph, "LIGHTGRAY");
     highlightSubGraph(sequencer, graph, tree, "GREEN");
+    highlightNodes(sequencer, selected, "GREEN");
     sequencer.addCommand(
         QString("SET_TEXT point 0,-250 Algorithm is over\nMinimum cost: %1").arg(sum));
 
@@ -1061,19 +1074,22 @@ void MainWindow::algorithmSpanningTree(const QString &STType)
     qsizetype minTreeSum;
 
     QMap<QPair<int, int>, QVariantList> existingEdges;
+    qDebug() << "getting edges";
     for (auto &e : graph.getListEdges()) {
+        qDebug() << e.size();
         if (!existingEdges.contains({e[1].toInt(), e[0].toInt()}))
             existingEdges.insert({e[0].toInt(), e[1].toInt()}, e);
     }
+    qDebug() << "cleared edges";
     auto edgeList = existingEdges.values();
     std::sort(edgeList.begin(), edgeList.end(), [](auto &e1, auto &e2) {
         return e1[2].toDouble() < e2[2].toDouble();
     });
-
+    qDebug() << "sorted edges";
     sequencer.clear();
-
+    int srcNode = qMax(0, graph.getSourceIndex());
     if (STType == "PRIM")
-        minTreeSum = spanningTree::prim(graphMatrix, n, minTree, sequencer);
+        minTreeSum = spanningTree::prim(graphMatrix, n, minTree, srcNode, sequencer);
     else if (STType == "KRUSKAL") {
         minTreeSum = spanningTree::kruskal(graphMatrix, edgeList, n, minTree, sequencer);
     } else if (STType == "BORUVKA")

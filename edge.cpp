@@ -32,8 +32,8 @@ Edge::Edge(Node *sourceNode,
     , flow(0)
     , weight(weight)
     , bandwidth(0)
-    , currentColor(NodeColors::DefaultColor)
     , defaultColor(NodeColors::DefaultColor)
+    , currentColor(DefaultColor)
 {
     setFlag(ItemIsSelectable, true);
     //setAcceptedMouseButtons(Qt::NoButton);
@@ -119,6 +119,20 @@ void Edge::adjust()
     } else {
         sourcePoint = destPoint = line.p1();
     }
+}
+
+bool Edge::isEnabled()
+{
+    return this->enabled;
+}
+
+void Edge::toggle(bool enabled)
+{
+    this->enabled = enabled;
+    this->setDefaultColor(enabled && this->sourceNode()->isEnabled() && this->destNode()->isEnabled()
+                              ? NodeColors::DefaultColor
+                              : NodeColors::DisabledColor);
+    this->resetColor();
 }
 
 void Edge::setCurrentColor(QColor clr)

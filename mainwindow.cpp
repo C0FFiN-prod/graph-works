@@ -156,6 +156,10 @@ MainWindow::MainWindow(const QString &title, QWidget *parent)
         graph.graphView->scene()->update();
     });
     connect(ui->actionAddNode, &QAction::triggered, this, &MainWindow::addNode);
+    connect(ui->actionToggleSelected,
+            &QAction::triggered,
+            this,
+            std::bind(&MainWindow::toggleSelectedObjects, this, true, false));
     connect(ui->actionDeleteNode,
             &QAction::triggered,
             this,
@@ -689,7 +693,7 @@ void MainWindow::applyEdgesList(QTableView *table)
 
 void MainWindow::updateEdgesList(QTableView *list)
 {
-    auto edges = graph.getListEdges();
+    auto edges = graph.getListEdges(true);
     int count = edges.count();
     ui->label_ListEdges_Count->setText(QString::number(count));
     auto model = static_cast<QStandardItemModel *>(list->model());
@@ -732,6 +736,7 @@ void MainWindow::addNode()
     for (auto &spin : graphCountSpins) {
         spin->setValue(amount + 1);
     }
+    updateFileStatus();
     graph.graphView->initScene();
 }
 void MainWindow::updateTables()
@@ -769,6 +774,82 @@ void MainWindow::addRowToList(QStandardItemModel *model)
     for (int i = colCount; i--;)
         items[i] = new QStandardItem("");
     model->insertRow(rowCount, items);
+}
+
+void MainWindow::toggleSelectedObjects(bool toOpposite, bool toEnabled)
+{
+    QPair<int, int> currentState{0, 0};
+    QSet<QPair<QGraphicsItem *, DeleteOptions>> toToggle;
+    bool nothingChanged = false;
+    for (auto &item : graph.graphView->items()) {
+        if (item != nullptr) {
+            if (item->isSelected()) {
+                if (Node *node = qgraphicsitem_cast<Node *>(item)) {
+                    if (toOpposite) {
+                        toToggle.insert(qMakePair(node, DeleteOptions::Nodes));
+                        if (graph.isNodeEnabled(node))
+                            currentState.second += 1;
+                        else
+                            currentState.first += 1;
+                    } else {
+                        try {
+                            graph.toggleNode(node, toEnabled);
+                        } catch (std::runtime_error e) {
+                            QMessageBox::warning(this,
+                                                 this->windowTitle(),
+                                                 e.what(),
+                                                 QMessageBox::StandardButton::Ok,
+                                                 QMessageBox::StandardButton::Ok);
+                        }
+                    }
+                } else if (Edge *edge = qgraphicsitem_cast<Edge *>(item)) {
+                    if (toOpposite) {
+                        toToggle.insert(qMakePair(edge, DeleteOptions::Edges));
+                        if (graph.isEdgeEnabled(edge))
+                            currentState.second += 1;
+                        else
+                            currentState.first += 1;
+                    } else {
+                        graph.toggleEdge(edge, toEnabled);
+                    }
+                }
+            }
+        }
+    }
+    if (toOpposite) {
+        bool nextState = false;
+
+        if (currentState.second != 0)
+            nextState = false;
+        else if (currentState.first != 0)
+            nextState = true;
+        else
+            nothingChanged = true;
+        if (!nothingChanged) {
+            foreach (auto pair, toToggle) {
+                switch (pair.second) {
+                case DeleteOptions::Nodes:
+                    try {
+                        graph.toggleNode(qgraphicsitem_cast<Node *>(pair.first), nextState);
+                    } catch (std::runtime_error e) {
+                        QMessageBox::warning(this,
+                                             this->windowTitle(),
+                                             e.what(),
+                                             QMessageBox::StandardButton::Ok,
+                                             QMessageBox::StandardButton::Ok);
+                    }
+                    break;
+                case DeleteOptions::Edges:
+                    graph.toggleEdge(qgraphicsitem_cast<Edge *>(pair.first), nextState);
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+    }
+    updateFileStatus();
+    graph.graphView->initScene();
 }
 
 void MainWindow::consoleLog(const QString &text)
@@ -873,7 +954,7 @@ void MainWindow::myCopy()
 {
     auto widget = QApplication::focusWidget();
     auto table = qobject_cast<QTableView *>(widget);
-    if( table != nullptr ){
+    if (table != nullptr) {
         copyTableToClipboard(table);
     }
 }
@@ -881,7 +962,7 @@ void MainWindow::myPaste()
 {
     auto widget = QApplication::focusWidget();
     auto table = qobject_cast<QTableView *>(widget);
-    if( table != nullptr ){
+    if (table != nullptr) {
         pasteClipboardToTable(table);
     }
 }

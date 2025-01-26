@@ -77,13 +77,13 @@ void MainWindow::saveGraphToCSV(bool saveToNew = false)
     out << "Enabling mask\n";
     QBitArray enablingMask = graph.getEnablingMask();
     if (amount % 4 != 0)
-        enablingMask.resize(amount / 4 + (amount % 4 != 0 ? 1 : 0));
+        enablingMask.resize((amount + 3) / 4 * 4);
     QString enablingMaskString = "";
     char byte = 0;
-    for (qsizetype i = 1; i < enablingMask.size(); ++i) {
+    for (qsizetype i = 0; i < enablingMask.size(); ++i) {
         byte <<= 1;
         byte += enablingMask[i];
-        if (i % 4 == 0) {
+        if (i % 4 == 3) {
             if (byte >= 0 && byte <= 9) {
                 byte += '0';
             } else if (byte >= 10 && byte <= 15) {
@@ -95,17 +95,17 @@ void MainWindow::saveGraphToCSV(bool saveToNew = false)
     }
     out << enablingMaskString + '\n';
 
-    if (!isMatrixZeros(graph.getMatrixBandwidth())) {
+    if (!isMatrixZeros(graph.getMatrixBandwidth(true))) {
         out << "Bandwidth\n";
-        out << matrixToString(graph.getMatrixBandwidth());
+        out << matrixToString(graph.getMatrixBandwidth(true));
     }
-    if (!isMatrixZeros(graph.getMatrixAdjacent())) {
+    if (!isMatrixZeros(graph.getMatrixAdjacent(true))) {
         out << "Adjacent\n";
-        out << matrixToString(graph.getMatrixAdjacent());
+        out << matrixToString(graph.getMatrixAdjacent(true));
     }
-    if (!isMatrixZeros(graph.getMatrixFlow())) {
+    if (!isMatrixZeros(graph.getMatrixFlow(true))) {
         out << "Flow\n";
-        out << matrixToString(graph.getMatrixFlow());
+        out << matrixToString(graph.getMatrixFlow(true));
     }
     if (file.commit()) {
         currentFile = filePath;
@@ -181,49 +181,41 @@ void MainWindow::readGraphFromCSV()
                                {"Source", -1},
                                {"Sink", -1},
                                {"Enabling mask", -1}};
-    for (int headersSetCnt = 0, i = 0; i < dataLength && headersSetCnt < 4; i++) {
+    for (int i = 0; i < dataLength; i++) {
         if (headers.contains(data[i])) {
-            if (headers[data[i]] == -1)
-                headersSetCnt++;
             headers[data[i]] = i;
         }
     }
-    auto wrongFormat = [this]() { QMessageBox::warning(this, title, "Wrong file format."); };
+    auto wrongFormat = [this](const QString &msg = "") {
+        QMessageBox::warning(this, title, "Wrong file format." + (!msg.isEmpty() ? "\n" + msg : ""));
+    };
     if (headers["Nodes count"] == -1 || headers["Adjacent"] == -1) {
-        wrongFormat();
+        wrongFormat("Not found nodes count or adjacent matrix");
         return;
     }
     cursor = headers["Nodes count"];
     if (cursor + 1 >= dataLength || !reValidInt.match(data[cursor + 1]).hasMatch()) {
-        wrongFormat();
+        wrongFormat("Failed to get nodes count");
         return;
     }
     amount = data[cursor + 1].toLongLong();
-
+    qDebug() << "src";
     cursor = headers["Source"];
-    bool ok;
     if (cursor != -1) {
         if (cursor + 1 >= dataLength || !reValidInt.match(data[cursor + 1]).hasMatch()) {
-            wrongFormat();
+            wrongFormat("Failed to get source node index");
             return;
         }
-        src = qMax(0, qMin(data[cursor + 1].toLongLong(&ok), amount - 1));
-        if (!ok) {
-            wrongFormat();
-            return;
-        }
+        src = qMax(0, qMin(data[cursor + 1].toInt(), amount - 1));
     }
+    qDebug() << "sink";
     cursor = headers["Sink"];
     if (cursor != -1) {
         if (cursor + 1 >= dataLength || !reValidInt.match(data[cursor + 1]).hasMatch()) {
-            wrongFormat();
+            wrongFormat("Failed to get sink node index");
             return;
         }
-        dst = qMax(0, qMin(data[cursor + 1].toLongLong(&ok), amount - 1));
-        if (!ok) {
-            wrongFormat();
-            return;
-        }
+        dst = qMax(0, qMin(data[cursor + 1].toInt(), amount - 1));
     }
 
     cursor = headers["Enabling mask"];
@@ -232,7 +224,7 @@ void MainWindow::readGraphFromCSV()
         if (cursor + 1 >= dataLength || !reValidHexLine.match(data[cursor + 1]).hasMatch()
             || (data[cursor + 1].size() * 4 < amount)
             || (data[cursor + 1].size() > (amount + 3) / 4)) {
-            wrongFormat();
+            wrongFormat("Failed to get enabling mask");
             return;
         }
         std::string hexMask = data[cursor + 1].toUpper().toStdString();
@@ -297,21 +289,21 @@ void MainWindow::readGraphFromCSV()
         graph.setMatrixAdjacent(adjacent);
     if (headers["Flow"] != -1)
         graph.setMatrixFlow(flow);
+    if (headers["Enabling mask"] != -1) {
+        graph.toggleNodes(enablingMask);
+    } else {
+        graph.toggleNodes(QBitArray(amount, true));
+    }
     if (headers["Source"] != -1)
         graph.setSourceIndex(src);
     if (headers["Sink"] != -1)
         graph.setDestIndex(dst);
-    if (headers["Enabling mask"] != -1)
-        graph.toggleNodes(enablingMask);
-    qDebug() << "toggled nodes";
-    currentFile = filePath;
 
+    currentFile = filePath;
     graph.changesSaved();
-    graph.graphView->resetNodesColor();
-    graph.graphView->resetEdgesColor();
-    qDebug() << "colors reseted";
     updateTables();
     updateFileStatus();
+
     graph.graphView->initScene();
     qDebug() << "scene inited";
     graph.graphView->scene()->update();

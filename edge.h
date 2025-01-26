@@ -30,7 +30,8 @@ public:
     int getSourceInd();
 
     void adjust();
-
+    bool isEnabled();
+    void toggle(bool enabled);
     void setCurrentColor(QColor clr);
     void setDefaultColor(QColor clr);
     void resetColor();
@@ -52,7 +53,7 @@ private:
     EdgeType edgeType;
     Node *source, *dest;
 
-
+    bool enabled = true;
     double flow;
     double weight;
     double bandwidth;
@@ -60,7 +61,6 @@ private:
     QPointF destPoint;
     QColor defaultColor;
     QColor currentColor;
-    QColor defaultColor;
     qreal arrowSize = 10;
 };
 #endif // EDGE_H

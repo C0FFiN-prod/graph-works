@@ -42,6 +42,7 @@
         <file>icons/next.svg</file>
         <file>icons/previous.svg</file>
         <file>icons/cross-small.svg</file>
+        <file>icons/toggleSelected.svg</file>
     </qresource>
     <qresource prefix="/qss">
         <file>styles/defaultstyle.qss</file>

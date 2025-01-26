@@ -43,10 +43,13 @@ public:
     void setFlags(QFlags<GraphFlags> flags);
     void unsetFlag(GraphFlags flag);
     void toggleFlag(GraphFlags flag);
+    void toggleNode(Node *node, bool enabled);
     void toggleNode(unsigned int index, bool enabled);
     void toggleEdge(Edge *edge, bool enabled);
     void toggleEdge(unsigned int u, unsigned int v, bool enabled);
     void toggleEdges(const QList<Edge *> &edgeList, bool enabled);
+    bool isEdgeEnabled(Edge *edge);
+    bool isNodeEnabled(Node *node);
     void toggleNodes(const QBitArray &mask);
     QBitArray getEnablingMask();
     GraphWidget *graphView;
