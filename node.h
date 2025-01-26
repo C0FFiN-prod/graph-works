@@ -35,7 +35,8 @@ public:
 
     int getIndex() const;
     void setIndex(unsigned int i);
-
+    void toggle(bool enabled);
+    bool isEnabled();
     QString getDisplayName() const;
     void setDisplayName(const QString &name);
 
@@ -55,11 +56,12 @@ protected:
 private:
     QSet<Node *> children;
     QSet<Node *> parents;
-    QColor defaulColor;
+    QColor defaultColor;
     QPointF newPos;
     GraphWidget *graph;
     int index;
     QString displayName;
+    bool enabled = true;
 };
 
 #endif // NODE_H

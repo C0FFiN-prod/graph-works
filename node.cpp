@@ -10,11 +10,12 @@
 #include <QStyleOption>
 
 Node::Node(int index, GraphWidget *graphWidget)
-    : graph(graphWidget)
+    : defaultColor(NodeColors::DefaultColor)
+    , currentColor(defaultColor)
+    , graph(graphWidget)
     , index(index)
     , displayName(QString::number(index))
 {
-    defaulColor = Qt::black;
     setFlag(ItemIsMovable);
     setFlag(ItemSendsGeometryChanges);
     setFlag(ItemIsSelectable);
@@ -24,7 +25,7 @@ Node::Node(int index, GraphWidget *graphWidget)
 }
 
 Node::Node()
-    : defaulColor(NodeColors::DefaultColor)
+    : defaultColor(NodeColors::DefaultColor)
     , graph(nullptr)
     , index(0)
     , displayName("0")
@@ -167,6 +168,21 @@ void Node::setIndex(unsigned int i)
     this->index = i;
 }
 
+void Node::toggle(bool enabled)
+{
+    this->enabled = enabled;
+    setDefaultColor(enabled ? NodeColors::DefaultColor : NodeColors::DisabledColor);
+    for (auto e : edgeList) {
+        e->setDefaultColor(enabled ? NodeColors::DefaultColor : NodeColors::DisabledColor);
+    }
+    this->update();
+}
+
+bool Node::isEnabled()
+{
+    return this->enabled;
+}
+
 QString Node::getDisplayName() const
 {
     return this->displayName;
@@ -183,8 +199,10 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
         painter->setPen(QPen(QColor(NodeColors::SelectionColor), 2));
 
     }else{
-        painter->setPen(QPen(defaulColor, 2));
+        painter->setPen(QPen(defaultColor, 2));
     }
+    qDebug() << this->getIndex() << " " << this->isEnabled() << " " << defaultColor << " "
+             << currentColor;
     // drawing circle
     painter->fillPath(shape(), QBrush(Qt::white));
 
@@ -222,7 +240,7 @@ Node::~Node()
 
 void Node::setDefaultColor(const NodeColors clr)
 {
-    defaulColor = QColor(clr);
+    defaultColor = QColor(clr);
 }
 
 QVariant Node::itemChange(GraphicsItemChange change, const QVariant &value)

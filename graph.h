@@ -1,10 +1,11 @@
 #ifndef GRAPH_H
 #define GRAPH_H
-#include "node.h"
+#include <QException>
 #include "edge.h"
 #include "graphwidget.h"
+#include "node.h"
+#include "qbitarray.h"
 #include "qmap.h"
-#include <QException>
 
 typedef QList<QList<double>> Matrix2D;
 typedef QList<QList<int>> Matrix2I;
@@ -16,10 +17,10 @@ public:
     Graph(unsigned int size);
     Graph(Matrix2D &matrix);
     ~Graph();
-    const Matrix2D getMatrixAdjacent();
-    const Matrix2D getMatrixFlow();
-    const Matrix2D getMatrixBandwidth();
-    const QList<QVariantList> getListEdges();
+    const Matrix2D getMatrixAdjacent(bool full = false);
+    const Matrix2D getMatrixFlow(bool full = false);
+    const Matrix2D getMatrixBandwidth(bool full = false);
+    const QList<QVariantList> getListEdges(bool full = false);
     void setMatrixAdjacent(Matrix2D &matrix);
     void setMatrixFlow(Matrix2D &matrix);
     void setMatrixBandwidth(Matrix2D &matrix);
@@ -41,7 +42,12 @@ public:
     void setFlags(QFlags<GraphFlags> flags);
     void unsetFlag(GraphFlags flag);
     void toggleFlag(GraphFlags flag);
-    //void removeNode(unsigned int i);
+    void toggleNode(unsigned int index, bool enabled);
+    void toggleEdge(Edge *edge, bool enabled);
+    void toggleEdge(unsigned int u, unsigned int v, bool enabled);
+    void toggleEdges(const QList<Edge *> &edgeList, bool enabled);
+    void toggleNodes(const QBitArray &mask);
+    QBitArray getEnablingMask();
     GraphWidget *graphView;
     unsigned int getAmount();
 
@@ -60,7 +66,8 @@ private:
     QFlags<GraphFlags> flags;
     EdgeType getEdgeType(int i, int j, Matrix2D &matrix);
     unsigned int amount;
-
+    QBitArray enablingMask;
+    QSet<Edge *> disabledEdges;
     QMap<QPair<Node*, Node*>, Edge*> edges;
     QMap<unsigned int, Node*> nodes;
 
@@ -73,6 +80,6 @@ private:
     Matrix2D adjacent;
     Matrix2D flow;
     Matrix2D bandwidth;
-
+    Matrix2D makeEnabledMatrix(const Matrix2D &matrix);
 };
 #endif // GRAPH_H

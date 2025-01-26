@@ -1,6 +1,7 @@
 #include <QFileDialog>
 #include <QSaveFile>
 #include "mainwindow.h"
+#include "qbitarray.h"
 
 template<typename T>
 char numberToChar(const T &value)
@@ -41,14 +42,52 @@ void MainWindow::saveGraphToCSV(bool saveToNew = false)
     QSaveFile file(filePath);
     file.open(QIODevice::WriteOnly | QIODevice::Text);
     QTextStream out(&file);
+    qsizetype amount = graph.getAmount();
     out << "Nodes count\n";
-    out << QString::number(graph.getAmount()) + '\n';
-    out << "Adjacent\n";
-    out << matrixToString(graph.getMatrixAdjacent());
-    out << "Bandwidth\n";
-    out << matrixToString(graph.getMatrixBandwidth());
-    out << "Flow\n";
-    out << matrixToString(graph.getMatrixFlow());
+    out << QString::number(amount) + '\n';
+
+    if (graph.getSourceIndex() != -1) {
+        out << "Source\n";
+        out << QString::number(graph.getSourceIndex()) + '\n';
+    }
+    if (graph.getDestIndex() != -1) {
+        out << "Sink\n";
+        out << QString::number(graph.getDestIndex()) + '\n';
+    }
+
+    out << "Enabling mask\n";
+    QBitArray enablingMask = graph.getEnablingMask();
+    if (amount % 4 != 0)
+        enablingMask.resize(amount / 4 + (amount % 4 != 0 ? 1 : 0));
+    QString enablingMaskString = "";
+    char byte = 0;
+    for (qsizetype i = 1; i < enablingMask.size(); ++i) {
+        byte <<= 1;
+        byte += enablingMask[i];
+        if (i % 4 == 0) {
+            if (byte >= 0 && byte <= 9) {
+                byte += '0';
+            } else if (byte >= 10 && byte <= 15) {
+                byte += 'A' - 10;
+            }
+            enablingMaskString.append(byte);
+            byte = 0;
+        }
+    }
+    out << enablingMaskString + '\n';
+
+    if (!isMatrixZeros(graph.getMatrixBandwidth())) {
+        out << "Bandwidth\n";
+        out << matrixToString(graph.getMatrixBandwidth());
+    }
+    if (!isMatrixZeros(graph.getMatrixAdjacent())) {
+        out << "Adjacent\n";
+        out << matrixToString(graph.getMatrixAdjacent());
+    }
+    if (!isMatrixZeros(graph.getMatrixFlow())) {
+        out << "Flow\n";
+        out << matrixToString(graph.getMatrixFlow());
+    }
     if (file.commit()) {
         currentFile = filePath;
         graph.changesSaved();
@@ -114,11 +153,15 @@ void MainWindow::readGraphFromCSV()
     file.open(QIODevice::ReadOnly | QIODevice::ExistingOnly | QIODevice::Text);
     QTextStream fstr(&file);
     QStringList data(fstr.readAll().split('\n'));
-    int cursor, amount, dataLength = data.size();
+    qsizetype cursor, amount, src = -1, dst = -1, dataLength = data.size();
+
     QMap<QString, int> headers{{"Nodes count", -1},
                                {"Adjacent", -1},
                                {"Bandwidth", -1},
-                               {"Flow", -1}};
+                               {"Flow", -1},
+                               {"Source", -1},
+                               {"Sink", -1},
+                               {"Enabling mask", -1}};
     for (int headersSetCnt = 0, i = 0; i < dataLength && headersSetCnt < 4; i++) {
         if (headers.contains(data[i])) {
             if (headers[data[i]] == -1)
@@ -136,7 +179,64 @@ void MainWindow::readGraphFromCSV()
         wrongFormat();
         return;
     }
-    amount = data[cursor + 1].toInt();
+    amount = data[cursor + 1].toLongLong();
+
+    cursor = headers["Source"];
+    bool ok;
+    if (cursor != -1) {
+        if (cursor + 1 >= dataLength || !reValidInt.match(data[cursor + 1]).hasMatch()) {
+            wrongFormat();
+            return;
+        }
+        src = qMax(0, qMin(data[cursor + 1].toLongLong(&ok), amount - 1));
+        if (!ok) {
+            wrongFormat();
+            return;
+        }
+    }
+    cursor = headers["Sink"];
+    if (cursor != -1) {
+        if (cursor + 1 >= dataLength || !reValidInt.match(data[cursor + 1]).hasMatch()) {
+            wrongFormat();
+            return;
+        }
+        dst = qMax(0, qMin(data[cursor + 1].toLongLong(&ok), amount - 1));
+        if (!ok) {
+            wrongFormat();
+            return;
+        }
+    }
+
+    cursor = headers["Enabling mask"];
+    QBitArray enablingMask(amount, true);
+    if (cursor != -1) {
+        if (cursor + 1 >= dataLength || !reValidHexLine.match(data[cursor + 1]).hasMatch()
+            || (data[cursor + 1].size() * 4 < amount)
+            || (data[cursor + 1].size() > (amount + 3) / 4)) {
+            wrongFormat();
+            return;
+        }
+        std::string hexMask = data[cursor + 1].toUpper().toStdString();
+        for (size_t i = 0; i < hexMask.size(); ++i) {
+            unsigned char byte = hexMask[i];
+
+            // Преобразование символа в число 0-15
+            if (byte >= '0' && byte <= '9') {
+                byte -= '0';
+            } else if (byte >= 'A' && byte <= 'F') {
+                byte -= 'A' - 10;
+            }
+
+            // Установка соответствующих 4 бит в bit_array
+            for (int j = 0; j < 4; ++j) {
+                int index = i * 4 + j;
+                if (index >= amount)
+                    break;
+                enablingMask[index] = (byte >> (3 - j)) & 1;
+            }
+        }
+    }
+    qDebug() << "read mask";
     QStringList dataLine(amount);
     auto fillMatrixFromData =
         [&cursor, &amount, &dataLine, &wrongFormat, &dataLength, &data](Matrix2D &m) {
@@ -176,10 +276,28 @@ void MainWindow::readGraphFromCSV()
         graph.setMatrixBandwidth(bandwidth);
     if (headers["Flow"] != -1)
         graph.setMatrixFlow(flow);
+    if (headers["Source"] != -1)
+        graph.setSourceIndex(src);
+    if (headers["Sink"] != -1)
+        graph.setDestIndex(dst);
+    if (headers["Enabling mask"] != -1)
+        graph.toggleNodes(enablingMask);
+    qDebug() << "toggled nodes";
     currentFile = filePath;
     graph.changesSaved();
+    graph.graphView->resetNodesColor();
+    graph.graphView->resetEdgesColor();
+    qDebug() << "colors reseted";
     updateTables();
     updateFileStatus();
+    graph.graphView->initScene();
+    qDebug() << "scene inited";
+    graph.graphView->scene()->update();
+    qDebug() << "scene updated";
+    graph.graphView->stabilizingIteration = 0;
+    if (!(graph.getFlags() & GraphFlags::ManualMode))
+        graph.graphView->runTimer();
+    qDebug() << "file loaded";
 }
 
 void MainWindow::newGraph()

@@ -20,6 +20,8 @@ public:
 
     void runTimer();
     void initScene();
+    void resetNodesColor();
+    void resetEdgesColor();
     QFlags<GraphFlags> getFlags();
 public slots:
     void zoomIn();

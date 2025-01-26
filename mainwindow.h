@@ -43,7 +43,9 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QString title;
-    const static QRegularExpression reValidDouble, reValidDoubleLine, reValidInt;
+    QLabel *currentFrameLabel;
+    QSlider *delayBetweenFramesSlider;
+    const static QRegularExpression reValidDouble, reValidDoubleLine, reValidInt, reValidHexLine;
     QMap<QString, QWidget *> docksViewMode;
     void pasteClipboardToTable(QTableView *dest);
     void copyTableToClipboard(QTableView *src);

@@ -54,6 +54,7 @@ private:
     double bandwidth;
     QPointF sourcePoint;
     QPointF destPoint;
+    QColor defaultColor;
     QColor currentColor;
     qreal arrowSize = 10;
 };

@@ -1,4 +1,5 @@
 #include "graph.h"
+#include "qbitarray.h"
 
 Graph::Graph():
     amount(0),
@@ -71,31 +72,68 @@ Graph::~Graph()
     clear();
 }
 
-
-const Matrix2D Graph::getMatrixAdjacent()
+Matrix2D Graph::makeEnabledMatrix(const Matrix2D &matrix)
 {
-    return adjacent;
-}
-
-const Matrix2D Graph::getMatrixFlow()
-{
-    return flow;
-}
-
-const Matrix2D Graph::getMatrixBandwidth()
-{
-    return bandwidth;
-}
-
-const QList<QVariantList> Graph::getListEdges()
-{
-    QList<QVariantList> edgeList(edges.size());
-    unsigned int i = 0;
-    for(auto [key, edge] : edges.asKeyValueRange()){
-        QVariantList tuple{key.first->getIndex(), key.second->getIndex(), edge->getWeight(), edge->getBandwidth(), edge->getFlow()};
-        edgeList[i++] = tuple;
+    Matrix2D newMatrix(matrix);
+    for (unsigned int i = 0; i < amount; ++i) {
+        for (unsigned int j = 0; j < amount; ++j) {
+            bool enabled = nodes[i]->isEnabled() && nodes[j]->isEnabled();
+            newMatrix[i][j] = enabled ? newMatrix[i][j] : 0;
+        }
     }
-    return edgeList;
+    return newMatrix;
+}
+
+const Matrix2D Graph::getMatrixAdjacent(bool full)
+{
+    if (full)
+        return adjacent;
+    return makeEnabledMatrix(adjacent);
+}
+
+const Matrix2D Graph::getMatrixFlow(bool full)
+{
+    if (full)
+        return flow;
+    return makeEnabledMatrix(flow);
+}
+
+const Matrix2D Graph::getMatrixBandwidth(bool full)
+{
+    if (full)
+        return bandwidth;
+    return makeEnabledMatrix(bandwidth);
+}
+
+const QList<QVariantList> Graph::getListEdges(bool full)
+{
+    if (full) {
+        QList<QVariantList> edgeList(edges.size());
+        unsigned int i = 0;
+        for (auto [key, edge] : edges.asKeyValueRange()) {
+            QVariantList tuple{key.first->getIndex(),
+                               key.second->getIndex(),
+                               edge->getWeight(),
+                               edge->getBandwidth(),
+                               edge->getFlow()};
+            edgeList[i++] = tuple;
+        }
+        return edgeList;
+    } else {
+        QList<QVariantList> edgeList(edges.size() - disabledEdges.size());
+        unsigned int i = 0;
+        for (auto [key, edge] : edges.asKeyValueRange()) {
+            QVariantList tuple{key.first->getIndex(),
+                               key.second->getIndex(),
+                               edge->getWeight(),
+                               edge->getBandwidth(),
+                               edge->getFlow()};
+            if (!disabledEdges.contains(edge) && enablingMask[tuple[0].toUInt()]
+                && enablingMask[tuple[1].toUInt()])
+                edgeList[i++] = tuple;
+        }
+        return edgeList;
+    }
 }
 
 
@@ -389,7 +427,7 @@ void Graph::removeNode(unsigned int index)
         adjacent.removeAt(index);
         flow.removeAt(index);
         bandwidth.removeAt(index);
-
+        enablingMask.resize(amount - 1);
         for (unsigned i = 0; i < amount - 1; i++) {
             adjacent[i].removeAt(index);
             flow[i].removeAt(index);
@@ -398,10 +436,13 @@ void Graph::removeNode(unsigned int index)
     }
 
     for (unsigned int i = index + 1; i < amount; i++) {
-        auto toChange = nodes.take(i);
+        Node *toChange = nodes[i];
         toChange->setIndex(i - 1);
         nodes.insert(i - 1, toChange);
+        enablingMask[i - 1] = toChange->isEnabled();
     }
+    if (index != amount - 1)
+        nodes.take(amount - 1);
     if ((int) index == getSourceIndex()) {
         src = nullptr;
     } else if ((int) index == getDestIndex()) {
@@ -439,6 +480,9 @@ void Graph::addNode(unsigned int i, const QString &name = "")
                 bandwidth[j].resize(amount + 1);
         }
     }
+    if (enablingMask.size() < amount + 1)
+        enablingMask.resize(amount + 1);
+    enablingMask[i] = true;
     amount++;
 }
 
@@ -483,6 +527,79 @@ void Graph::unsetFlag(GraphFlags flag)
 void Graph::toggleFlag(GraphFlags flag)
 {
     this->flags^=flag;
+}
+
+void Graph::toggleNode(unsigned int index, bool enabled)
+{
+    if (!nodes.contains(index))
+        throw std::runtime_error(QString("No such node with index %1").arg(index).toStdString());
+    Node *node = nodes[index];
+    if (!enabled && (src == node || dst == node))
+        throw std::runtime_error(QString("Not allowed disable source or sink.\nNode with index %1")
+                                     .arg(index)
+                                     .toStdString());
+    node->toggle(enabled);
+}
+
+void Graph::toggleEdge(unsigned int u, unsigned int v, bool enabled)
+{
+    if (!nodes.contains(u))
+        throw std::runtime_error(QString("Cannot find node with index %1").arg(u).toStdString());
+    if (!nodes.contains(v))
+        throw std::runtime_error(QString("Cannot find node with index %1").arg(v).toStdString());
+    if (!edges.contains({nodes[u], nodes[v]}))
+        throw std::runtime_error(
+            QString("Cannot find edge between %1 and ").arg(u).arg(v).toStdString());
+    toggleEdge(edges[{nodes[u], nodes[v]}], enabled);
+}
+
+void Graph::toggleEdges(const QList<Edge *> &edgeList, bool enabled)
+{
+    for (auto edge : edgeList)
+        toggleEdge(edge, enabled);
+}
+
+void Graph::toggleEdge(Edge *edge, bool enabled)
+{
+    bool isBiDirectionalSame = edge->getEdgeType() == EdgeType::BiDirectionalSame;
+    Edge *reverseEdge = isBiDirectionalSame
+                            ? edges[{nodes[edge->getDestinationInd()], nodes[edge->getSourceInd()]}]
+                            : nullptr;
+    if (!enabled) {
+        disabledEdges.insert(edge);
+        if (isBiDirectionalSame) {
+            disabledEdges.insert(reverseEdge);
+        }
+
+    } else {
+        disabledEdges.remove(edge);
+        if (isBiDirectionalSame) {
+            disabledEdges.remove(reverseEdge);
+        }
+    }
+    edge->setDefaultColor(enabled ? NodeColors::DefaultColor : NodeColors::DisabledColor);
+    edge->resetColor();
+    if (isBiDirectionalSame) {
+        reverseEdge->setDefaultColor(enabled ? NodeColors::DefaultColor : NodeColors::DisabledColor);
+        reverseEdge->resetColor();
+    }
+}
+
+void Graph::toggleNodes(const QBitArray &mask)
+{
+    if (mask.size() > enablingMask.size())
+        enablingMask.resize(mask.size());
+    for (unsigned int i = 0; i < mask.size(); ++i) {
+        if (nodes.contains(i)) {
+            nodes[i]->toggle(mask[i]);
+            enablingMask[i] = mask[i];
+        }
+    }
+}
+
+QBitArray Graph::getEnablingMask()
+{
+    return this->enablingMask;
 }
 
 unsigned int Graph::getAmount()

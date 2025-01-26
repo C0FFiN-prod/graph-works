@@ -53,6 +53,21 @@ void GraphWidget::initScene()
     }
 }
 
+void GraphWidget::resetNodesColor()
+{
+    foreach (auto &node, nodes->values()) {
+        node->resetColor();
+        qDebug() << node->getIndex() << " " << node->isEnabled();
+    }
+}
+
+void GraphWidget::resetEdgesColor()
+{
+    foreach (auto &edge, edges->values()) {
+        edge->resetColor();
+    }
+}
+
 QFlags<GraphFlags> GraphWidget::getFlags()
 {
     return *flags;

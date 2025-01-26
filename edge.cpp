@@ -57,7 +57,8 @@ Edge::Edge(Node *sourceNode,
     , flow(0)
     , weight(weight)
     , bandwidth(0)
-    , currentColor(NodeColors::DefaultColor)
+    , defaultColor(NodeColors::DefaultColor)
+    , currentColor(defaultColor)
 {
     setFlag(ItemIsSelectable, true);
     //setAcceptedMouseButtons(Qt::NoButton);

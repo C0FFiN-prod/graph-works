@@ -23,6 +23,7 @@ enum DeleteOptions {
 enum NodeColors {
     SelectionColor = 0x0078d4,
     DefaultColor = 0x000000,
+    DisabledColor = 0xCCAAAA,
     SourceColor = 0xFFD300,
     DestColor = 0x3914AF
 };

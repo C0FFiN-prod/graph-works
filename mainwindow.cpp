@@ -12,6 +12,26 @@
 const QRegularExpression MainWindow::reValidDoubleLine("([0-9]+(\\.[0-9]+)?(\t|\n))+");
 const QRegularExpression MainWindow::reValidDouble("[0-9]+(\\.[0-9]+)?");
 const QRegularExpression MainWindow::reValidInt("[0-9]+");
+const QRegularExpression MainWindow::reValidHexLine("[0-9A-Fa-f]+");
+
+template<typename Func, typename... Args>
+auto timer(Func func, long long &ms, Args &&...args) -> decltype(func(std::forward<Args>(args)...))
+{
+    using namespace std::chrono;
+    auto start = system_clock::now();
+    if constexpr (std::is_void_v<decltype(func(std::forward<Args>(args)...))>) {
+        func(std::forward<Args>(args)...);
+        auto end = system_clock::now();
+        ms = duration_cast<milliseconds>(end - start).count();
+        return;
+    } else {
+        auto result = func(std::forward<Args>(args)...);
+        auto end = system_clock::now();
+        ms = duration_cast<milliseconds>(end - start).count();
+        return result;
+    }
+}
+
 MainWindow::MainWindow(const QString &title, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -604,11 +624,11 @@ void MainWindow::updateTables()
     for (auto &table : graphMatrixViews) {
         tableName = table->objectName().replace(nameRe, "");
         if (tableName == "Adj") {
-            setTableFromMatrix(table, graph.getMatrixAdjacent(), amount, amount);
+            setTableFromMatrix(table, graph.getMatrixAdjacent(true), amount, amount);
         } else if (tableName == "Flow") {
-            setTableFromMatrix(table, graph.getMatrixFlow(), amount, amount);
+            setTableFromMatrix(table, graph.getMatrixFlow(true), amount, amount);
         } else if (tableName == "Bandwidth") {
-            setTableFromMatrix(table, graph.getMatrixBandwidth(), amount, amount);
+            setTableFromMatrix(table, graph.getMatrixBandwidth(true), amount, amount);
         }
     }
     for (auto &list : graphListViews) {
