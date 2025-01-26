@@ -26,6 +26,7 @@ Node::Node(int index, GraphWidget *graphWidget)
 
 Node::Node()
     : defaultColor(NodeColors::DefaultColor)
+    , currentColor(defaultColor)
     , graph(nullptr)
     , index(0)
     , displayName("0")
@@ -47,44 +48,65 @@ void Node::calculateForces(bool manual)
 {
     if (!scene() || manual || scene()->mouseGrabberItem() == this) {
         newPos = pos();
+        this->graph->stabilizingIteration = 0;
         return;
     }
-
+    QRectF sceneRect = scene()->sceneRect();
+    double minScreen = qMin(sceneRect.width(), sceneRect.height());
+    double threshold = 0.1;
+    double k_r = 80;
+    double k_a = .05;
+    double k_c = 0.002;
+    double damping = 1;
+    double cooling = std::exp(-0.01 * graph->stabilizingIteration);
     // Sum up all forces pushing this item away
+    QPointF vec;
     qreal xvel = 0;
     qreal yvel = 0;
+    qsizetype nodesCount = 0;
     const QList<QGraphicsItem *> items = scene()->items();
     for (QGraphicsItem *item : items) {
         Node *node = qgraphicsitem_cast<Node *>(item);
         if (!node)
             continue;
-
-        QPointF vec = mapToItem(node, 0, 0);
+        nodesCount++;
+        vec = mapToItem(node, 0, 0);
         qreal dx = vec.x();
         qreal dy = vec.y();
-        double l = 2.0 * (dx * dx + dy * dy);
-        if (l > 0) {
-            xvel += (dx * 550.0) / l;
-            yvel += (dy * 550.0) / l;
-        }
+        double l = std::pow(dx * dx + dy * dy, 1.0);
+        xvel += k_r * dx / (l + 0.001);
+        yvel += k_r * dy / (l + 0.001);
     }
-
+    vec = mapFromScene(0, 0);
+    xvel += k_c * vec.x() * qMax(sqrt(nodesCount), 0.1) / minScreen * 1000;
+    yvel += k_c * vec.y() * qMax(sqrt(nodesCount), 0.1) / minScreen * 1000;
     // Now subtract all forces pulling items together
-    double weight = (edgeList.size() + 1) * 50;
-    for (const Edge *edge : std::as_const(edgeList)) {
-        QPointF vec;
+    for (Edge *edge : std::as_const(edgeList)) {
+        if (edge->getEdgeType() == EdgeType::Loop)
+            continue;
+        double k_t = edge->getEdgeType() == EdgeType::SingleDirection ? 2 : 1;
         if (edge->sourceNode() == this)
             vec = mapToItem(edge->destNode(), 0, 0);
         else
             vec = mapToItem(edge->sourceNode(), 0, 0);
-        xvel -= vec.x() / weight;
-        yvel -= vec.y() / weight;
+        qreal dx = vec.x();
+        qreal dy = vec.y();
+        double l = sqrt(dx * dx + dy * dy);
+        double dl = (minScreen / qLn(nodesCount) / 2 - l);
+        if (l < 0.1)
+            l += 0.1;
+        xvel += dx / l * k_a * dl * k_t;
+        yvel += dy / l * k_a * dl * k_t;
     }
 
-    if (qAbs(xvel) < 0.1 && qAbs(yvel) < 0.1)
-        xvel = yvel = 0;
+    xvel = qMax(-minScreen / 10, qMin(minScreen / 10, xvel)) * damping * cooling;
+    yvel = qMax(-minScreen / 10, qMin(minScreen / 10, yvel)) * damping * cooling;
 
-    QRectF sceneRect = scene()->sceneRect();
+    if (qAbs(xvel) < threshold)
+        xvel = 0;
+    if (qAbs(yvel) < threshold)
+        yvel = 0;
+
     newPos = pos() + QPointF(xvel, yvel);
     newPos.setX(qMin(qMax(newPos.x(), sceneRect.left() + 10), sceneRect.right() - 10));
     newPos.setY(qMin(qMax(newPos.y(), sceneRect.top() + 10), sceneRect.bottom() - 10));
@@ -199,7 +221,7 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
         painter->setPen(QPen(QColor(NodeColors::SelectionColor), 2));
 
     }else{
-        painter->setPen(QPen(defaultColor, 2));
+        painter->setPen(QPen(currentColor, 2));
     }
     qDebug() << this->getIndex() << " " << this->isEnabled() << " " << defaultColor << " "
              << currentColor;
@@ -241,6 +263,14 @@ Node::~Node()
 void Node::setDefaultColor(const NodeColors clr)
 {
     defaultColor = QColor(clr);
+}
+void Node::resetColor()
+{
+    currentColor = defaultColor;
+}
+void Node::setCurrentColor(const QColor clr)
+{
+    currentColor = clr;
 }
 
 QVariant Node::itemChange(GraphicsItemChange change, const QVariant &value)

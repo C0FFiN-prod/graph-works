@@ -32,6 +32,25 @@ QString matrixToString(const T &matrix, const QString &sep = ";", const QString 
 template QString matrixToString(const Matrix2D &matrix, const QString &sep, const QString &newLine);
 template QString matrixToString(const Matrix2I &matrix, const QString &sep, const QString &newLine);
 
+template<typename T>
+bool isMatrixZeros(const T &matrix)
+{
+    int h = matrix.size();
+    if (!h)
+        return true;
+    int w = matrix[0].size();
+    if (!w)
+        return true;
+    int i, j;
+    for (i = 0; i != h; i++) {
+        for (j = 0; j != w; j++) {
+            if (matrix[i][j])
+                return false;
+        }
+    }
+    return true;
+}
+
 void MainWindow::saveGraphToCSV(bool saveToNew = false)
 {
     QString filePath((saveToNew || currentFile.isEmpty())
@@ -260,20 +279,22 @@ void MainWindow::readGraphFromCSV()
                 }
             }
         };
-    Matrix2D adjacent(amount, QList<double>(amount, 0));
-    cursor = headers["Adjacent"];
-    fillMatrixFromData(adjacent);
     Matrix2D bandwidth(amount, QList<double>(amount, 0));
     cursor = headers["Bandwidth"];
     if (cursor != -1)
         fillMatrixFromData(bandwidth);
+    Matrix2D adjacent(amount, QList<double>(amount, 0));
+    cursor = headers["Adjacent"];
+    if (cursor != -1)
+        fillMatrixFromData(adjacent);
     Matrix2D flow(amount, QList<double>(amount, 0));
     cursor = headers["Flow"];
     if (cursor != -1)
         fillMatrixFromData(flow);
-    graph.setMatrixAdjacent(adjacent);
     if (headers["Bandwidth"] != -1)
         graph.setMatrixBandwidth(bandwidth);
+    if (headers["Adjacent"] != -1)
+        graph.setMatrixAdjacent(adjacent);
     if (headers["Flow"] != -1)
         graph.setMatrixFlow(flow);
     if (headers["Source"] != -1)
@@ -284,6 +305,7 @@ void MainWindow::readGraphFromCSV()
         graph.toggleNodes(enablingMask);
     qDebug() << "toggled nodes";
     currentFile = filePath;
+
     graph.changesSaved();
     graph.graphView->resetNodesColor();
     graph.graphView->resetEdgesColor();

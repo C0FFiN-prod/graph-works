@@ -1,6 +1,7 @@
 #include "TextBox.h"
 #include "qgraphicsscene.h"
 #include "qgraphicssceneevent.h"
+#include "qregularexpression.h"
 
 
 TextBox::TextBox(): text(""), centerPoint(QPoint(0,0))
@@ -13,7 +14,7 @@ TextBox::TextBox(): text(""), centerPoint(QPoint(0,0))
 TextBox::TextBox(QString txt, QPoint coords): text(txt), centerPoint(coords)
 {
     selectionColor = Qt::white;
-    setFlag(ItemIsSelectable);
+    // setFlag(ItemIsSelectable);
 }
 
 QRectF TextBox::boundingRect() const
@@ -56,21 +57,33 @@ void TextBox::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget
     painter->setPen(Qt::black);
 
     //get text bounds
-    QFontMetrics metrics(font);
-    QRect rect = metrics.boundingRect(text);
+    QString maxLine = 0;
+    auto lines = text.split(QRegularExpression("[\n\r]"));
+    for(auto& line : lines)
+        if(line.length() > maxLine.length())
+            maxLine = line;
 
+    QFontMetrics metrics(font);
+    QRect rect = metrics.boundingRect(maxLine);
+    rect.setHeight(rect.height()*lines.length());
     //draw padding
     int padding = 5;
     QPointF offset(-padding,padding);
     QRect backgroundRect = rect.adjusted(-padding*2, -padding*2, padding/2, padding/2);
     backgroundRect.moveCenter((this->centerPoint));
-    //drawing background
 
-    painter->setPen(Qt::NoPen);
-    painter->setBrush(selectionColor);
-    painter->drawEllipse(backgroundRect);
-    //painter->setPen(Qt::yellow);
-    //painter->drawRect(boundingRect());
+    //drawing background
+    if (rectBackground) {
+        painter->setPen(Qt::black);
+        painter->setBrush(Qt::white);
+        painter->drawRect(backgroundRect);
+
+    } else {
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(Qt::white);
+        painter->drawEllipse(backgroundRect);
+    }
+
     //drawing text
     painter->setPen(Qt::black);
     painter->drawText(backgroundRect, Qt::AlignVCenter | Qt::AlignHCenter, text);
@@ -89,21 +102,29 @@ void TextBox::setText(QString text)
     this->text =text;
 }
 
-void TextBox::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void TextBox::setCustomText(QString text)
 {
-    if(!(event->modifiers() & Qt::ControlModifier)){
-        for(auto item: this->scene()->items()){
-            if(item!=this){
-                item->setSelected(false);
-
-            }
-        }
-    }
-    //QGraphicsItem::mousePressEvent(event);
-
-    setSelected(!isSelected());
-    update();
+    this->containsCustomText = true;
+    this->text = text;
 }
 
+QString TextBox::getText()
+{
+    return this->text;
+}
 
+// void TextBox::mousePressEvent(QGraphicsSceneMouseEvent *event)
+// {
+//     if(!(event->modifiers() & Qt::ControlModifier)){
+//         for(auto item: this->scene()->items()){
+//             if(item!=this){
+//                 item->setSelected(false);
 
+//             }
+//         }
+//     }
+//     //QGraphicsItem::mousePressEvent(event);
+
+//     setSelected(!isSelected());
+//     update();
+// }

@@ -192,7 +192,11 @@ void Graph::setMatrixFlow(Matrix2D &matrix)
                 auto key = qMakePair(nodes[i],nodes[j]);
                 if(bandwidth[i][j] < matrix[i][j])
                     bandwidth[i][j] = matrix[i][j];
-                edges[key] = new Edge(nodes[i],nodes[j], 1, getEdgeType(i,j,bandwidth));
+                edges[key] = new Edge(nodes[i],
+                                      nodes[j],
+                                      1,
+                                      qMax(getEdgeType(i, j, bandwidth),
+                                           getEdgeType(i, j, adjacent)));
                 edges[key]->setBandwidth(matrix[i][j]);
                 edges[key]->setFlow(matrix[i][j]);
                 adjacent[i][j] = 1;
@@ -204,14 +208,18 @@ void Graph::setMatrixFlow(Matrix2D &matrix)
                     edge->setBandwidth(matrix[i][j]);
                 }
                 edge->setFlow(matrix[i][j]);
-                edge->setEdgeType(getEdgeType(i, j, bandwidth));
+                edge->setEdgeType(qMax(getEdgeType(i, j, bandwidth), getEdgeType(i, j, adjacent)));
             }
             if((i!=j)&&!adjacent[j][i]&&matrix[j][i]){
                 nodes[j]->connectToNode(nodes[i]);
                 auto key = qMakePair(nodes[j],nodes[i]);
                 if(bandwidth[j][i] < matrix[j][i])
                     bandwidth[j][i] = matrix[j][i];
-                edges[key] = new Edge(nodes[j],nodes[i], 1, getEdgeType(j,i,bandwidth));
+                edges[key] = new Edge(nodes[j],
+                                      nodes[i],
+                                      1,
+                                      qMax(getEdgeType(j, i, bandwidth),
+                                           getEdgeType(j, i, adjacent)));
                 edges[key]->setBandwidth(matrix[j][i]);
                 edges[key]->setFlow(matrix[j][i]);
                 adjacent[j][i] = 1;
@@ -223,7 +231,7 @@ void Graph::setMatrixFlow(Matrix2D &matrix)
                     edge->setBandwidth(matrix[j][i]);
                 }
                 edge->setFlow(matrix[j][i]);
-                edge->setEdgeType(getEdgeType(j, i, bandwidth));
+                edge->setEdgeType(qMax(getEdgeType(j, i, bandwidth), getEdgeType(j, i, adjacent)));
             }
             flow[i][j] = matrix[i][j];
             flow[j][i] = matrix[j][i];
@@ -245,7 +253,10 @@ void Graph::setMatrixBandwidth(Matrix2D& matrix)
                 auto key = qMakePair(nodes[i],nodes[j]);
                 if(flow[i][j] > matrix[i][j])
                     flow[i][j] = matrix[i][j];
-                edges[key] = new Edge(nodes[i],nodes[j], 1, getEdgeType(i,j,matrix));
+                edges[key] = new Edge(nodes[i],
+                                      nodes[j],
+                                      1,
+                                      qMax(getEdgeType(i, j, matrix), getEdgeType(i, j, adjacent)));
                 edges[key]->setBandwidth(matrix[i][j]);
                 edges[key]->setFlow(flow[i][j]);
                 adjacent[i][j] = 1;
@@ -257,7 +268,7 @@ void Graph::setMatrixBandwidth(Matrix2D& matrix)
                     flow[i][j] = matrix[i][j];
                     edge->setFlow(matrix[i][j]);
                 }
-                edge->setEdgeType(getEdgeType(i, j, matrix));
+                edge->setEdgeType(qMax(getEdgeType(i, j, matrix), getEdgeType(i, j, adjacent)));
             }
             if((i!=j)&&adjacent[j][i]&&!matrix[j][i]){
                 removeEdge(j, i);
@@ -266,7 +277,10 @@ void Graph::setMatrixBandwidth(Matrix2D& matrix)
                 auto key = qMakePair(nodes[j],nodes[i]);
                 if(flow[j][i] > matrix[j][i])
                     flow[j][i] = matrix[j][i];
-                edges[key] = new Edge(nodes[j],nodes[i], 1, getEdgeType(j,i,matrix));
+                edges[key] = new Edge(nodes[j],
+                                      nodes[i],
+                                      1,
+                                      qMax(getEdgeType(j, i, matrix), getEdgeType(j, i, adjacent)));
                 edges[key]->setBandwidth(matrix[j][i]);
                 edges[key]->setFlow(flow[j][i]);
                 adjacent[j][i] = 1;
@@ -278,7 +292,7 @@ void Graph::setMatrixBandwidth(Matrix2D& matrix)
                     flow[j][i] = matrix[j][i];
                     edge->setFlow(matrix[j][i]);
                 }
-                edge->setEdgeType(getEdgeType(i, j, matrix));
+                edge->setEdgeType(qMax(getEdgeType(j, i, matrix), getEdgeType(j, i, adjacent)));
             }
             bandwidth[i][j] = matrix[i][j];
             bandwidth[j][i] = matrix[j][i];
@@ -370,6 +384,17 @@ void Graph::setEdgeBandwidth(unsigned int u, unsigned int v, double b)
 QString Graph::getNodeName(unsigned int u)
 {
     return nodes[u]->getDisplayName();
+}
+
+Edge *Graph::getEdge(unsigned int u, unsigned int v)
+{
+    QPair<Node *, Node *> key
+        = QPair<Node *, Node *>(this->graphView->getNodes()->value(u, nullptr),
+                                this->graphView->getNodes()->value(v, nullptr));
+    if (!key.first || !key.second) {
+        throw std::runtime_error("Source/dest node not found");
+    }
+    return graphView->getEdges()->value(key, nullptr);
 }
 
 EdgeType Graph::getEdgeType(int i, int j, Matrix2D& matrix)
@@ -631,10 +656,12 @@ void Graph::setSourceIndex(unsigned int sourceIndex)
         if (src == dst)
             dst = nullptr;
         src->setDefaultColor(NodeColors::SourceColor);
+        src->resetColor();
     }
     for (auto &i : nodes) {
         if (i != dst && i != src) {
             i->setDefaultColor(NodeColors::DefaultColor);
+            i->resetColor();
             i->update(i->boundingRect());
         }
     }
@@ -647,10 +674,12 @@ void Graph::setDestIndex(unsigned int destIndex)
         if (src == dst)
             src = nullptr;
         dst->setDefaultColor(NodeColors::DestColor);
+        dst->resetColor();
     }
     for (auto &i : nodes) {
         if (i != dst && i != src) {
             i->setDefaultColor(NodeColors::DefaultColor);
+            i->resetColor();
             i->update(i->boundingRect());
         }
     }

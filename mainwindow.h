@@ -16,6 +16,7 @@
 #include "qspinbox.h"
 #include "qstandarditemmodel.h"
 #include "qtableview.h"
+#include "sequencer.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -28,8 +29,8 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(const QString &title, QWidget *parent = nullptr);
     Graph graph;
+    Sequencer sequencer;
     ~MainWindow();
-
 private slots:
     void clearConsole();
     void viewModeChecked(bool checked);
@@ -48,6 +49,7 @@ private:
     const static QRegularExpression reValidDouble, reValidDoubleLine, reValidInt, reValidHexLine;
     QMap<QString, QWidget *> docksViewMode;
     void pasteClipboardToTable(QTableView *dest);
+    void handleSequencerFrameChange();
     void copyTableToClipboard(QTableView *src);
     void applyGraphMatrix(QTableView *table);
     void applyEdgesList(QTableView *table);
@@ -81,6 +83,9 @@ private:
     void algorithmDijkstra();
     void algorithmDinic();
     void algorithmBellmanFord();
+    void algorithmSpanningTree(const QString &STType);
+
+    void initSequencer(bool isSequenceStateless = false);
 
     // Saves
     QString currentFile = "";

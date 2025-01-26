@@ -1,13 +1,14 @@
 #include "mainwindow.h"
+#include <QClipboard>
+#include <QMessageBox>
+#include <QQueue>
+#include <QShortcut>
+#include <QStandardItemModel>
+#include <QThread>
+#include <QToolTip>
 #include "qspinbox.h"
 #include "ui_mainwindow.h"
-#include <QStandardItemModel>
-#include <QMessageBox>
-#include <QToolTip>
-#include <QClipboard>
-#include <QQueue>
 #include <set>
-#include <QShortcut>
 
 const QRegularExpression MainWindow::reValidDoubleLine("([0-9]+(\\.[0-9]+)?(\t|\n))+");
 const QRegularExpression MainWindow::reValidDouble("[0-9]+(\\.[0-9]+)?");
@@ -34,10 +35,36 @@ auto timer(Func func, long long &ms, Args &&...args) -> decltype(func(std::forwa
 
 MainWindow::MainWindow(const QString &title, QWidget *parent)
     : QMainWindow(parent)
+    , sequencer(Sequencer(graph.graphView))
     , ui(new Ui::MainWindow)
     , title(title)
 {
-    ui->setupUi(this);    
+    ui->setupUi(this);
+
+    //setting up extra widgets
+    currentFrameLabel = new QLabel("0/0", this);
+    ui->toolBar->insertWidget(ui->actionFirstFrame, currentFrameLabel);
+    delayBetweenFramesSlider = new QSlider(Qt::Orientation::Horizontal, this);
+    delayBetweenFramesSlider->setOrientation(Qt::Horizontal);
+    delayBetweenFramesSlider->setMaximum(1000);
+    delayBetweenFramesSlider->setMinimum(0);
+    delayBetweenFramesSlider->setTickInterval(10);
+    delayBetweenFramesSlider->setMaximumSize(100, 20);
+
+    connect(delayBetweenFramesSlider, &QSlider::valueChanged, [this](int value) {
+        QToolTip::showText(delayBetweenFramesSlider->mapToGlobal(
+                               delayBetweenFramesSlider->rect().center()),
+                           QString::number(value) + " ms",
+                           delayBetweenFramesSlider);
+    });
+
+    // Скрываем tooltip, когда слайдер не активен
+    connect(delayBetweenFramesSlider, &QSlider::sliderReleased, this, []() {
+        QToolTip::hideText();
+    });
+
+    ui->toolBar->addWidget(delayBetweenFramesSlider);
+
     auto spinBoxes = this->findChildren<QSpinBox *>();
     auto pushButtons = this->findChildren<QPushButton *>();
     for(auto* table : this->findChildren<QTableView *>()){
@@ -105,7 +132,7 @@ MainWindow::MainWindow(const QString &title, QWidget *parent)
             table->setModel(new QStandardItemModel(0,0));
     }
 
-    connect(ui->actionBandwidth, &QAction::triggered, this, [this](bool checked){
+    connect(ui->actionBandwidth, &QAction::triggered, this, [this](bool checked) {
         if(checked)
             this->graph.setFlag(GraphFlags::ShowBandwidth);
         else
@@ -151,7 +178,6 @@ MainWindow::MainWindow(const QString &title, QWidget *parent)
             &QAction::triggered,
             this,
             std::bind(&MainWindow::markSelectedAs, this, SelectOptions::Destination));
-
     auto view = ui->menuView_mode;
     auto docks = this->findChildren<QDockWidget *>();
     if(!docks.empty()){
@@ -238,6 +264,18 @@ MainWindow::MainWindow(const QString &title, QWidget *parent)
     connect(ui->actionDijkstra, &QAction::triggered, this, &MainWindow::algorithmDijkstra);
     connect(ui->actionDinic, &QAction::triggered, this, &MainWindow::algorithmDinic);
     connect(ui->actionBellmanFord, &QAction::triggered, this, &MainWindow::algorithmBellmanFord);
+    connect(ui->actionPrim,
+            &QAction::triggered,
+            this,
+            std::bind(&MainWindow::algorithmSpanningTree, this, "PRIM"));
+    connect(ui->actionKruskal,
+            &QAction::triggered,
+            this,
+            std::bind(&MainWindow::algorithmSpanningTree, this, "KRUSKAL"));
+    connect(ui->actionBoruvka,
+            &QAction::triggered,
+            this,
+            std::bind(&MainWindow::algorithmSpanningTree, this, "BORUVKA"));
     connect(ui->actionNetTransportProblem,
             &QAction::triggered,
             this,
@@ -258,6 +296,42 @@ MainWindow::MainWindow(const QString &title, QWidget *parent)
     connect(ui->button_ClearConsole, &QPushButton::pressed, this, &MainWindow::clearConsole);
 
     updateFileStatus();
+
+    // Connecting sequencer actions
+    connect(ui->actionNextFrame, &QAction::triggered, this, [this]() {
+        long long ms;
+        timer([this]() { sequencer.next(); }, ms);
+        qDebug() << "Invoked method next: took " << ms << " ms";
+        handleSequencerFrameChange();
+        QThread::msleep(qMax(delayBetweenFramesSlider->sliderPosition() - ms, 0));
+    });
+    connect(ui->actionPreviousFrame, &QAction::triggered, this, [this]() {
+        long long ms;
+        timer([this]() { sequencer.prev(); }, ms);
+        qDebug() << "Invoked method prev: took " << ms << " ms";
+
+        handleSequencerFrameChange();
+        QThread::msleep(qMax(delayBetweenFramesSlider->sliderPosition() - ms, 0));
+    });
+    connect(ui->actionFirstFrame, &QAction::triggered, this, [this]() {
+        sequencer.first();
+        handleSequencerFrameChange();
+    });
+    connect(ui->actionLastFrame, &QAction::triggered, this, [this]() {
+        sequencer.last();
+        handleSequencerFrameChange();
+    });
+    connect(ui->actionClearSequence, &QAction::triggered, this, [this]() {
+        sequencer.clear();
+        handleSequencerFrameChange();
+    });
+    //disabling sequencer btns and controls
+    ui->actionFirstFrame->setDisabled(true);
+    ui->actionNextFrame->setDisabled(true);
+    ui->actionPreviousFrame->setDisabled(true);
+    ui->actionLastFrame->setDisabled(true);
+    ui->actionClearSequence->setDisabled(true);
+    delayBetweenFramesSlider->setDisabled(true);
 }
 
 MainWindow::~MainWindow()
@@ -329,6 +403,50 @@ void MainWindow::pasteClipboardToTable(QTableView *dest)
         }
     }
     emit model->dataChanged(indexes.first(),model->item(row+i-1, col+j-1)->index());
+}
+
+void MainWindow::handleSequencerFrameChange()
+{
+    int currentPosition = sequencer.getPosition();
+    int maxPosition = sequencer.getFramesLength() - 1;
+    currentFrameLabel->setText(QString::number(currentPosition + 1) + " / "
+                               + QString::number(maxPosition + 1));
+
+    ui->actionFirstFrame->setDisabled(false);
+    ui->actionNextFrame->setDisabled(false);
+    ui->actionPreviousFrame->setDisabled(false);
+    ui->actionLastFrame->setDisabled(false);
+    ui->actionClearSequence->setDisabled(false);
+
+    if (currentPosition == maxPosition && currentPosition != -1) {
+        ui->actionNextFrame->setDisabled(true);
+        ui->actionLastFrame->setDisabled(true);
+    } else if (currentPosition == maxPosition) {
+        ui->actionFirstFrame->setDisabled(true);
+        ui->actionNextFrame->setDisabled(true);
+        ui->actionPreviousFrame->setDisabled(true);
+        ui->actionLastFrame->setDisabled(true);
+        ui->actionClearSequence->setDisabled(true);
+        delayBetweenFramesSlider->setDisabled(true);
+    } else if (currentPosition < 0) {
+        ui->actionPreviousFrame->setDisabled(true);
+        ui->actionFirstFrame->setDisabled(true);
+    }
+}
+
+void MainWindow::initSequencer(bool isSequenceStateless)
+{
+    sequencer.isSequenceStateless = isSequenceStateless;
+    if (this->sequencer.getFramesLength() == 0) {
+        qDebug() << "Sequencer cannot be prepared: frames are empty";
+        return;
+    }
+    delayBetweenFramesSlider->setDisabled(false);
+    ui->actionLastFrame->setDisabled(false);
+    ui->actionNextFrame->setDisabled(false);
+    ui->actionClearSequence->setDisabled(false);
+    currentFrameLabel->setText(QString::number(sequencer.getPosition() + 1) + "/"
+                               + QString::number(sequencer.getFramesLength()));
 }
 
 void MainWindow::viewModeChecked(bool checked)
@@ -474,6 +592,9 @@ void MainWindow::applyGraphMatrix(QTableView *table)
     graph.graphView->scene()->update();
     updateTables();
     updateFileStatus();
+    graph.graphView->stabilizingIteration = 0;
+    if (!(graph.getFlags() & GraphFlags::ManualMode))
+        graph.graphView->runTimer();
 }
 
 void MainWindow::applyEdgesList(QTableView *table)
@@ -734,6 +855,7 @@ void MainWindow::markSelectedAs(const QFlags<SelectOptions> &option)
             }
         }
     }
+    graph.graphView->initScene();
 }
 
 void MainWindow::listDataChanged(const QModelIndex &topLeft,
@@ -829,8 +951,11 @@ template QTableView *MainWindow::makeTableFromMatrix(
 void MainWindow::updateFileStatus()
 {
     QString newTitle;
-    if (graph.isUnsaved())
+    if (graph.isUnsaved()) {
         newTitle += '*';
+        sequencer.clear();
+        handleSequencerFrameChange();
+    }
     if (!currentFile.isEmpty())
         newTitle += currentFile + " - ";
     newTitle += title;

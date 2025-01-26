@@ -10,6 +10,8 @@
 class TextBox : public QGraphicsItem
 {
 public:
+    bool containsCustomText = false;
+    bool rectBackground = false;
     TextBox();
     TextBox(QString txt, QPoint coords);
     QRectF boundingRect() const override;
@@ -17,11 +19,13 @@ public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *widget) override;
     void moveTo(QPoint coords);
     void setText(QString text);
+    void setCustomText(QString text);
+    QString getText();
+
 protected:
-    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    // void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
     //enum { Type = QGraphicsItem::ItemIsSelectable};
 private:
-
     QString text;
     QColor selectionColor;
     QFont font;

@@ -17,12 +17,16 @@ class GraphWidget : public QGraphicsView
 
 public:
     GraphWidget(QMap<QPair<Node*, Node*>, Edge*>* edges, QMap<unsigned int, Node*>* nodes, QFlags<GraphFlags> *flags, QWidget *parent = nullptr);
-
+    qsizetype stabilizingIteration = 0;
+    qsizetype getMaxStabilizingIteration();
     void runTimer();
     void initScene();
     void resetNodesColor();
     void resetEdgesColor();
     QFlags<GraphFlags> getFlags();
+
+    QMap<QPair<Node *, Node *>, Edge *> *getEdges();
+    QMap<unsigned int, Node *> *getNodes();
 public slots:
     void zoomIn();
     void zoomOut();
@@ -39,6 +43,7 @@ protected:
     void scaleView(qreal scaleFactor);
 
 private:
+    qsizetype maxStabilizintIteration = 1000;
     bool dragging = false;
     QPointF prevScenePos;
     int timerId = 0;

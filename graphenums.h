@@ -27,5 +27,5 @@ enum NodeColors {
     SourceColor = 0xFFD300,
     DestColor = 0x3914AF
 };
-enum SelectOptions { Source = 1, Destination = 3 };
+enum SelectOptions { Source = 1, Destination = 2 };
 #endif // GRAPHENUMS_H

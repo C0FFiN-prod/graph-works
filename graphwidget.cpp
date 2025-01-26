@@ -28,6 +28,11 @@ GraphWidget::GraphWidget(QMap<QPair<Node*, Node*>, Edge*>* edges, QMap<unsigned 
 //    setOptimizationFlag(QGraphicsView::DontAdjustForAntialiasing);
 }
 
+qsizetype GraphWidget::getMaxStabilizingIteration()
+{
+    return maxStabilizintIteration;
+}
+
 void GraphWidget::runTimer()
 {
     if (!timerId)
@@ -36,20 +41,20 @@ void GraphWidget::runTimer()
 
 void GraphWidget::initScene()
 {
-    QSet<QPair<int, int>> addedBiDirectionalSameIndicies;
-
     for (auto &node : *nodes) {
         if(!isItemOnScene(scene(), qgraphicsitem_cast<Node *>(node))&& node!=nullptr){
             scene()->addItem(node);
         }
         node->update();
     }
+
     for(auto& edge: *edges){
         if(!isItemOnScene(scene(), qgraphicsitem_cast<Edge *>(edge)) && edge!=nullptr){
             scene()->addItem(edge);
             scene()->addItem(&edge->info);
         }
         edge->update();
+        edge->info.update();
     }
 }
 
@@ -90,6 +95,7 @@ void GraphWidget::timerEvent(QTimerEvent *event)
     QList<Node *> nodes;
     QList<Edge *> edges;
     const QList<QGraphicsItem *> items = scene()->items();
+    stabilizingIteration = qMin(++stabilizingIteration, maxStabilizintIteration);
     for (QGraphicsItem *item : items) {
         if (Node *node = qgraphicsitem_cast<Node *>(item)){
             nodes << node;
@@ -162,6 +168,7 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event){
 void GraphWidget::resizeEvent(QResizeEvent *event)
 {
     int w = this->width() - nodeSize, h = this->height() - nodeSize;
+    stabilizingIteration = 0;
     scene()->setSceneRect(-w/2, -h/2, w, h);
     runTimer();
     QGraphicsView::resizeEvent(event);
@@ -194,4 +201,14 @@ bool isItemOnScene(QGraphicsScene *scene, QGraphicsItem *item)
         }
     }
     return false;
+}
+
+QMap<QPair<Node *, Node *>, Edge *> *GraphWidget::getEdges()
+{
+    return this->edges;
+}
+
+QMap<unsigned int, Node *> *GraphWidget::getNodes()
+{
+    return this->nodes;
 }
