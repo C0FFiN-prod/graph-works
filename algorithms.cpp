@@ -831,6 +831,8 @@ unsigned int boruvka(
         "SET_TEXT point 0,-250 Starting Borůvka's algorithm\nEach node is its own tree initially");
 
     while (numTrees > 1) {
+        bool merged = false; // Флаг для проверки изменений
+
         // Найти минимальные рёбра для каждого дерева
         for (int i = 0; i < edges.size(); i++) {
             e = edges[i];
@@ -871,6 +873,7 @@ unsigned int boruvka(
                     tree[e.u][e.v] = e.w;
                     tree[e.v][e.u] = e.w;
                     numTrees--;
+                    merged = true; // Произошло объединение
 
                     // Анимация объединения деревьев
                     sequencer.addFrame();
@@ -886,6 +889,13 @@ unsigned int boruvka(
                                              .arg(numTrees));
                 }
             }
+        }
+
+        // Если на этом шаге не было объединений, завершаем алгоритм
+        if (!merged) {
+            qWarning()
+                << "No trees were merged in this iteration. Algorithm terminates prematurely.";
+            break;
         }
 
         // Сброс минимальных рёбер
