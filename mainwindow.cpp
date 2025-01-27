@@ -138,6 +138,7 @@ MainWindow::MainWindow(const QString &title, QWidget *parent)
         else
             this->graph.unsetFlag(GraphFlags::ShowBandwidth);
         graph.graphView->scene()->update();
+        graph.updateNodes();
     });
 
     connect(ui->actionWeights, &QAction::triggered, this, [this](bool checked){
@@ -146,6 +147,7 @@ MainWindow::MainWindow(const QString &title, QWidget *parent)
         else
             this->graph.unsetFlag(GraphFlags::ShowWeights);
         graph.graphView->scene()->update();
+        graph.updateNodes();
     });
 
     connect(ui->actionFlow, &QAction::triggered, this, [this](bool checked){
@@ -154,6 +156,7 @@ MainWindow::MainWindow(const QString &title, QWidget *parent)
         else
             this->graph.unsetFlag(GraphFlags::ShowFlow);
         graph.graphView->scene()->update();
+        graph.updateNodes();
     });
     connect(ui->actionAddNode, &QAction::triggered, this, &MainWindow::addNode);
     connect(ui->actionToggleSelected,

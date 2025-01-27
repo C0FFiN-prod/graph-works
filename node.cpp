@@ -221,35 +221,87 @@ void Node::setDisplayName(const QString &name)
 
 void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
-    if(isSelected()){
-        painter->setPen(QPen(QColor(NodeColors::SelectionColor), 2));
-
-    }else{
-        painter->setPen(QPen(currentColor, 2));
-    }
-    // drawing circle
+    // Установка стиля узла
     painter->fillPath(shape(), QBrush(Qt::white));
-
-    //painter->setPen(QPen(color, 2));
-    painter->drawPath(shape());
-    //font setting up
+    // Настройка шрифта для текста
     QFont font = painter->font();
-    font.setBold(true);
-    font.setPointSize(14);
-    painter->setFont(font);
-    //get text boxing
-    QString nodeText = (graph->getFlags().testFlag(GraphFlags::DisplayIndex))
-                           ? (QString::number(index))
-                           : (displayName);
-    QFontMetrics metrics(font);
-    QRect textRect = metrics.boundingRect(nodeText);
+    font.setFamily("Lucida Console");
+    // Отображение индекса или имени узла (в верхнем секторе)
+    QString nodeText = graph->getFlags().testFlag(GraphFlags::DisplayIndex) ? QString::number(index)
+                                                                            : displayName;
+    if (!graph->getFlags().testAnyFlags(
+            {GraphFlags::ShowWeights, GraphFlags::ShowFlow, GraphFlags::ShowBandwidth})) {
+        font.setBold(true);
+        font.setPointSize(qMax(4, qMin(nodeSize / nodeText.length(), 14)));
+        painter->setFont(font);
+        painter->setPen(Qt::black);
+        QFontMetrics metrics(font);
+        painter->drawText(boundingRect().center() - metrics.tightBoundingRect(nodeText).center(),
+                          nodeText);
+    } else {
+        // Проверяем
+        // Проверяем наличие петли
+        Edge *loopEdge = nullptr;
+        for (const auto &edge : edgeList) {
+            if (edge->getEdgeType() == EdgeType::Loop) {
+                loopEdge = edge;
+                break;
+            }
+        }
 
-    //get coords of text
-    QPointF textPnt(-(textRect.width())/2 -0.7 , textRect.height()/3. - 0.7);;
+        if (loopEdge) {
+            // Вычисляем активные параметры петли
+            QList<QString> activeParameters;
+            {
+                activeParameters.append(nodeText);
+                if (graph->getFlags().testFlag(GraphFlags::ShowWeights)) {
+                    activeParameters.append(QString::number(loopEdge->getWeight()));
+                }
+                if (graph->getFlags().testFlag(GraphFlags::ShowFlow)) {
+                    activeParameters.append(QString::number(loopEdge->getFlow()));
+                }
+                if (graph->getFlags().testFlag(GraphFlags::ShowBandwidth)) {
+                    activeParameters.append(QString::number(loopEdge->getBandwidth()));
+                }
+            }
+            font.setBold(false);
 
-    //drawing text
-    painter->setPen(Qt::black);
-    painter->drawText(textPnt, nodeText);
+            // Расчёт и отображение секторов
+
+            int paramCount = activeParameters.size();
+            if (paramCount > 0) {
+                double radius = nodeSize / 2.0;
+                double spanAngle = 360.0 / paramCount;
+                double startAngle = (180.0 - spanAngle) / 2;
+
+                for (const auto &param : activeParameters) {
+                    // Рисуем сектор
+                    painter->setPen(Qt::black);
+                    painter->drawPie(QRectF(-radius, -radius, radius * 2, radius * 2),
+                                     startAngle * 16,
+                                     spanAngle * 16);
+
+                    // Отображение текста внутри сектора
+                    double angle = startAngle + spanAngle / 2.0;
+                    double textX = radius * 0.5 * cos(angle * M_PI / 180.0);
+                    double textY = -radius * 0.5 * sin(angle * M_PI / 180.0);
+                    QPointF textPnt{textX, textY};
+                    font.setPointSize(
+                        qMax(4,
+                             qMin((nodeSize / (activeParameters.size() - 1)) / param.length(), 10)));
+                    painter->setFont(font);
+                    QFontMetrics metrics(font);
+                    textPnt -= metrics.tightBoundingRect(param).center();
+                    painter->setPen(Qt::black);
+                    painter->drawText(textPnt, param);
+
+                    startAngle += spanAngle;
+                }
+            }
+        }
+    }
+    painter->setPen(isSelected() ? QPen({NodeColors::SelectionColor}, 2) : QPen(currentColor, 2));
+    painter->drawPath(shape());
 }
 
 Node::~Node()

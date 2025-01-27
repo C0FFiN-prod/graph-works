@@ -106,6 +106,7 @@
     <addaction name="actionRefreshTables"/>
     <addaction name="actionClearConsole"/>
     <addaction name="separator"/>
+    <addaction name="actionToggleSelected"/>
     <addaction name="actionAddNode"/>
     <addaction name="actionDeleteNode"/>
     <addaction name="actionDeleteEdges"/>
@@ -1127,10 +1128,13 @@
      <normaloff>:/ico/icons/toggleSelected.svg</normaloff>:/ico/icons/toggleSelected.svg</iconset>
    </property>
    <property name="text">
-    <string>ToggleSelected</string>
+    <string>Toggle Selected</string>
    </property>
    <property name="toolTip">
     <string>Toggle on/off selected objects</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+T</string>
    </property>
    <property name="menuRole">
     <enum>QAction::NoRole</enum>
